@@ -1,0 +1,28 @@
+services:
+
+  #################################
+  # Patient Microservice
+  #################################
+  patient:
+    build: ./Patients/patient
+    image: esd_g2t1-php-apache:latest
+    restart: always
+    ports:
+      - "5001:5000"
+    depends_on:
+      - patient_db
+    environment:
+      dbURL: mysql+mysqlconnector://root@host.docker.internal:3301/patientdb
+
+  #################################
+  # Patient SQL Database
+  #################################
+  patient_db:
+    image: mysql:latest
+    restart: always
+    ports:
+      - "3301:3306"
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: yes
+    volumes:
+      - ./Patients/db/patient.sql:/docker-entrypoint-initdb.d/init.sql

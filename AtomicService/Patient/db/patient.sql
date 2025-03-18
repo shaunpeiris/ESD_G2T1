@@ -1,9 +1,8 @@
 -- Assuming the database doesn't exist
 CREATE DATABASE IF NOT EXISTS patientdb;
 
-USE patientdb;  -- Switch to the newly created database
+USE patientdb; 
 
--- Create the table schema
 CREATE TABLE IF NOT EXISTS patient (
   id INT PRIMARY KEY AUTO_INCREMENT,
   name VARCHAR(255) NOT NULL,
@@ -12,7 +11,6 @@ CREATE TABLE IF NOT EXISTS patient (
   medicalHistory JSON
 );
 
--- Sample data with structured medicalHistory JSON
 INSERT INTO patient (name, email, password, medicalHistory)
 VALUES 
   ('Emma Taylor', 'emma@example.com', 'pass123', 
