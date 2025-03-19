@@ -4,7 +4,7 @@ services:
   # Patient Microservice
   #################################
   patient:
-    build: ./Patients/patient
+    build: ./Patient/patient
     image: esd_g2t1-php-apache:latest
     restart: always
     ports:
@@ -25,4 +25,4 @@ services:
     environment:
       MYSQL_ALLOW_EMPTY_PASSWORD: yes
     volumes:
-      - ./Patients/db/patient.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./Patient/db/patient.sql:/docker-entrypoint-initdb.d/init.sql

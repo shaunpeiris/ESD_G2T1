@@ -7,6 +7,8 @@ app = Flask(__name__)
 CORS(app)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://root@localhost:3306/patientdb'
+# app.config['SQLALCHEMY_DATABASE_URI'] = environ.get('dbURL')
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
@@ -97,13 +99,16 @@ def update_medical_history():
     else: 
         existing_medical_history = patient.medicalHistory
 
-    # Update each category in the medical history
+ # Update each category in the medical history
     for category in ["allergies", "medical_conditions", "past_surgeries", 
                      "family_medical_history", "chronic_illnesses", "medications"]:
         if category in new_medical_history:
             if category not in existing_medical_history:
                 existing_medical_history[category] = []
-            existing_medical_history[category].extend(new_medical_history[category])
+            # Convert to set to remove duplicates, then back to list
+            combined = set(existing_medical_history[category])
+            combined.update(new_medical_history[category])
+            existing_medical_history[category] = list(combined)
 
     patient.medicalHistory = existing_medical_history
 

@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prescribe Medication | HealthConnect</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        .sidebar {
+            height: 100vh;
+            position: sticky;
+            top: 0;
+            background-color: #f8f9fa;
+            border-right: 1px solid #dee2e6;
+        }
+        .patient-card {
+            transition: transform 0.2s;
+            border-left: 5px solid #0d6efd;
+        }
+        .patient-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .medication-item {
+            border-left: 3px solid #198754;
+            padding-left: 15px;
+            margin-bottom: 15px;
+        }
+        .allergy-alert {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 10px 15px;
+            margin-bottom: 15px;
+        }
+        .interaction-alert {
+            background-color: #f8d7da;
+            border-left: 4px solid #dc3545;
+            padding: 10px 15px;
+            margin-bottom: 15px;
+        }
+        .med-search-result:hover {
+            background-color: #f8f9fa;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 d-md-block sidebar collapse">
+                <div class="d-flex flex-column p-3">
+                    <div class="text-center mb-4">
+                        <img src="https://via.placeholder.com/80" class="rounded-circle mb-2" alt="Doctor profile">
+                        <h5 class="mb-0">Dr. James Wilson</h5>
+                        <p class="text-muted small">Cardiology</p>
+                    </div>
+                    <ul class="nav nav-pills flex-column mb-auto">
+                        <li class="nav-item">
+                            <a href="dashboard.html" class="nav-link">
+                                <i class="bi bi-speedometer2 me-2"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="appointments.html" class="nav-link">
+                                <i class="bi bi-calendar-check me-2"></i> Appointments
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="patients.html" class="nav-link">
+                                <i class="bi bi-people me-2"></i> Patients
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="prescriptions.html" class="nav-link active">
+                                <i class="bi bi-prescription2 me-2"></i> Prescriptions
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="medical-records.html" class="nav-link">
+                                <i class="bi bi-journal-medical me-2"></i> Medical Records
+                            </a>
+                        </li>
+                    </ul>
+                    <hr>
+                    <a href="#" class="btn btn-outline-danger">
+                        <i class="bi bi-box-arrow-right me-2"></i> Sign Out
+                    </a>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">Prescribe Medication</h1>
+                </div>
+
+                <!-- Patient Selection Section -->
+                <section id="patient-selection" class="mb-4">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">Patient Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <!-- Selected Patient Info -->
+                            <div class="row align-items-center">
+                                <div class="col-md-2 text-center">
+                                    <img src="https://via.placeholder.com/80" class="rounded-circle mb-2" alt="Patient photo" style="width: 80px; height: 80px;">
+                                </div>
+                                <div class="col-md-5">
+                                    <h5>Emily Parker</h5>
+                                    <p class="mb-1"><strong>DOB:</strong> 05/12/1978 (45 years)</p>
+                                    <p class="mb-1"><strong>Patient ID:</strong> PT-78945</p>
+                                    <p class="mb-0"><strong>Last Visit:</strong> March 10, 2025</p>
+                                </div>
+                                <div class="col-md-5">
+                                    <div class="allergy-alert">
+                                        <h6><i class="bi bi-exclamation-triangle-fill me-2"></i>Allergies</h6>
+                                        <ul class="mb-0">
+                                            <li><strong>Penicillin</strong>: Rash, difficulty breathing</li>
+                                            <li><strong>Sulfa drugs</strong>: Hives</li>
+                                        </ul>
+                                    </div>
+                                    <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#patientHistoryModal">
+                                        <i class="bi bi-file-medical me-2"></i>View Medical History
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Prescription Form Section -->
+                <section id="prescription-form">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">Create Prescription</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="prescriptionForm">
+                                <!-- Current Medications Display -->
+                                <div class="mb-4">
+                                    <h6>Current Medications</h6>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-bordered">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Medication</th>
+                                                    <th>Dosage</th>
+                                                    <th>Frequency</th>
+                                                    <th>Prescribed On</th>
+                                                    <th>End Date</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>Atorvastatin</td>
+                                                    <td>20 mg</td>
+                                                    <td>Once daily</td>
+                                                    <td>Jan 15, 2025</td>
+                                                    <td>Ongoing</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Metoprolol</td>
+                                                    <td>50 mg</td>
+                                                    <td>Twice daily</td>
+                                                    <td>Feb 22, 2025</td>
+                                                    <td>Ongoing</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <!-- Potential Interaction Warning -->
+                                <div class="interaction-alert mb-4">
+                                    <h6><i class="bi bi-exclamation-triangle-fill me-2"></i>Potential Interaction</h6>
+                                    <p class="mb-0">Lisinopril may interact with Metoprolol. Monitor blood pressure closely.</p>
+                                </div>
+
+                                <!-- Medications List -->
+                                <div id="prescribedMedications">
+                                    <h6 class="mb-3">Prescribed Medications</h6>
+                                    
+                                    <!-- Medication container - medications will be added here dynamically -->
+                                    <div id="medicationContainer">
+                                        <!-- Initial medication (for example) -->
+                                        <div class="medication-item p-3 border rounded mb-3" id="med-1">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <h5 class="mb-1">Lisinopril</h5>
+                                                    <p class="mb-0 text-muted">ACE inhibitor - For hypertension</p>
+                                                </div>
+                                                <button type="button" class="btn-close remove-medication" data-med-id="med-1" aria-label="Remove medication"></button>
+                                            </div>
+                                            
+                                            <div class="row mt-3">
+                                                <div class="col-md-3">
+                                                    <label class="form-label">Dosage</label>
+                                                    <select class="form-select">
+                                                        <option>5 mg</option>
+                                                        <option selected>10 mg</option>
+                                                        <option>20 mg</option>
+                                                        <option>40 mg</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label class="form-label">Route</label>
+                                                    <select class="form-select">
+                                                        <option selected>Oral</option>
+                                                        <option>Topical</option>
+                                                        <option>Intravenous</option>
+                                                        <option>Intramuscular</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label class="form-label">Frequency</label>
+                                                    <select class="form-select">
+                                                        <option>Once daily</option>
+                                                        <option selected>Twice daily</option>
+                                                        <option>Three times daily</option>
+                                                        <option>Four times daily</option>
+                                                        <option>As needed</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label class="form-label">Duration</label>
+                                                    <div class="input-group">
+                                                        <input type="number" class="form-control" value="30">
+                                                        <span class="input-group-text">days</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="mt-3">
+                                                <label class="form-label">Special Instructions</label>
+                                                <textarea class="form-control" rows="2">Take with food in the morning and evening.</textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <button type="button" class="btn btn-outline-primary mb-4" data-bs-toggle="modal" data-bs-target="#medicationSearchModal">
+                                        <i class="bi bi-plus-circle me-2"></i>Add Medication
+                                    </button>
+                                </div>
+                                
+                                <!-- Prescription Notes -->
+                                <div class="mb-3">
+                                    <label for="prescriptionNotes" class="form-label">Prescription Notes</label>
+                                    <textarea class="form-control" id="prescriptionNotes" rows="3" placeholder="Add any additional notes or instructions">Patient should monitor blood pressure daily and report readings below 100/60 or above 140/90.</textarea>
+                                </div>
+                                
+                                <!-- Pharmacy Selection -->
+                                <div class="mb-4">
+                                    <label for="pharmacy" class="form-label">Send Prescription To</label>
+                                    <select class="form-select" id="pharmacy">
+                                        <option value="">Select Pharmacy</option>
+                                        <option value="1" selected>Downtown Pharmacy - 123 Main St</option>
+                                        <option value="2">Westside Drugs - 456 Park Ave</option>
+                                        <option value="3">MedExpress Pharmacy - 789 Oak Blvd</option>
+                                    </select>
+                                </div>
+                                
+                                <!-- Form Actions -->
+                                <div class="d-flex justify-content-end">
+                                    <button type="button" class="btn btn-outline-secondary me-2">Save as Draft</button>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-send me-2"></i>Send Prescription
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- Medication Search Modal -->
+    <div class="modal fade" id="medicationSearchModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Search Medications</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <input type="text" class="form-control" id="medSearchInput" placeholder="Search by medication name">
+                    </div>
+                    <div class="list-group" id="medicationSearchResults">
+                        <a href="#" class="list-group-item list-group-item-action med-search-result" data-med-name="Hydrochlorothiazide" data-med-desc="Diuretic - Used for treating high blood pressure and fluid retention">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">Hydrochlorothiazide</h6>
+                                <small>Diuretic</small>
+                            </div>
+                            <p class="mb-1">Used for treating high blood pressure and fluid retention</p>
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action med-search-result" data-med-name="Losartan" data-med-desc="ARB - Angiotensin II receptor blocker used for hypertension">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">Losartan</h6>
+                                <small>ARB</small>
+                            </div>
+                            <p class="mb-1">Angiotensin II receptor blocker used for hypertension</p>
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action med-search-result" data-med-name="Furosemide" data-med-desc="Loop Diuretic - Used for treating fluid retention and swelling">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">Furosemide</h6>
+                                <small>Loop Diuretic</small>
+                            </div>
+                            <p class="mb-1">Used for treating fluid retention and swelling</p>
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action med-search-result" data-med-name="Amlodipine" data-med-desc="Calcium channel blocker - For hypertension and angina">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">Amlodipine</h6>
+                                <small>CCB</small>
+                            </div>
+                            <p class="mb-1">Calcium channel blocker for hypertension and angina</p>
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action med-search-result" data-med-name="Metformin" data-med-desc="Biguanide - For type 2 diabetes management">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">Metformin</h6>
+                                <small>Biguanide</small>
+                            </div>
+                            <p class="mb-1">First-line medication for type 2 diabetes management</p>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Patient History Modal (placeholder) -->
+    <div class="modal fade" id="patientHistoryModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Patient Medical History</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Patient medical history would be displayed here.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+    // Counter for unique IDs
+    let medicationCounter = 1;
+    
+    // Handle medication search filtering
+    const medSearchInput = document.getElementById('medSearchInput');
+    medSearchInput.addEventListener('keyup', function() {
+        const filter = this.value.toUpperCase();
+        const results = document.getElementById('medicationSearchResults').getElementsByTagName('a');
+        
+        for (let i = 0; i < results.length; i++) {
+            const medName = results[i].getAttribute('data-med-name');
+            const medDesc = results[i].getAttribute('data-med-desc');
+            const txtValue = medName + ' ' + medDesc;
+            
+            if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                results[i].style.display = "";
+            } else {
+                results[i].style.display = "none";
+            }
+        }
+    });
+    
+    // Add medication when clicked in search results
+    const medResults = document.querySelectorAll('.med-search-result');
+    medResults.forEach(function(result) {
+        result.addEventListener('click', function(e) {
+            e.preventDefault();
+            const medName = this.getAttribute('data-med-name');
+            const medDesc = this.getAttribute('data-med-desc');
+            addMedication(medName, medDesc);
+            
+            // Close the modal after selection
+            const modal = bootstrap.Modal.getInstance(document.getElementById('medicationSearchModal'));
+            modal.hide();
+        });
+    });
+    
+    // Function to add a new medication
+    function addMedication(medName, medDesc) {
+        const medId = 'med-' + medicationCounter;
+        medicationCounter++;
+        
+        const medContainer = document.getElementById('medicationContainer');
+        const newMed = document.createElement('div');
+        newMed.className = 'medication-item p-3 border rounded mb-3';
+        newMed.id = medId;
+        
+        newMed.innerHTML = `
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h5 class="mb-1">${medName}</h5>
+                    <p class="mb-0 text-muted">${medDesc}</p>
+                </div>
+                <button type="button" class="btn-close remove-medication" data-med-id="${medId}" aria-label="Remove medication"></button>
+            </div>
+            
+            <div class="row mt-3">
+                <div class="col-md-3">
+                    <label class="form-label">Dosage</label>
+                    <select class="form-select">
+                        <option>5 mg</option>
+                        <option selected>10 mg</option>
+                        <option>20 mg</option>
+                        <option>40 mg</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Route</label>
+                    <select class="form-select">
+                        <option selected>Oral</option>
+                        <option>Topical</option>
+                        <option>Intravenous</option>
+                        <option>Intramuscular</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Frequency</label>
+                    <select class="form-select">
+                        <option>Once daily</option>
+                        <option selected>Twice daily</option>
+                        <option>Three times daily</option>
+                        <option>Four times daily</option>
+                        <option>As needed</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Duration</label>
+                    <div class="input-group">
+                        <input type="number" class="form-control" value="30">
+                        <span class="input-group-text">days</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-3">
+                <label class="form-label">Special Instructions</label>
+                <textarea class="form-control" rows="2">Take with food.</textarea>
+            </div>
+        `;
+        
+        medContainer.appendChild(newMed);
+        
+        // Add event listener to the new remove button
+        const removeBtn = newMed.querySelector('.remove-medication');
+        removeBtn.addEventListener('click', function() {
+            removeMedication(this.getAttribute('data-med-id'));
+        });
+    }
+    
+    // Function to remove a medication
+    function removeMedication(medId) {
+        const medication = document.getElementById(medId);
+        if (medication) {
+            medication.parentNode.removeChild(medication);
+        }
+    }
+    
+    // Add event listeners to existing remove buttons
+    document.querySelectorAll('.remove-medication').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            removeMedication(this.getAttribute('data-med-id'));
+        });
+    });
+    
+    // Handle form submission
+    const prescriptionForm = document.getElementById('prescriptionForm');
+    if (prescriptionForm) {
+        prescriptionForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            // Here you would collect all the medication data and submit it
+            alert('Prescription submitted successfully!');
+        });
+    }
+});
+
+    </script>
