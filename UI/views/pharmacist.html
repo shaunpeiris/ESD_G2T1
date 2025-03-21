@@ -57,14 +57,14 @@
     <div class="container-fluid">
         <div class="row">
             <!-- Sidebar -->
-            <div class="col-md-3 col-lg-2 d-md-block sidebar collapse">
+            <div class="col-lg-2 col-md-3 collapse d-md-block sidebar">
                 <div class="d-flex flex-column p-3">
                     <div class="text-center mb-4">
                         <img src="https://via.placeholder.com/80" class="rounded-circle mb-2" alt="Pharmacist profile">
                         <h5 class="mb-0">Sarah Johnson</h5>
                         <p class="text-muted small">Lead Pharmacist</p>
                     </div>
-                    <ul class="nav nav-pills flex-column mb-auto">
+                    <ul class="flex-column nav nav-pills mb-auto">
                         <li class="nav-item">
                             <a href="dashboard.html" class="nav-link">
                                 <i class="bi bi-speedometer2 me-2"></i> Dashboard
@@ -99,15 +99,15 @@
             </div>
 
             <!-- Main Content -->
-            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
-                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+            <main class="col-lg-10 col-md-9 ms-sm-auto px-md-4 py-4">
+                <div class="d-flex flex-md-nowrap flex-wrap align-items-center border-bottom justify-content-between mb-3 pb-2 pt-3">
                     <h1 class="h2">Prescription Management</h1>
                     <div class="btn-toolbar mb-2 mb-md-0">
                         <div class="btn-group me-2">
-                            <button type="button" class="btn btn-sm btn-outline-secondary" id="refreshPrescriptions">
+                            <button type="button" class="btn btn-outline-secondary btn-sm" id="refreshPrescriptions">
                                 <i class="bi bi-arrow-clockwise me-1"></i> Refresh
                             </button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary">
+                            <button type="button" class="btn btn-outline-secondary btn-sm">
                                 <i class="bi bi-printer me-1"></i> Print
                             </button>
                         </div>
@@ -136,19 +136,19 @@
                         </li>
                     </ul>
                     
-                    <div class="tab-content p-3 border border-top-0 rounded-bottom" id="prescriptionTabContent">
+                    <div class="border border-top-0 p-3 rounded-bottom tab-content" id="prescriptionTabContent">
                         <!-- Pending Prescriptions Tab -->
-                        <div class="tab-pane fade show active" id="pending" role="tabpanel" aria-labelledby="pending-tab">
-                            <div class="row g-3">
+                        <div class="active fade show tab-pane" id="pending" role="tabpanel" aria-labelledby="pending-tab">
+                            <div class="g-3 row">
                                 <!-- Prescription Card 1 -->
-                                <div class="col-md-6 col-lg-4">
+                                <div class="col-lg-4 col-md-6">
                                     <div class="card prescription-card" id="prescription-1">
                                         <div class="card-body">
-                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <div class="d-flex align-items-center justify-content-between mb-2">
                                                 <h5 class="card-title mb-0">Emily Parker</h5>
                                                 <span class="badge bg-primary">New</span>
                                             </div>
-                                            <h6 class="card-subtitle mb-2 text-muted">Prescription #RX-78945</h6>
+                                            <h6 class="card-subtitle text-muted mb-2">Prescription #RX-78945</h6>
                                             <p class="card-text mb-1"><strong>Doctor:</strong> Dr. James Wilson</p>
                                             <p class="card-text mb-1"><strong>Date:</strong> March 15, 2025</p>
                                             <p class="card-text mb-3"><strong>Items:</strong> 3 medications</p>
@@ -162,14 +162,14 @@
                                 </div>
                                 
                                 <!-- Prescription Card 2 -->
-                                <div class="col-md-6 col-lg-4">
+                                <div class="col-lg-4 col-md-6">
                                     <div class="card prescription-card urgent" id="prescription-2">
                                         <div class="card-body">
-                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <div class="d-flex align-items-center justify-content-between mb-2">
                                                 <h5 class="card-title mb-0">Michael Johnson</h5>
                                                 <span class="badge bg-danger">Urgent</span>
                                             </div>
-                                            <h6 class="card-subtitle mb-2 text-muted">Prescription #RX-78946</h6>
+                                            <h6 class="card-subtitle text-muted mb-2">Prescription #RX-78946</h6>
                                             <p class="card-text mb-1"><strong>Doctor:</strong> Dr. Emily Rodriguez</p>
                                             <p class="card-text mb-1"><strong>Date:</strong> March 15, 2025</p>
                                             <p class="card-text mb-3"><strong>Items:</strong> 2 medications</p>
@@ -187,17 +187,17 @@
                         </div>
                         
                         <!-- Processing Prescriptions Tab -->
-                        <div class="tab-pane fade" id="processing" role="tabpanel" aria-labelledby="processing-tab">
-                            <div class="row g-3">
+                        <div class="fade tab-pane" id="processing" role="tabpanel" aria-labelledby="processing-tab">
+                            <div class="g-3 row">
                                 <!-- Processing Prescription Card -->
-                                <div class="col-md-6 col-lg-4">
+                                <div class="col-lg-4 col-md-6">
                                     <div class="card prescription-card processing">
                                         <div class="card-body">
-                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <div class="d-flex align-items-center justify-content-between mb-2">
                                                 <h5 class="card-title mb-0">Sarah Williams</h5>
                                                 <span class="badge bg-warning">Processing</span>
                                             </div>
-                                            <h6 class="card-subtitle mb-2 text-muted">Prescription #RX-78943</h6>
+                                            <h6 class="card-subtitle text-muted mb-2">Prescription #RX-78943</h6>
                                             <p class="card-text mb-1"><strong>Doctor:</strong> Dr. Robert Chen</p>
                                             <p class="card-text mb-1"><strong>Date:</strong> March 15, 2025</p>
                                             <p class="card-text mb-3"><strong>Status:</strong> Awaiting final check</p>
@@ -213,17 +213,17 @@
                         </div>
                         
                         <!-- Completed Prescriptions Tab -->
-                        <div class="tab-pane fade" id="completed" role="tabpanel" aria-labelledby="completed-tab">
-                            <div class="row g-3">
+                        <div class="fade tab-pane" id="completed" role="tabpanel" aria-labelledby="completed-tab">
+                            <div class="g-3 row">
                                 <!-- Completed Prescription Card -->
-                                <div class="col-md-6 col-lg-4">
-                                    <div class="card prescription-card completed">
+                                <div class="col-lg-4 col-md-6">
+                                    <div class="card completed prescription-card">
                                         <div class="card-body">
-                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <div class="d-flex align-items-center justify-content-between mb-2">
                                                 <h5 class="card-title mb-0">David Wilson</h5>
                                                 <span class="badge bg-success">Completed</span>
                                             </div>
-                                            <h6 class="card-subtitle mb-2 text-muted">Prescription #RX-78940</h6>
+                                            <h6 class="card-subtitle text-muted mb-2">Prescription #RX-78940</h6>
                                             <p class="card-text mb-1"><strong>Doctor:</strong> Dr. James Wilson</p>
                                             <p class="card-text mb-1"><strong>Date:</strong> March 14, 2025</p>
                                             <p class="card-text mb-1"><strong>Dispensed:</strong> March 15, 2025</p>
@@ -246,7 +246,7 @@
 
     <!-- Prescription Processing Modal -->
     <div class="modal fade" id="prescriptionProcessingModal" tabindex="-1" aria-labelledby="prescriptionProcessingModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-dialog modal-dialog-scrollable modal-xl">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="prescriptionProcessingModalLabel">Process Prescription #RX-78945</h5>
@@ -288,7 +288,7 @@
                                     <p class="mb-1"><strong>Prescribing Doctor:</strong> Dr. James Wilson (Cardiology)</p>
                                     <p class="mb-1"><strong>Date Prescribed:</strong> March 15, 2025</p>
                                     <p class="mb-1"><strong>Prescription Notes:</strong></p>
-                                    <p class="mb-3 fst-italic">Patient should monitor blood pressure daily and report readings below 100/60 or above 140/90.</p>
+                                    <p class="fst-italic mb-3">Patient should monitor blood pressure daily and report readings below 100/60 or above 140/90.</p>
                                     
                                     <div class="alert alert-info mb-0">
                                         <h6 class="alert-heading"><i class="bi bi-info-circle-fill me-2"></i>Current Medications</h6>
@@ -308,7 +308,7 @@
                         <div class="card-body">
                             <div id="medicationList">
                                 <!-- Medication 1 -->
-                                <div class="medication-item available mb-3 rounded" id="med-item-1">
+                                <div class="rounded available mb-3 medication-item" id="med-item-1">
                                     <div class="row">
                                         <div class="col-md-6">
                                             <h5>Lisinopril 10mg</h5>
@@ -319,7 +319,7 @@
                                         </div>
                                         <div class="col-md-3">
                                             <h6>Inventory Status</h6>
-                                            <span class="badge bg-success badge-stock mb-2">In Stock: 120 tablets</span>
+                                            <span class="badge badge-stock bg-success mb-2">In Stock: 120 tablets</span>
                                             <div class="form-check mb-2">
                                                 <input class="form-check-input" type="checkbox" id="verifyMed1" checked>
                                                 <label class="form-check-label" for="verifyMed1">
@@ -344,7 +344,7 @@
                                 </div>
                                 
                                 <!-- Medication 2 -->
-                                <div class="medication-item low-stock mb-3 rounded" id="med-item-2">
+                                <div class="rounded low-stock mb-3 medication-item" id="med-item-2">
                                     <div class="row">
                                         <div class="col-md-6">
                                             <h5>Amlodipine 5mg</h5>
@@ -355,7 +355,7 @@
                                         </div>
                                         <div class="col-md-3">
                                             <h6>Inventory Status</h6>
-                                            <span class="badge bg-warning badge-stock mb-2">Low Stock: 35 tablets</span>
+                                            <span class="badge badge-stock bg-warning mb-2">Low Stock: 35 tablets</span>
                                             <div class="form-check mb-2">
                                                 <input class="form-check-input" type="checkbox" id="verifyMed2" checked>
                                                 <label class="form-check-label" for="verifyMed2">
@@ -380,7 +380,7 @@
                                 </div>
                                 
                                 <!-- Medication 3 -->
-                                <div class="medication-item out-of-stock mb-3 rounded" id="med-item-3">
+                                <div class="rounded mb-3 medication-item out-of-stock" id="med-item-3">
                                     <div class="row">
                                         <div class="col-md-6">
                                             <h5>Hydrochlorothiazide 25mg</h5>
@@ -391,7 +391,7 @@
                                         </div>
                                         <div class="col-md-3">
                                             <h6>Inventory Status</h6>
-                                            <span class="badge bg-danger badge-stock mb-2">Out of Stock: 0 tablets</span>
+                                            <span class="badge badge-stock bg-danger mb-2">Out of Stock: 0 tablets</span>
                                             <div class="form-check mb-2">
                                                 <input class="form-check-input" type="checkbox" id="verifyMed3" disabled>
                                                 <label class="form-check-label" for="verifyMed3">
@@ -604,7 +604,7 @@
                     </div>
                     <div class="col-md-3">
                         <h6>Inventory Status</h6>
-                        <span class="badge ${stockBadgeClass} badge-stock mb-2">${status}: ${stockAmount} units</span>
+                        <span class="badge badge-stock ${stockBadgeClass} mb-2">${status}: ${stockAmount} units</span>
                         <div class="form-check mb-2">
                             <input class="form-check-input" type="checkbox" id="verifyMed${index}" ${canDispense ? 'checked' : 'disabled'}>
                             <label class="form-check-label" for="verifyMed${index}">
@@ -724,7 +724,7 @@
             resultItem.setAttribute('data-med-name', med);
             
             resultItem.innerHTML = `
-                <div class="d-flex w-100 justify-content-between">
+                <div class="d-flex justify-content-between w-100">
                     <h6 class="mb-1">${med}</h6>
                     <small>Stock: ${inventory[med] || 0}</small>
                 </div>
