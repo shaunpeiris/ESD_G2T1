@@ -28,7 +28,7 @@ const app = Vue.createApp({
     },
 
     methods: {
-        checkLogin() {
+         checkLogin() {
             // Check if the user is logged in
             const patientData = sessionStorage.getItem('patient');
             if (!patientData) {
@@ -40,7 +40,12 @@ const app = Vue.createApp({
             
             // Set up medical history from patient data
             if (this.patient.medicalHistory) {
-                this.medicalHistory = this.patient.medicalHistory;
+                this.medicalHistory = { ...this.patient.medicalHistory };
+                
+                // Initialize allergies array if it doesn't exist
+                if (!this.medicalHistory.allergies) {
+                    this.medicalHistory.allergies = [];
+                }
                 
                 // Convert array-based items to strings for textarea fields
                 if (Array.isArray(this.medicalHistory.medical_conditions)) {
@@ -69,11 +74,33 @@ const app = Vue.createApp({
                     medications: ''
                 };
             }
+            
+            console.log("Patient loaded:", this.patient);
+            console.log("Medical history initialized:", this.medicalHistory);
         },
         
         savePersonalInfo() {
-            // In a real implementation, this would send updated data to the server
-            this.showSaveMessage();
+            // Prepare the data to send to the server
+            const updateData = {
+                id: this.patient.id,
+                name: this.patient.name,
+                email: this.patient.email
+            };
+            
+            // Send the update to the server
+            axios.put(`${patientURL}/update/personal`, updateData)
+                .then(response => {
+                    // Update session storage with new data
+                    const updatedPatient = response.data.data;
+                    this.patient = updatedPatient;
+                    sessionStorage.setItem('patient', JSON.stringify(updatedPatient));
+                    this.showSaveMessage();
+                })
+                .catch(error => {
+                    this.errorMessage = error.response?.data?.message || "Failed to update personal information.";
+                    this.showError = true;
+                    setTimeout(() => this.showError = false, 3000);
+                });
         },
         
         addAllergy() {
@@ -90,10 +117,12 @@ const app = Vue.createApp({
             this.medicalHistory.allergies.splice(index, 1);
         },
         
+// Replace the existing saveMedicalInfo method with this improved version
+
         saveMedicalInfo() {
             // Convert text fields to arrays where needed
-            let updatedMedicalHistory = {
-                allergies: this.medicalHistory.allergies,
+            const updatedMedicalHistory = {
+                allergies: this.medicalHistory.allergies || [],
                 medical_conditions: this.stringToArray(this.medicalHistory.medical_conditions),
                 past_surgeries: this.stringToArray(this.medicalHistory.past_surgeries),
                 family_medical_history: this.stringToArray(this.medicalHistory.family_medical_history),
@@ -101,25 +130,52 @@ const app = Vue.createApp({
                 medications: this.stringToArray(this.medicalHistory.medications)
             };
             
+            console.log('Sending medical history update:', updatedMedicalHistory);
+            
             // Send update to server
             axios.put(`${patientURL}/update`, {
                 id: this.patient.id,
                 medicalHistory: updatedMedicalHistory
             })
             .then(response => {
-                // Update session storage with new data
+                console.log('Medical history update response:', response.data);
+                
+                // Update the patient data with the response
                 this.patient.medicalHistory = response.data.data.medicalHistory;
                 sessionStorage.setItem('patient', JSON.stringify(this.patient));
+                
+                // Update the local medical history
+                this.medicalHistory = { ...this.patient.medicalHistory };
+                
+                // Convert arrays back to strings for textarea fields
+                if (Array.isArray(this.medicalHistory.medical_conditions)) {
+                    this.medicalHistory.medical_conditions = this.medicalHistory.medical_conditions.join(', ');
+                }
+                if (Array.isArray(this.medicalHistory.past_surgeries)) {
+                    this.medicalHistory.past_surgeries = this.medicalHistory.past_surgeries.join(', ');
+                }
+                if (Array.isArray(this.medicalHistory.family_medical_history)) {
+                    this.medicalHistory.family_medical_history = this.medicalHistory.family_medical_history.join(', ');
+                }
+                if (Array.isArray(this.medicalHistory.chronic_illnesses)) {
+                    this.medicalHistory.chronic_illnesses = this.medicalHistory.chronic_illnesses.join(', ');
+                }
+                if (Array.isArray(this.medicalHistory.medications)) {
+                    this.medicalHistory.medications = this.medicalHistory.medications.join(', ');
+                }
+                
                 this.showSaveMessage();
             })
             .catch(error => {
-                this.errorMessage = "Failed to update medical information.";
+                console.error('Error updating medical history:', error);
+                this.errorMessage = error.response?.data?.message || "Failed to update medical information.";
                 this.showError = true;
                 setTimeout(() => this.showError = false, 3000);
             });
         },
         
         updatePassword() {
+            // Check if passwords match
             if (this.newPassword !== this.confirmPassword) {
                 this.errorMessage = "Passwords do not match.";
                 this.showError = true;
@@ -127,13 +183,49 @@ const app = Vue.createApp({
                 return;
             }
             
-            // In a real implementation, this would verify current password and update with new one
-            this.showSaveMessage();
+            // Check if the current password is provided
+            if (!this.currentPassword) {
+                this.errorMessage = "Current password is required.";
+                this.showError = true;
+                setTimeout(() => this.showError = false, 3000);
+                return;
+            }
             
-            // Clear password fields after save
-            this.currentPassword = '';
-            this.newPassword = '';
-            this.confirmPassword = '';
+            // Check if the new password is long enough
+            if (this.newPassword.length < 6) {
+                this.errorMessage = "New password must be at least 6 characters.";
+                this.showError = true;
+                setTimeout(() => this.showError = false, 3000);
+                return;
+            }
+            
+            // Prepare data for password update
+            const passwordData = {
+                id: this.patient.id,
+                currentPassword: this.currentPassword,
+                newPassword: this.newPassword
+            };
+            
+            // Send password update to server
+            axios.put(`${patientURL}/update/password`, passwordData)
+                .then(response => {
+                    // Update session storage with new data if needed
+                    if (response.data.data) {
+                        this.patient = response.data.data;
+                        sessionStorage.setItem('patient', JSON.stringify(this.patient));
+                    }
+                    this.showSaveMessage();
+                    
+                    // Clear password fields after save
+                    this.currentPassword = '';
+                    this.newPassword = '';
+                    this.confirmPassword = '';
+                })
+                .catch(error => {
+                    this.errorMessage = error.response?.data?.message || "Failed to update password.";
+                    this.showError = true;
+                    setTimeout(() => this.showError = false, 3000);
+                });
         },
         
         togglePasswordVisibility(inputId, event) {
