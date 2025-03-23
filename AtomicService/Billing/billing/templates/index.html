@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Billing Checkout</title>
+    <script src="https://js.stripe.com/v3/"></script>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="bg-light">
+    <div class="container mt-5">
+      <div class="row">
+        <!-- Left column: Patient Info & Payment -->
+        <div class="col-md-7">
+          <h2 class="mb-4">Secure Payment</h2>
+          <div class="card p-3 mb-3">
+            <h6>
+              Patient Name:
+              <span class="text-success" id="patientName">Loading...</span>
+            </h6>
+            <h6>
+              Email: <span class="text-info" id="patientEmail">Loading...</span>
+            </h6>
+          </div>
+          <button id="payButton" class="btn btn-primary w-100 mt-3">
+            Proceed to Payment
+          </button>
+        </div>
+
+        <!-- Right column: Prescription -->
+        <div class="col-md-5">
+          <div class="card p-3">
+            <h5>Prescription Summary</h5>
+            <ul class="list-group mb-3" id="prescriptionList">
+              <li class="list-group-item">Loading prescription...</li>
+            </ul>
+            <div class="d-flex justify-content-between">
+              <h6>Doctor Consultation Fee</h6>
+              <h6 class="text-success">SGD 20.00</h6>
+            </div>
+            <div class="d-flex justify-content-between mt-2">
+              <h6>Total Amount (SGD)</h6>
+              <h6 class="text-success" id="totalAmount">Calculating...</h6>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const patientId = 1;
+
+      async function fetchBillingDetails() {
+        try {
+          // 1. Get patient info from microservice
+          const patientRes = await fetch(
+            `http://localhost:5100/patient/${patientId}`
+          );
+          const patientJson = await patientRes.json();
+
+          console.log("Patient JSON:", patientJson); 
+
+          const name = patientJson.data.name;
+          const email = patientJson.data.email;
+
+     
+          document.getElementById("patientName").innerText = name;
+          document.getElementById("patientEmail").innerText = email;
+
+     
+          const presRes = await fetch("/get-prescription");
+          const prescription = await presRes.json();
+
+          const list = document.getElementById("prescriptionList");
+          list.innerHTML = "";
+
+          let totalPrice = 2000; // Consultation fee 
+
+          prescription.medicines.forEach((med) => {
+            const li = document.createElement("li");
+            li.className = "list-group-item";
+            li.innerText = `💊 ${med.name} - SGD ${(med.price / 100).toFixed(
+              2
+            )}`;
+            list.appendChild(li);
+            totalPrice += med.price;
+          });
+
+          document.getElementById("totalAmount").innerText = `SGD ${(
+            totalPrice / 100
+          ).toFixed(2)}`;
+        } catch (err) {
+          console.error("Billing fetch error:", err);
+        //document.getElementById("patientName").innerText = "Error";
+          document.getElementById("totalAmount").innerText = "50";
+        }
+      }
+
+      // 3. Payment Button Click → Call backend to create Stripe session
+      document
+        .getElementById("payButton")
+        .addEventListener("click", async function () {
+          try {
+            const res = await fetch("/create-checkout-session", {
+              method: "POST",
+              headers: {
+                "X-Patient-ID": patientId,
+              },
+            });
+            const data = await res.json();
+            if (data.url) {
+              window.location.href = data.url;
+            } else {
+              alert("Error creating Stripe session.");
+            }
+          } catch (err) {
+            alert("Payment failed.");
+            console.error(err);
+          }
+        });
+
+      // On page load
+      fetchBillingDetails();
+    </script>
+  </body>
+</html>
