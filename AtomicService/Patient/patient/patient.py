@@ -74,8 +74,6 @@ def get_patient_by_id(id):
         }
     ), 404
 
-# Replace the existing update_medical_history function with this improved version
-
 @app.route("/patient/update", methods=['PUT'])
 def update_medical_history():
     """Update a patient's medical history including allergies, medical conditions, etc."""
@@ -107,25 +105,9 @@ def update_medical_history():
             "medications": []
         }
     
-    # Define the categories we expect to update
-    categories = [
-        "allergies", 
-        "medical_conditions", 
-        "past_surgeries", 
-        "family_medical_history", 
-        "chronic_illnesses", 
-        "medications"
-    ]
+    # Update patient's medicalHistory with the entire new object
+    patient.medicalHistory = new_medical_history
     
-    # Update medical history with new data for each category
-    for category in categories:
-        if category in new_medical_history:
-            # Make sure all values are strings if they're not arrays
-            if new_medical_history[category] and not isinstance(new_medical_history[category], list):
-                patient.medicalHistory[category] = [str(new_medical_history[category])]
-            else:
-                patient.medicalHistory[category] = new_medical_history[category]
-
     try:
         db.session.commit()
         return jsonify(

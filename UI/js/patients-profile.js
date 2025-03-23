@@ -117,12 +117,11 @@ const app = Vue.createApp({
             this.medicalHistory.allergies.splice(index, 1);
         },
         
-// Replace the existing saveMedicalInfo method with this improved version
 
         saveMedicalInfo() {
-            // Convert text fields to arrays where needed
+    // Make sure allergies is explicitly initialized as an array, even if empty
             const updatedMedicalHistory = {
-                allergies: this.medicalHistory.allergies || [],
+                allergies: Array.isArray(this.medicalHistory.allergies) ? [...this.medicalHistory.allergies] : [],
                 medical_conditions: this.stringToArray(this.medicalHistory.medical_conditions),
                 past_surgeries: this.stringToArray(this.medicalHistory.past_surgeries),
                 family_medical_history: this.stringToArray(this.medicalHistory.family_medical_history),
@@ -132,7 +131,6 @@ const app = Vue.createApp({
             
             console.log('Sending medical history update:', updatedMedicalHistory);
             
-            // Send update to server
             axios.put(`${patientURL}/update`, {
                 id: this.patient.id,
                 medicalHistory: updatedMedicalHistory
@@ -140,14 +138,11 @@ const app = Vue.createApp({
             .then(response => {
                 console.log('Medical history update response:', response.data);
                 
-                // Update the patient data with the response
                 this.patient.medicalHistory = response.data.data.medicalHistory;
                 sessionStorage.setItem('patient', JSON.stringify(this.patient));
                 
-                // Update the local medical history
                 this.medicalHistory = { ...this.patient.medicalHistory };
                 
-                // Convert arrays back to strings for textarea fields
                 if (Array.isArray(this.medicalHistory.medical_conditions)) {
                     this.medicalHistory.medical_conditions = this.medicalHistory.medical_conditions.join(', ');
                 }
@@ -175,7 +170,6 @@ const app = Vue.createApp({
         },
         
         updatePassword() {
-            // Check if passwords match
             if (this.newPassword !== this.confirmPassword) {
                 this.errorMessage = "Passwords do not match.";
                 this.showError = true;
@@ -183,7 +177,6 @@ const app = Vue.createApp({
                 return;
             }
             
-            // Check if the current password is provided
             if (!this.currentPassword) {
                 this.errorMessage = "Current password is required.";
                 this.showError = true;
@@ -191,7 +184,6 @@ const app = Vue.createApp({
                 return;
             }
             
-            // Check if the new password is long enough
             if (this.newPassword.length < 6) {
                 this.errorMessage = "New password must be at least 6 characters.";
                 this.showError = true;
@@ -199,14 +191,12 @@ const app = Vue.createApp({
                 return;
             }
             
-            // Prepare data for password update
             const passwordData = {
                 id: this.patient.id,
                 currentPassword: this.currentPassword,
                 newPassword: this.newPassword
             };
             
-            // Send password update to server
             axios.put(`${patientURL}/update/password`, passwordData)
                 .then(response => {
                     // Update session storage with new data if needed
