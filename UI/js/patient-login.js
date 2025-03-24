@@ -7,6 +7,8 @@ const app = Vue.createApp({
             password: '',
             wrong: false,
             error: '',
+            passwordVisible: false  
+
         }
     },
 
@@ -38,6 +40,9 @@ const app = Vue.createApp({
                     this.wrong = true;
                     this.error = error.response.data.message || "Login failed. Please check your credentials.";
                 })
+        },
+         togglePasswordVisibility() {
+        this.passwordVisible = !this.passwordVisible;
         },
     },
 
