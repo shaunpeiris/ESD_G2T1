@@ -74,6 +74,68 @@ def get_patient_by_id(id):
         }
     ), 404
 
+@app.route("/patient/create", methods=['POST', 'OPTIONS'])
+def create_patient():
+    """Create a new patient account"""
+    if request.method == 'OPTIONS':
+        return '', 200
+        
+    data = request.get_json()
+    
+    # Validate required fields
+    if not all(key in data for key in ('name', 'email', 'password')):
+        return jsonify(
+            {
+                "code": 400,
+                "message": "Missing required fields"
+            }
+        ), 400
+    
+    # Check if email already exists
+    existing_patient = db.session.scalars(
+        db.select(Patient).filter_by(email=data["email"]).
+        limit(1)
+    ).first()
+    
+    if existing_patient:
+        return jsonify(
+            {
+                "code": 409,
+                "message": "A user with this email already exists"
+            }
+        ), 409
+    
+    # Create new patient
+    new_patient = Patient(
+        id=None,  # Auto-increment will handle this
+        name=data["name"],
+        email=data["email"],
+        password=data["password"],
+        medicalHistory=data.get("medicalHistory", None)
+    )
+    
+    try:
+        db.session.add(new_patient)
+        db.session.commit()
+        
+        return jsonify(
+            {
+                "code": 201,
+                "message": "Patient account created successfully",
+                "data": new_patient.json()
+            }
+        ), 201
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error creating patient: {str(e)}")
+        return jsonify(
+            {
+                "code": 500,
+                "message": "An error occurred creating the patient account"
+            }
+        ), 500
+
+
 @app.route("/patient/update", methods=['PUT', 'OPTIONS'])
 def update_medical_history():
     """Update a patient's medical history including allergies, medical conditions, etc."""
