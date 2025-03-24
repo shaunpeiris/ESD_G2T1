@@ -4,8 +4,7 @@ from os import environ # need to add to our environment variables later
 from flask_cors import CORS
 
 app = Flask(__name__)
-# Update CORS configuration to explicitly allow your frontend origin
-# CORS(app, resources={r"/*": {"origins": ["http://localhost:8000"], "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"], "allow_headers": ["Content-Type", "Authorization"]}})
+
 CORS(app)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://root@localhost:3306/patientdb'
 # app.config['SQLALCHEMY_DATABASE_URI'] = environ.get('dbURL')
@@ -17,7 +16,7 @@ db = SQLAlchemy(app)
 class Patient(db.Model):
     __tablename__ = 'patient'
 
-    id = db.Column(db.String(64), primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(64), nullable=False)
     email = db.Column(db.String(64), nullable=False)
     password = db.Column(db.String(64), nullable=False)

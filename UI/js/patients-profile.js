@@ -1,4 +1,4 @@
-const patientURL = 'http://localhost:5000/patient';
+const patientURL = 'http://127.0.0.1:5000/patient';
 
 const app = Vue.createApp({
     data() {
