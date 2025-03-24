@@ -8,7 +8,6 @@ const app = Vue.createApp({
             wrong: false,
             error: '',
             passwordVisible: false  
-
         }
     },
 
@@ -21,13 +20,18 @@ const app = Vue.createApp({
             }
         },
 
-        login() {
+        login(event) {
+            // Prevent the default form submission behavior
+            if (event) event.preventDefault();
+            
             let params = {
                 email: this.email,
                 password: this.password
             }
             
-            loginURL = patientURL + '/login';
+            // Make sure this variable is properly defined with 'const' or 'let'
+            const loginURL = patientURL + '/login';
+            
             axios.post(loginURL, params)
                 .then((response) => {
                     let patient = response.data.data;
@@ -38,11 +42,16 @@ const app = Vue.createApp({
                 })
                 .catch((error) => {
                     this.wrong = true;
-                    this.error = error.response.data.message || "Login failed. Please check your credentials.";
-                })
+                    // Set a default error message if the server response doesn't contain one
+                    this.error = (error.response && error.response.data && error.response.data.message) 
+                        ? error.response.data.message 
+                        : "Login failed. Please check your credentials.";
+                    console.error("Login error:", error);
+                });
         },
-         togglePasswordVisibility() {
-        this.passwordVisible = !this.passwordVisible;
+        
+        togglePasswordVisibility() {
+            this.passwordVisible = !this.passwordVisible;
         },
     },
 

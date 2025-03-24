@@ -4,8 +4,9 @@ from os import environ # need to add to our environment variables later
 from flask_cors import CORS
 
 app = Flask(__name__)
+# Update CORS configuration to explicitly allow your frontend origin
+# CORS(app, resources={r"/*": {"origins": ["http://localhost:8000"], "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"], "allow_headers": ["Content-Type", "Authorization"]}})
 CORS(app)
-
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://root@localhost:3306/patientdb'
 # app.config['SQLALCHEMY_DATABASE_URI'] = environ.get('dbURL')
 
@@ -74,9 +75,12 @@ def get_patient_by_id(id):
         }
     ), 404
 
-@app.route("/patient/update", methods=['PUT'])
+@app.route("/patient/update", methods=['PUT', 'OPTIONS'])
 def update_medical_history():
     """Update a patient's medical history including allergies, medical conditions, etc."""
+    if request.method == 'OPTIONS':
+        return '', 200
+        
     data = request.get_json()
     id = data["id"]
     new_medical_history = data["medicalHistory"]
@@ -126,9 +130,11 @@ def update_medical_history():
             }
         ), 500
 
-@app.route("/patient/login", methods=['POST'])
+@app.route("/patient/login", methods=['POST', 'OPTIONS'])
 def login():
-
+    if request.method == 'OPTIONS':
+        return '', 200
+        
     data = request.get_json()
     email = data["email"]
     password = data["password"]
@@ -151,9 +157,12 @@ def login():
         }
     ), 404
 
-@app.route("/patient/update/personal", methods=['PUT'])
+@app.route("/patient/update/personal", methods=['PUT', 'OPTIONS'])
 def update_personal_info():
     """Update a patient's personal information (name and email)"""
+    if request.method == 'OPTIONS':
+        return '', 200
+        
     data = request.get_json()
     id = data["id"]
     new_name = data.get("name")
@@ -196,9 +205,12 @@ def update_personal_info():
         }
     ), 200
 
-@app.route("/patient/update/password", methods=['PUT'])
+@app.route("/patient/update/password", methods=['PUT', 'OPTIONS'])
 def update_password():
     """Update a patient's password"""
+    if request.method == 'OPTIONS':
+        return '', 200
+        
     data = request.get_json()
     id = data["id"]
     current_password = data["currentPassword"]
