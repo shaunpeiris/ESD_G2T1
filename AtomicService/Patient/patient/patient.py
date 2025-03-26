@@ -5,9 +5,10 @@ from flask_cors import CORS
 
 app = Flask(__name__)
 
-CORS(app) 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://root@localhost:3306/patientdb'
-#app.config['SQLALCHEMY_DATABASE_URI'] = environ.get('dbURL')
+CORS(app)
+db_uri = environ.get('dbURL') 
+app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
+# app.config['SQLALCHEMY_DATABASE_URI'] = environ.get('dbURL')
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 

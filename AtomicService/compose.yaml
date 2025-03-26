@@ -5,14 +5,13 @@ services:
   #################################
   patient:
     build: ./Patient/patient
-    image: esd_g2t1-php-apache:latest
+    image: ESDG2T1/patient:1.0
     restart: always
-    ports:
-      - "5001:5000"
+    ports: [ 8501:5000 ]
     depends_on:
       - patient_db
     environment:
-      dbURL: mysql+mysqlconnector://root@host.docker.internal:3301/patientdb
+      dbURL: mysql+mysqlconnector://root@host.docker.internal:3306/patientdb
 
   #################################
   # Patient SQL Database
@@ -20,8 +19,7 @@ services:
   patient_db:
     image: mysql:latest
     restart: always
-    ports:
-      - "3301:3306"
+    ports: [ 3301:3306 ]
     environment:
       MYSQL_ALLOW_EMPTY_PASSWORD: yes
     volumes:
