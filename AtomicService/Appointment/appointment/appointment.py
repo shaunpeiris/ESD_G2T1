@@ -3,9 +3,6 @@ from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from os import environ
-import mysql.connector
-
-
 
 app = Flask(__name__)
 CORS(app)
@@ -20,8 +17,8 @@ class Appointment(db.Model):
     __tablename__ = 'appointment'
 
     appointment_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    patient_id = db.Column(db.Integer, db.ForeignKey('patient.id'),nullable=False)
-    doctor_id = db.Column(db.Integer, nullable=False)
+    patient_id = db.Column(db.Integer, nullable=False)
+    doctor_id = db.Column(db.String(4), nullable=False)
     appointment_date = db.Column(db.Date, nullable=False)
 
     start_time = db.Column(db.DateTime, nullable=False)
@@ -331,39 +328,3 @@ if __name__ == '__main__':
 #             "code": 500,
 #             "message": f"An error occurred deleting the appointment: {str(e)}"
 #         }), 500
-
-
-
-
-
-
-
-#run this in compose.yaml 
-
-  #################################
-  # Appointment Microservice
-  #################################
-#   appointment:
-#     build: ./Appointment/appointment
-#     image: kylieyang/appointment:1.0
-#     container_name: appointment
-#     restart: always
-#     ports:
-#       - "5002:5001"
-#     depends_on:
-#       - appointment_db
-#     environment:
-#       dbURL: mysql+mysqlconnector://appointment.user@host.docker.internal:3302/appointment
-
-#     #################################
-#   # appointment SQL Database
-#   #################################
-#   appointment_db:
-#     image: mysql:latest
-#     restart: always
-#     ports:
-#       - "3302:3306"
-#     environment:
-#       MYSQL_ALLOW_EMPTY_PASSWORD: yes
-#     volumes:
-#       - ./Appointment/db/appointment.sql:/docker-entrypoint-initdb.d/init.sql
