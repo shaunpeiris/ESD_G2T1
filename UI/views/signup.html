@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HealthConnect | Sign Up</title>
+    <title>MediSync | Sign Up</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <style>
@@ -79,88 +79,163 @@
                         <p class="text-muted">Join MediSync to manage your healthcare</p>
                     </div>
                     
-                    <form id="signupForm" novalidate>
-                        <!-- Email Address -->
-                        <div class="mb-4">
-                            <div class="form-floating">
-                                <input type="email" class="form-control" id="email" placeholder="name@example.com" required>
-                                <label for="email">Email address</label>
-                                <div class="invalid-feedback">
-                                    Please provide a valid email address.
+                    <!-- Success message alert -->
+                    <div id="signup-form">
+                        <div v-if="submitSuccess" class="alert alert-success" role="alert">
+                            <h4 class="alert-heading"><i class="bi bi-check-circle-fill me-2"></i>Account Created Successfully!</h4>
+                            <p>Your MediSync account has been created. You will be redirected to the login page in {{ redirectCountdown }} seconds.</p>
+                            <hr>
+                            <p class="mb-0">
+                                <a href="login.html" class="alert-link">Click here</a> if you're not redirected automatically.
+                            </p>
+                        </div>
+                        
+                        <!-- Error message alert -->
+                        <div v-if="submitError" class="alert alert-danger" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ submitError }}
+                        </div>
+                        
+                        <form @submit.prevent="submitForm" v-if="!submitSuccess" novalidate>
+                            <!-- First Name -->
+                            <div class="mb-4">
+                                <div class="form-floating">
+                                    <input 
+                                        type="text" 
+                                        class="form-control" 
+                                        :class="{'is-invalid': formErrors.firstName}" 
+                                        id="firstName" 
+                                        placeholder="First Name" 
+                                        v-model="firstName"
+                                        @input="clearInvalidClass('firstName')"
+                                        required>
+                                    <label for="firstName">First Name</label>
+                                    <div class="invalid-feedback">
+                                        {{ formErrors.firstName }}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        
-                        <!-- Password -->
-                        <div class="mb-4">
-                            <div class="form-floating position-relative">
-                                <input type="password" class="form-control" id="password" placeholder="Password" required>
-                                <label for="password">Password</label>
-                                <span class="password-toggle" id="togglePassword">
-                                    <i class="bi bi-eye-slash"></i>
-                                </span>
-                                <div class="invalid-feedback">
-                                    Password must be at least 8 characters.
+                            
+                            <!-- Last Name -->
+                            <div class="mb-4">
+                                <div class="form-floating">
+                                    <input 
+                                        type="text" 
+                                        class="form-control" 
+                                        :class="{'is-invalid': formErrors.lastName}" 
+                                        id="lastName" 
+                                        placeholder="Last Name" 
+                                        v-model="lastName"
+                                        @input="clearInvalidClass('lastName')"
+                                        required>
+                                    <label for="lastName">Last Name</label>
+                                    <div class="invalid-feedback">
+                                        {{ formErrors.lastName }}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        
-                        <!-- Confirm Password -->
-                        <div class="mb-4">
-                            <div class="form-floating position-relative">
-                                <input type="password" class="form-control" id="confirmPassword" placeholder="Confirm Password" required>
-                                <label for="confirmPassword">Confirm Password</label>
-                                <span class="password-toggle" id="toggleConfirmPassword">
-                                    <i class="bi bi-eye-slash"></i>
-                                </span>
-                                <div class="invalid-feedback">
-                                    Passwords do not match.
+                            
+                            <!-- Email Address -->
+                            <div class="mb-4">
+                                <div class="form-floating">
+                                    <input 
+                                        type="email" 
+                                        class="form-control" 
+                                        :class="{'is-invalid': formErrors.email}" 
+                                        id="email" 
+                                        placeholder="name@example.com" 
+                                        v-model="email"
+                                        @input="clearInvalidClass('email')"
+                                        required>
+                                    <label for="email">Email address</label>
+                                    <div class="invalid-feedback">
+                                        {{ formErrors.email }}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        
-                        <!-- Phone Number -->
-                        <div class="mb-4">
-                            <div class="form-floating">
-                                <input type="tel" class="form-control" id="phone" placeholder="Phone Number" required>
-                                <label for="phone">Phone Number</label>
-                                <div class="invalid-feedback">
-                                    Please provide a valid phone number.
+                            
+                            <!-- Password -->
+                            <div class="mb-4">
+                                <div class="form-floating position-relative">
+                                    <input 
+                                        :type="passwordVisible ? 'text' : 'password'" 
+                                        class="form-control" 
+                                        :class="{'is-invalid': formErrors.password}" 
+                                        id="password" 
+                                        placeholder="Password" 
+                                        v-model="password"
+                                        @input="clearInvalidClass('password')"
+                                        required>
+                                    <label for="password">Password</label>
+                                    <span class="password-toggle" @click="togglePasswordVisibility('password')">
+                                        <i :class="passwordVisible ? 'bi bi-eye' : 'bi bi-eye-slash'"></i>
+                                    </span>
+                                    <div class="invalid-feedback">
+                                        {{ formErrors.password }}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        
-                        <!-- Date of Birth -->
-                        <div class="mb-4">
-                            <div class="form-floating">
-                                <input type="date" class="form-control" id="dob" placeholder="Date of Birth" required>
-                                <label for="dob">Date of Birth</label>
-                                <div class="invalid-feedback">
-                                    Please provide your date of birth.
+                            
+                            <!-- Confirm Password -->
+                            <div class="mb-4">
+                                <div class="form-floating position-relative">
+                                    <input 
+                                        :type="confirmPasswordVisible ? 'text' : 'password'" 
+                                        class="form-control" 
+                                        :class="{'is-invalid': formErrors.confirmPassword}" 
+                                        id="confirmPassword" 
+                                        placeholder="Confirm Password" 
+                                        v-model="confirmPassword"
+                                        @input="clearInvalidClass('confirmPassword')"
+                                        required>
+                                    <label for="confirmPassword">Confirm Password</label>
+                                    <span class="password-toggle" @click="togglePasswordVisibility('confirmPassword')">
+                                        <i :class="confirmPasswordVisible ? 'bi bi-eye' : 'bi bi-eye-slash'"></i>
+                                    </span>
+                                    <div class="invalid-feedback">
+                                        {{ formErrors.confirmPassword }}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        
-                        <div class="mb-4">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" value="" id="termsAgree" required>
-                                <label class="form-check-label" for="termsAgree">
-                                    I agree to the <a href="#" class="text-decoration-none">Terms of Service</a> and <a href="#" class="text-decoration-none">Privacy Policy</a>
-                                </label>
-                                <div class="invalid-feedback">
-                                    You must agree to the terms and conditions.
+                            
+                            <!-- Terms & Conditions -->
+                            <div class="mb-4">
+                                <div class="form-check">
+                                    <input 
+                                        class="form-check-input" 
+                                        :class="{'is-invalid': formErrors.terms}" 
+                                        type="checkbox" 
+                                        id="terms" 
+                                        v-model="termsAgreed"
+                                        @change="clearInvalidClass('terms')"
+                                        required>
+                                    <label class="form-check-label" for="terms">
+                                        I agree to the <a href="#" class="text-decoration-none">Terms of Service</a> and <a href="#" class="text-decoration-none">Privacy Policy</a>
+                                    </label>
+                                    <div class="invalid-feedback">
+                                        {{ formErrors.terms }}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        
-                        <div class="d-grid mb-4">
-                            <button type="submit" class="btn btn-primary btn-lg">Create Account</button>
-                        </div>
-                        
-                        <div class="text-center">
-                            <p class="mb-0">Already have an account? <a href="login.html" class="text-decoration-none">Sign in</a></p>
-                        </div>
-                    </form>
+                            
+                            <!-- Submit Button -->
+                            <div class="d-grid mb-4">
+                                <button 
+                                    type="submit" 
+                                    class="btn btn-primary btn-lg" 
+                                    :disabled="isSubmitting">
+                                    <span v-if="isSubmitting">
+                                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                        Creating Account...
+                                    </span>
+                                    <span v-else>Create Account</span>
+                                </button>
+                            </div>
+                            
+                            <div class="text-center">
+                                <p class="mb-0">Already have an account? <a href="login.html" class="text-decoration-none">Sign in</a></p>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
@@ -182,92 +257,10 @@
         </div>
     </footer>
 
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.2.31/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Password visibility toggle
-        document.getElementById('togglePassword').addEventListener('click', function() {
-            togglePasswordVisibility('password', this);
-        });
-        
-        document.getElementById('toggleConfirmPassword').addEventListener('click', function() {
-            togglePasswordVisibility('confirmPassword', this);
-        });
-        
-        function togglePasswordVisibility(inputId, toggleElement) {
-            const passwordInput = document.getElementById(inputId);
-            const icon = toggleElement.querySelector('i');
-            
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-                icon.classList.remove('bi-eye-slash');
-                icon.classList.add('bi-eye');
-            } else {
-                passwordInput.type = 'password';
-                icon.classList.remove('bi-eye');
-                icon.classList.add('bi-eye-slash');
-            }
-        }
-        
-        // Form validation
-        document.getElementById('signupForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-            
-            const form = this;
-            let isValid = true;
-            
-            // Clear previous validation
-            form.querySelectorAll('.is-invalid').forEach(el => {
-                el.classList.remove('is-invalid');
-            });
-            
-            // Validate email
-            const email = form.querySelector('#email');
-            if (!email.value || !email.value.includes('@')) {
-                email.classList.add('is-invalid');
-                isValid = false;
-            }
-            
-            // Validate password
-            const password = form.querySelector('#password');
-            if (!password.value || password.value.length < 8) {
-                password.classList.add('is-invalid');
-                isValid = false;
-            }
-            
-            // Validate confirm password
-            const confirmPassword = form.querySelector('#confirmPassword');
-            if (password.value !== confirmPassword.value) {
-                confirmPassword.classList.add('is-invalid');
-                isValid = false;
-            }
-            
-            // Validate phone
-            const phone = form.querySelector('#phone');
-            if (!phone.value) {
-                phone.classList.add('is-invalid');
-                isValid = false;
-            }
-            
-            // Validate date of birth
-            const dob = form.querySelector('#dob');
-            if (!dob.value) {
-                dob.classList.add('is-invalid');
-                isValid = false;
-            }
-            
-            // Validate terms agreement
-            const termsAgree = form.querySelector('#termsAgree');
-            if (!termsAgree.checked) {
-                termsAgree.classList.add('is-invalid');
-                isValid = false;
-            }
-            
-            if (isValid) {
-                // Form is valid, you can submit it
-                alert('Account created successfully!');
-                // form.submit(); // Uncomment this in production
-            }
-        });
-    </script>
+    <script src="../js/patient-signup.js"></script>
 </body>
 </html>

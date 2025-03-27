@@ -4,9 +4,10 @@ from os import environ # need to add to our environment variables later
 from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://root@localhost:3306/patientdb'
+CORS(app)
+db_uri = environ.get('dbURL') 
+app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
 # app.config['SQLALCHEMY_DATABASE_URI'] = environ.get('dbURL')
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -16,7 +17,7 @@ db = SQLAlchemy(app)
 class Patient(db.Model):
     __tablename__ = 'patient'
 
-    id = db.Column(db.String(64), primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(64), nullable=False)
     email = db.Column(db.String(64), nullable=False)
     password = db.Column(db.String(64), nullable=False)
@@ -74,11 +75,74 @@ def get_patient_by_id(id):
         }
     ), 404
 
-# Replace the existing update_medical_history function with this improved version
+@app.route("/patient/create", methods=['POST', 'OPTIONS'])
+def create_patient():
+    """Create a new patient account"""
+    if request.method == 'OPTIONS':
+        return '', 200
+        
+    data = request.get_json()
+    
+    # Validate required fields
+    if not all(key in data for key in ('name', 'email', 'password')):
+        return jsonify(
+            {
+                "code": 400,
+                "message": "Missing required fields"
+            }
+        ), 400
+    
+    # Check if email already exists
+    existing_patient = db.session.scalars(
+        db.select(Patient).filter_by(email=data["email"]).
+        limit(1)
+    ).first()
+    
+    if existing_patient:
+        return jsonify(
+            {
+                "code": 409,
+                "message": "A user with this email already exists"
+            }
+        ), 409
+    
+    # Create new patient
+    new_patient = Patient(
+        id=None,  # Auto-increment will handle this
+        name=data["name"],
+        email=data["email"],
+        password=data["password"],
+        medicalHistory=data.get("medicalHistory", None)
+    )
+    
+    try:
+        db.session.add(new_patient)
+        db.session.commit()
+        
+        return jsonify(
+            {
+                "code": 201,
+                "message": "Patient account created successfully",
+                "data": new_patient.json()
+            }
+        ), 201
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error creating patient: {str(e)}")
+        return jsonify(
+            {
+                "code": 500,
+                "message": "An error occurred creating the patient account"
+            }
+        ), 500
 
-@app.route("/patient/update", methods=['PUT'])
+
+@app.route("/patient/update", methods=['PUT', 'OPTIONS'])
 def update_medical_history():
     """Update a patient's medical history including allergies, medical conditions, etc."""
+    if request.method == 'OPTIONS':
+        return '', 200
+        
     data = request.get_json()
     id = data["id"]
     new_medical_history = data["medicalHistory"]
@@ -107,25 +171,9 @@ def update_medical_history():
             "medications": []
         }
     
-    # Define the categories we expect to update
-    categories = [
-        "allergies", 
-        "medical_conditions", 
-        "past_surgeries", 
-        "family_medical_history", 
-        "chronic_illnesses", 
-        "medications"
-    ]
+    # Update patient's medicalHistory with the entire new object
+    patient.medicalHistory = new_medical_history
     
-    # Update medical history with new data for each category
-    for category in categories:
-        if category in new_medical_history:
-            # Make sure all values are strings if they're not arrays
-            if new_medical_history[category] and not isinstance(new_medical_history[category], list):
-                patient.medicalHistory[category] = [str(new_medical_history[category])]
-            else:
-                patient.medicalHistory[category] = new_medical_history[category]
-
     try:
         db.session.commit()
         return jsonify(
@@ -144,9 +192,11 @@ def update_medical_history():
             }
         ), 500
 
-@app.route("/patient/login", methods=['POST'])
+@app.route("/patient/login", methods=['POST', 'OPTIONS'])
 def login():
-
+    if request.method == 'OPTIONS':
+        return '', 200
+        
     data = request.get_json()
     email = data["email"]
     password = data["password"]
@@ -169,9 +219,12 @@ def login():
         }
     ), 404
 
-@app.route("/patient/update/personal", methods=['PUT'])
+@app.route("/patient/update/personal", methods=['PUT', 'OPTIONS'])
 def update_personal_info():
     """Update a patient's personal information (name and email)"""
+    if request.method == 'OPTIONS':
+        return '', 200
+        
     data = request.get_json()
     id = data["id"]
     new_name = data.get("name")
@@ -214,9 +267,12 @@ def update_personal_info():
         }
     ), 200
 
-@app.route("/patient/update/password", methods=['PUT'])
+@app.route("/patient/update/password", methods=['PUT', 'OPTIONS'])
 def update_password():
     """Update a patient's password"""
+    if request.method == 'OPTIONS':
+        return '', 200
+        
     data = request.get_json()
     id = data["id"]
     current_password = data["currentPassword"]

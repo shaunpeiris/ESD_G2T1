@@ -216,53 +216,60 @@
                                             <div class="card">
                                                 <div class="card-body p-3">
                                                     <!-- Display existing allergies as tags -->
-                                                    <div class="mb-2">
+                                                    <!-- <div class="mb-2">
                                                         <span v-if="medicalHistory.allergies && medicalHistory.allergies.length === 0" class="text-muted">No allergies recorded</span>
                                                         <span v-for="(allergy, index) in medicalHistory.allergies" :key="index" class="badge bg-warning text-dark allergy-tag px-3 py-2">
                                                             {{ allergy }}
                                                             <button type="button" class="btn-close btn-close-white ms-2" style="font-size: 0.5rem;" @click="removeAllergy(index)"></button>
                                                         </span>
+                                                    </div> -->
+
+                                                    <div class="mb-2">
+                                                        <span v-if="medicalHistory.allergies && medicalHistory.allergies.length === 0" class="text-muted">No allergies recorded</span>
+                                                        <span v-for="(allergy, index) in medicalHistory.allergies" :key="index" class="badge bg-warning text-dark allergy-tag px-3 py-2">
+                                                            {{ allergy }}
+                                                        </span>
                                                     </div>
                                                     
                                                     <!-- Add new allergy -->
-                                                    <div class="input-group mt-2">
+                                                    <!-- <div class="input-group mt-2">
                                                         <input type="text" class="form-control" placeholder="Enter allergy" v-model="newAllergy">
                                                         <button class="btn btn-outline-primary" type="button" @click="addAllergy">
                                                             <i class="bi bi-plus-circle me-1"></i> Add
                                                         </button>
-                                                    </div>
+                                                    </div> -->
                                                 </div>
                                             </div>
                                         </div>
                                         
                                         <div class="mb-3">
                                             <label for="medicalConditions" class="form-label">Medical Conditions</label>
-                                            <textarea class="form-control" id="medicalConditions" rows="3" placeholder="List any medical conditions you have" v-model="medicalHistory.medical_conditions"></textarea>
+                                            <textarea class="form-control" id="medicalConditions" rows="3" placeholder="List any medical conditions you have" v-model="medicalHistory.medical_conditions" disabled></textarea>
                                         </div>
                                         
                                         <div class="mb-3">
                                             <label for="medications" class="form-label">Current Medications</label>
-                                            <textarea class="form-control" id="medications" rows="3" placeholder="List any medications you're currently taking" v-model="medicalHistory.medications"></textarea>
+                                            <textarea class="form-control" id="medications" rows="3" placeholder="List any medications you're currently taking" v-model="medicalHistory.medications" disabled></textarea>
                                         </div>
                                         
                                         <div class="mb-3">
                                             <label for="pastSurgeries" class="form-label">Past Surgeries</label>
-                                            <textarea class="form-control" id="pastSurgeries" rows="3" placeholder="List any past surgeries" v-model="medicalHistory.past_surgeries"></textarea>
+                                            <textarea class="form-control" id="pastSurgeries" rows="3" placeholder="List any past surgeries" v-model="medicalHistory.past_surgeries" disabled></textarea>
                                         </div>
                                         
                                         <div class="mb-3">
                                             <label for="familyHistory" class="form-label">Family Medical History</label>
-                                            <textarea class="form-control" id="familyHistory" rows="3" placeholder="Describe any relevant family medical history" v-model="medicalHistory.family_medical_history"></textarea>
+                                            <textarea class="form-control" id="familyHistory" rows="3" placeholder="Describe any relevant family medical history" v-model="medicalHistory.family_medical_history" disabled></textarea>
                                         </div>
                                         
                                         <div class="mb-3">
                                             <label for="chronicIllnesses" class="form-label">Chronic Illnesses</label>
-                                            <textarea class="form-control" id="chronicIllnesses" rows="3" placeholder="List any chronic illnesses" v-model="medicalHistory.chronic_illnesses"></textarea>
+                                            <textarea class="form-control" id="chronicIllnesses" rows="3" placeholder="List any chronic illnesses" v-model="medicalHistory.chronic_illnesses" disabled></textarea>
                                         </div>
                                         
-                                        <div class="d-grid d-md-flex justify-content-md-end">
+                                        <!-- <div class="d-grid d-md-flex justify-content-md-end">
                                             <button type="submit" class="btn btn-primary px-4">Save Medical Information</button>
-                                        </div>
+                                        </div> -->
                                     </form>
                                 </div>
                                 
