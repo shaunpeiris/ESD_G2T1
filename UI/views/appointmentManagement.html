@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Appointment Management System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+    <div id="app" class="container mt-5">
+        <h1 class="mb-4 text-center">Appointment Management System</h1>
+        
+        <!-- Navigation Buttons -->
+        <div class="row mb-4 justify-content-center">
+            <div class="col-md-4 d-grid gap-2">
+                <button 
+                    @click="currentView = 'create'" 
+                    :class="['btn', currentView === 'create' ? 'btn-primary' : 'btn-outline-primary']"
+                >
+                    <i class="bi bi-plus-circle me-2"></i>Create New Appointment
+                </button>
+                <button 
+                    @click="currentView = 'patientAppointments'" 
+                    :class="['btn', currentView === 'patientAppointments' ? 'btn-success' : 'btn-outline-success']"
+                >
+                    <i class="bi bi-calendar-check me-2"></i>Patient Appointments
+                </button>
+                <button 
+                    @click="currentView = 'appointmentDetails'" 
+                    :class="['btn', currentView === 'appointmentDetails' ? 'btn-info' : 'btn-outline-info']"
+                >
+                    <i class="bi bi-search me-2"></i>Find Appointment Details
+                </button>
+            </div>
+            
+            <!-- Main Content Area -->
+            <div class="col-md-8 mt-4 mt-md-0">
+                <!-- Create Appointment Component -->
+                <div v-if="currentView === 'create'" class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h2 class="card-title mb-0">Create New Appointment</h2>
+                    </div>
+                    <div class="card-body">
+                        <form @submit.prevent="createAppointment">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Patient ID</label>
+                                    <input v-model="newAppointment.patient_id" type="number" required class="form-control">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Doctor ID</label>
+                                    <input v-model="newAppointment.doctor_id" type="text" required class="form-control">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Appointment Date</label>
+                                    <input v-model="newAppointment.appointment_date" type="date" required class="form-control">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Start Time</label>
+                                    <input v-model="newAppointment.start_time" type="datetime-local" required class="form-control">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">End Time</label>
+                                    <input v-model="newAppointment.end_time" type="datetime-local" required class="form-control">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Notes (Optional)</label>
+                                    <textarea v-model="newAppointment.notes" class="form-control"></textarea>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-calendar-plus me-2"></i>Create Appointment
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Patient Appointments Component -->
+                <div v-if="currentView === 'patientAppointments'" class="card">
+                    <div class="card-header bg-success text-white">
+                        <h2 class="card-title mb-0">Patient Appointments</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="input-group mb-3">
+                            <input v-model="patientId" type="number" required class="form-control" placeholder="Enter Patient ID">
+                            <button @click="fetchPatientAppointments" class="btn btn-success">
+                                <i class="bi bi-search me-2"></i>Fetch Appointments
+                            </button>
+                        </div>
+
+                        <div v-if="patientAppointments.length" class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Appointment ID</th>
+                                        <th>Date</th>
+                                        <th>Doctor ID</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="apt in patientAppointments" :key="apt.appointment_id">
+                                        <td>{{ apt.appointment_id }}</td>
+                                        <td>{{ apt.appointment_date }}</td>
+                                        <td>{{ apt.doctor_id }}</td>
+                                        <td>{{ apt.appointment_status }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <p v-else class="text-muted text-center">No appointments found.</p>
+                    </div>
+                </div>
+
+                <!-- Appointment Details Component -->
+                <div v-if="currentView === 'appointmentDetails'" class="card">
+                    <div class="card-header bg-info text-white">
+                        <h2 class="card-title mb-0">Appointment Details</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="input-group mb-3">
+                            <input v-model="appointmentId" type="number" required class="form-control" placeholder="Enter Appointment ID">
+                            <button @click="fetchAppointmentDetails" class="btn btn-info">
+                                <i class="bi bi-search me-2"></i>Fetch Details
+                            </button>
+                        </div>
+
+                        <div v-if="selectedAppointment" class="card mt-3">
+                            <div class="card-body">
+                                <h5 class="card-title">Appointment Information</h5>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong>Patient ID:</strong> {{ selectedAppointment.patient_id }}</p>
+                                        <p><strong>Doctor ID:</strong> {{ selectedAppointment.doctor_id }}</p>
+                                        <p><strong>Date:</strong> {{ selectedAppointment.appointment_date }}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><strong>Start Time:</strong> {{ selectedAppointment.start_time }}</p>
+                                        <p><strong>End Time:</strong> {{ selectedAppointment.end_time }}</p>
+                                        <p><strong>Status:</strong> {{ selectedAppointment.appointment_status }}</p>
+                                    </div>
+                                </div>
+                                <p><strong>Notes:</strong> {{ selectedAppointment.notes || 'No notes' }}</p>
+                            </div>
+                            <div class="card-footer">
+                                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                    <button @click="updateAppointmentStatus('SCHEDULED')" class="btn btn-outline-primary me-md-2">
+                                        <i class="bi bi-calendar-check me-2"></i>Mark as Scheduled
+                                    </button>
+                                    <button @click="updateAppointmentStatus('COMPLETED')" class="btn btn-outline-success">
+                                        <i class="bi bi-check-circle me-2"></i>Mark as Completed
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    new Vue({
+        el: '#app',
+        data: {
+            currentView: 'create',
+            newAppointment: {
+                patient_id: null,
+                doctor_id: '',
+                appointment_date: '',
+                start_time: '',
+                end_time: '',
+                notes: ''
+            },
+            patientId: null,
+            patientAppointments: [],
+            appointmentId: null,
+            selectedAppointment: null
+        },
+        methods: {
+            createAppointment() {
+                const payload = {
+                    patient_id: this.newAppointment.patient_id,
+                    doctor_id: this.newAppointment.doctor_id,
+                    appointment_date: this.newAppointment.appointment_date,
+                    start_time: new Date(this.newAppointment.start_time).toISOString(),
+                    end_time: new Date(this.newAppointment.end_time).toISOString(),
+                    notes: this.newAppointment.notes
+                };
+
+                axios.post('http://localhost:5002/appointment', payload)
+                    .then(response => {
+                        alert('Appointment created successfully!');
+                        console.log(response.data);
+                    })
+                    .catch(error => {
+                        alert('Error creating appointment: ' + error.response.data.message);
+                    });
+            },
+            fetchPatientAppointments() {
+                axios.get(`http://localhost:5002/appointment/patient/${this.patientId}`)
+                    .then(response => {
+                        this.patientAppointments = response.data.data.appointments;
+                    })
+                    .catch(error => {
+                        alert('Error fetching appointments: ' + error.response.data.message);
+                    });
+            },
+            fetchAppointmentDetails() {
+                axios.get(`http://localhost:5002/appointment/${this.appointmentId}`)
+                    .then(response => {
+                        this.selectedAppointment = response.data.data;
+                    })
+                    .catch(error => {
+                        alert('Error fetching appointment details: ' + error.response.data.message);
+                    });
+            },
+            updateAppointmentStatus(status) {
+                if (!this.selectedAppointment) return;
+
+                axios.patch(`http://localhost:5002/appointment/${this.selectedAppointment.appointment_id}/status`, { status })
+                    .then(response => {
+                        alert(`Appointment marked as ${status}`);
+                        this.selectedAppointment = response.data.data;
+                    })
+                    .catch(error => {
+                        alert('Error updating appointment status: ' + error.response.data.message);
+                    });
+            }
+        }
+    });
+    </script>
+</body>
+</html>
