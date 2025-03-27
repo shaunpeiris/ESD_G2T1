@@ -25,13 +25,12 @@ services:
     volumes:
       - ./Patient/db/patient.sql:/docker-entrypoint-initdb.d/init.sql
 
-    #################################
+  #################################
   # Appointment Microservice
   #################################
   appointment:
     build: ./Appointment/appointment
     image: ESDG2T1/appointment:1.0
-    #container_name: appointment
     restart: always
     ports:
       - "5002:5001"
@@ -40,9 +39,9 @@ services:
     environment:
       dbURL: mysql+mysqlconnector://root@host.docker.internal:3306/appointmentdb
 
-#     #################################
-#   # appointment SQL Database
-#   #################################
+  #################################
+  # Appointment SQL Database
+  #################################
   appointment_db:
     image: mysql:latest
     restart: always
@@ -52,3 +51,30 @@ services:
       MYSQL_ALLOW_EMPTY_PASSWORD: yes
     volumes:
       - ./Appointment/db/appointment.sql:/docker-entrypoint-initdb.d/init.sql
+
+  #################################
+  # Prescription Microservice
+  #################################
+  prescription:
+    build: ./Prescription/prescription
+    image: ESDG2T1/prescription:1.0
+    restart: always
+    ports:
+      - "5003:5002"
+    depends_on:
+      - prescription_db
+    environment:
+      dbURL: mysql+mysqlconnector://root@host.docker.internal:3306/prescriptiondb
+
+  #################################
+  # Prescription SQL Database
+  #################################
+  prescription_db:
+    image: mysql:latest
+    restart: always
+    ports:
+      - "3303:3306"
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: yes
+    volumes:
+      - ./Prescription/db/prescription.sql:/docker-entrypoint-initdb.d/init.sql
