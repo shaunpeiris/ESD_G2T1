@@ -1,16 +1,18 @@
  -- Uncomment the following lines to drop the table if it exists and create a new one:
-    DROP TABLE IF EXISTS Prescription;
-    
-CREATE TABLE IF NOT EXISTS Prescription (
-        PrescriptionID INT NOT NULL AUTO_INCREMENT,
-        Medicine JSON NOT NULL,
-        AppointmentID INT,
-        PRIMARY KEY (PrescriptionID)
+CREATE DATABASE IF NOT EXISTS prescriptiondb;
+
+USE prescriptiondb;
+
+CREATE TABLE IF NOT EXISTS prescription (
+        prescriptionID INT PRIMARY KEY AUTO_INCREMENT,
+        medicine JSON NOT NULL,
+        appointmentID INT,
+        status BOOLEAN DEFAULT FALSE
         -- ,FOREIGN KEY (AppointmentID) REFERENCES Appointment(AppointmentID)
     );
     
     -- Insert sample data into Prescription table
-    INSERT INTO Prescription (Medicine, AppointmentID)
+    INSERT INTO prescription (medicine, appointmentID)
     VALUES 
       ('{"medications": [{"name": "Paracetamol", "dose": "500mg", "frequency": "twice a day"}]}', 1),
       ('{"medications": [{"name": "Ibuprofen", "dose": "200mg", "frequency": "three times a day"}]}', 2),
