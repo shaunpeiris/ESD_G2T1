@@ -277,10 +277,10 @@ def start_listening():
 if __name__ == "__main__":
     print("This is flask " + os.path.basename(__file__) + " for processing prescriptions...")
     
-    # Start the RabbitMQ listener in a separate thread
-    import threading
-    listener_thread = threading.Thread(target=start_listening)
-    listener_thread.daemon = True
-    listener_thread.start()
+    # # Start the RabbitMQ listener in a separate thread
+    # import threading
+    # listener_thread = threading.Thread(target=start_listening)
+    # listener_thread.daemon = True
+    # listener_thread.start()
     
     app.run(host="0.0.0.0", port=5100, debug=True)

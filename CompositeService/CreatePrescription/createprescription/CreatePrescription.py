@@ -173,21 +173,20 @@ def processCreatePrescription(prescription_data):
     
     # 5. Create prescription record
     # Format the medicine data to match your database structure
+# With this simpler version:
     formatted_prescription_data = {
-            "appointmentID": appointment_id,  # Original camelCase key
-            "appointment_id": appointment_id,  # Added snake_case key
-            "medicine": formatted_medicines,   # Direct format
-            # Also include nested format for backward compatibility
-            "medications": formatted_medicines  # Alternative key
+        "appointmentID": appointment_id,
+        "appointment_id": appointment_id,
+        "medicine": formatted_medicines,  # Include "medicine" key
+        "medications": formatted_medicines  # Also include "medications" key
     }
-
     print('\n-----Debug: Formatted prescription data-----')
     print(json.dumps(formatted_prescription_data, indent=2))
-    
+
     print('\n-----Invoking prescription microservice to create prescription-----')
     prescription_result = invoke_http(prescription_URL, method='POST', json=formatted_prescription_data)
     print('prescription_result:', prescription_result)
-    
+        
     code = prescription_result["code"]
     if code not in range(200, 300):
         return {

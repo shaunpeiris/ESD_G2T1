@@ -69,40 +69,59 @@ def validate_medicine(target, value, oldvalue, initiator):
             raise ValueError("Medication must contain 'name' and 'quantity' fields")
 
 @app.route("/prescription", methods=['POST'])
+@app.route("/prescription/new", methods=['POST'])  # Adding a /new endpoint for compatibility
 def create_or_update_prescription():
     """
     This endpoint is used by the "Create Prescription" Composite microservice.
     It accepts both camelCase and snake_case keys and various medicine formats.
+    The /new route is added for compatibility with some versions of the client.
     """
     # First, log the incoming data for debugging
-    print("Received prescription data:", request.json)
+    print("===== PRESCRIPTION DEBUG =====")
+    print("Received prescription data:", json.dumps(request.json, indent=2))
+    print("Content-Type:", request.headers.get('Content-Type'))
+    print("Request method:", request.method)
+    print("Request path:", request.path)
     
     # Extract data using both snake_case and camelCase keys
     appointment_id = request.json.get('appointmentID') or request.json.get('appointment_id')
+    print("Extracted appointment_id:", appointment_id)
     
     # Handle medicine data that could be nested or direct
     medicine_data = request.json.get('medicine')
+    medications = request.json.get('medications')
+    
+    print("Raw medicine_data:", json.dumps(medicine_data, indent=2) if medicine_data else None)
+    print("Raw medications:", json.dumps(medications, indent=2) if medications else None)
 
     # Add validation for medicine format
-    if not isinstance(medicine, list):
+    print("Type of medicine_data:", type(medicine_data).__name__ if medicine_data else None)
+    print("Type of medications:", type(medications).__name__ if medications else None)
+    
+    if isinstance(medicine_data, list):
+        print("Processing medicine_data as a list")
+        medicine = {"medications": medicine_data}
+    elif isinstance(medicine_data, dict) and 'medications' in medicine_data:
+        print("Processing medicine_data as a dict with 'medications' key")
+        medicine = medicine_data
+    elif isinstance(medications, list):
+        print("Processing 'medications' directly as a list")
+        medicine = {"medications": medications}
+    else:
+        print("Invalid medicine format, cannot process")
+        print("medicine_data:", medicine_data)
+        print("medications:", medications)
         return jsonify({
             "code": 400,
-            "message": "Medicine data must be a list of medication objects"
+            "message": "Medicine data must be a list of medication objects or a dictionary with 'medications' key"
         }), 400
         
-    for med in medicine:
+    for med in medicine["medications"]:
         if not isinstance(med, dict) or 'name' not in med or 'quantity' not in med:
             return jsonify({
                 "code": 400,
                 "message": "Each medication must be an object with 'name' and 'quantity'"
             }), 400
-
-    if isinstance(medicine_data, dict) and 'medications' in medicine_data:
-        # Extract from nested structure
-        medicine = medicine_data.get('medications')
-    else:
-        # Use as is
-        medicine = medicine_data
     
     print(f"Extracted appointment_id: {appointment_id}")
     print(f"Extracted medicine: {medicine}")
@@ -120,34 +139,25 @@ def create_or_update_prescription():
             "message": "Missing medicine information - check the format of your request."
         }), 400
 
-    status = request.json.get('status', False)  # Default to False if not provided
+    # Always set status to False for new prescriptions
+    # status = False
     
-    # Check if a prescription already exists for the given appointment ID
-    prescription = Prescription.query.filter_by(appointment_id=appointment_id).first()
-    
-    if prescription:
-        # Update existing prescription
-        prescription.medicine = medicine
-        prescription.status = status  # Update status if provided
-        message = "Prescription updated"
-    else:
-        # Create new prescription
-        prescription = Prescription(
-            appointment_id=appointment_id, 
-            medicine=medicine,
-            status=status  # Set status on creation
-        )
-        db.session.add(prescription)
-        message = "Prescription created"
+    # CHANGED: Always create a new prescription, regardless of whether one exists for this appointment_id
+    prescription = Prescription(
+        appointment_id=appointment_id, 
+        medicine=medicine,
+        status=0  # Always set status to False on creation
+    )
+    db.session.add(prescription)
+    message = "Prescription created"
     
     try:
         db.session.commit()
         # Ensure the ID is included in the response
         response_data = prescription.json()
-        # Double-check that ID is included in multiple formats
-        if hasattr(prescription, 'id'):
-            response_data['id'] = prescription.id
-            response_data['prescription_id'] = prescription.id
+        # Add ID in multiple formats for compatibility
+        response_data['id'] = prescription.prescription_id
+        response_data['prescription_id'] = prescription.prescription_id
         
         return jsonify({
             "code": 200,
