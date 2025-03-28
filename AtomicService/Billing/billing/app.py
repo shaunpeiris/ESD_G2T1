@@ -3,6 +3,7 @@ import stripe
 from flask_sqlalchemy import SQLAlchemy
 import requests
 from dotenv import load_dotenv
+from os import environ
 import os
 
 # Load environment variables from .env
@@ -11,21 +12,21 @@ load_dotenv()
 app = Flask(__name__, template_folder="templates")
 
 # Database Configuration
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DB_URI")
+app.config['SQLALCHEMY_DATABASE_URI'] =  environ.get('dbURL') 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {'pool_recycle': 299}
 
 db = SQLAlchemy(app)
 
 # Stripe Configuration
-STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
-STRIPE_PUBLISHABLE_KEY = os.getenv("STRIPE_PUBLISHABLE_KEY")
-STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")
+STRIPE_SECRET_KEY = environ.get("STRIPE_SECRET_KEY")
+STRIPE_PUBLISHABLE_KEY = environ.get("STRIPE_PUBLISHABLE_KEY")
+STRIPE_WEBHOOK_SECRET = environ.get("STRIPE_WEBHOOK_SECRET")
 stripe.api_key = STRIPE_SECRET_KEY
 
 # Microservice & domain config
-YOUR_DOMAIN = os.getenv("YOUR_DOMAIN")
-PATIENT_MICROSERVICE_URL = os.getenv("PATIENT_MICROSERVICE_URL")
+YOUR_DOMAIN = environ.get("YOUR_DOMAIN")
+PATIENT_MICROSERVICE_URL = environ.get("PATIENT_MICROSERVICE_URL")
 
 # Dummy Prescription Data
 DUMMY_PRESCRIPTION = {
@@ -193,7 +194,7 @@ def stripe_webhook():
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()
-    app.run(debug=True, port=5003)
+    app.run(debug=True, port=5004)
 
 
 

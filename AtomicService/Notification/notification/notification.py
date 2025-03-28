@@ -3,17 +3,18 @@ from twilio.rest import Client
 from dotenv import load_dotenv
 import smtplib
 from email.mime.text import MIMEText
+from os import environ
 import os
 
 app = Flask(__name__)
 
 # Environment Variables
-TWILIO_SID = os.getenv("TWILIO_ACCOUNT_SID")
-TWILIO_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
-TWILIO_PHONE = os.getenv("TWILIO_PHONE_NUMBER")
+TWILIO_SID = environ.get("TWILIO_ACCOUNT_SID")
+TWILIO_TOKEN = environ.get("TWILIO_AUTH_TOKEN")
+TWILIO_PHONE = environ.get("TWILIO_PHONE_NUMBER")
 
-GMAIL_USER = os.getenv("GMAIL_USERNAME")
-GMAIL_PASS = os.getenv("GMAIL_PASSWORD")
+GMAIL_USER = environ.get("GMAIL_USERNAME")
+GMAIL_PASS = environ.get("GMAIL_PASSWORD")
 load_dotenv()
 notifications = {}
 
@@ -92,7 +93,7 @@ def resend_notification(notif_id):
 
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5200)
+    app.run(debug=True, port=5005)
 
 
 ######Use this to trigger notifications in your microservice######

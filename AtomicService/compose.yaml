@@ -96,3 +96,55 @@ services:
 networks:
   atomic_network:
     driver: bridge
+
+  #################################
+  # Billing Microservice
+  #################################
+  billing:
+    build: ./Billing/billing
+    image: ESDG2T1/billing:1.0
+    restart: always
+    ports:
+      - "5004:5004"
+    depends_on:
+      - billing_db
+    environment:
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
+      YOUR_DOMAIN: ${YOUR_DOMAIN}
+      PATIENT_MICROSERVICE_URL: ${PATIENT_MICROSERVICE_URL}
+      dbURL: mysql+mysqlconnector://root@host.docker.internal:3306/billing  
+    env_file:
+      - .env
+
+  #################################
+  # Billing SQL Database
+  #################################
+  billing_db:
+    image: mysql:latest
+    restart: always
+    ports:
+      - "3304:3306"
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: yes
+    volumes:
+      - ./Billing/db/billing.sql:/docker-entrypoint-initdb.d/init.sql
+
+  #################################
+  # Notification Microservice
+  #################################
+  notification:
+    build: ./Notification/notification  
+    image: ESDG2T1/notification:1.0
+    restart: always
+    ports:
+      - "5005:5005"
+    environment:
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN}
+      TWILIO_PHONE_NUMBER: ${TWILIO_PHONE_NUMBER}
+      GMAIL_USERNAME: ${GMAIL_USERNAME}
+      GMAIL_PASSWORD: ${GMAIL_PASSWORD}
+    env_file:
+      - .env
