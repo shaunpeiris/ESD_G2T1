@@ -153,7 +153,7 @@ services:
     image: ESDG2T1/availability:1.0
     restart: always
     ports:
-      - "5004:5000"
+      - "5024:5000"
     environment:
       dbURL: GOOGLE_APPLICATION_CREDENTIALS=/app/serviceAccountKey.json
     networks:
