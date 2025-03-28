@@ -1,17 +1,19 @@
 services:
-
   #################################
   # Patient Microservice
   #################################
   patient:
     build: ./Patient/patient
-    image: ESDG2T1/patient:1.0
+    image: esdg2t1/patient:1.0
     restart: always
-    ports: [5001:5001]
+    ports:
+      - "8501:5000"
     depends_on:
       - patient_db
     environment:
-      dbURL: mysql+mysqlconnector://root@host.docker.internal:3306/patientdb
+      dbURL: mysql+mysqlconnector://root@patient_db:3306/patientdb
+    networks:
+      - atomic_network
 
   #################################
   # Patient SQL Database
@@ -19,25 +21,30 @@ services:
   patient_db:
     image: mysql:latest
     restart: always
-    ports: [ 3301:3306 ]
+    ports:
+      - "3301:3306"
     environment:
       MYSQL_ALLOW_EMPTY_PASSWORD: yes
     volumes:
       - ./Patient/db/patient.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - atomic_network
 
   #################################
   # Appointment Microservice
   #################################
   appointment:
     build: ./Appointment/appointment
-    image: ESDG2T1/appointment:1.0
+    image: esdg2t1/appointment:1.0
     restart: always
     ports:
-      - "5002:5002"
+      - "5002:5001"
     depends_on:
       - appointment_db
     environment:
-      dbURL: mysql+mysqlconnector://root@host.docker.internal:3306/appointmentdb
+      dbURL: mysql+mysqlconnector://root@appointment_db:3306/appointmentdb
+    networks:
+      - atomic_network
 
   #################################
   # Appointment SQL Database
@@ -51,20 +58,25 @@ services:
       MYSQL_ALLOW_EMPTY_PASSWORD: yes
     volumes:
       - ./Appointment/db/appointment.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - atomic_network
 
   #################################
   # Prescription Microservice
   #################################
   prescription:
     build: ./Prescription/prescription
-    image: ESDG2T1/prescription:1.0
+    image: esdg2t1/prescription:1.0
     restart: always
     ports:
       - "5003:5003"
     depends_on:
       - prescription_db
     environment:
-      dbURL: mysql+mysqlconnector://root@host.docker.internal:3306/prescriptiondb
+      dbURL: mysql+mysqlconnector://root@prescription_db:3306/prescription
+    networks:
+      - atomic_network
+
 
   #################################
   # Prescription SQL Database
@@ -78,3 +90,9 @@ services:
       MYSQL_ALLOW_EMPTY_PASSWORD: yes
     volumes:
       - ./Prescription/db/prescription.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - atomic_network
+
+networks:
+  atomic_network:
+    driver: bridge
