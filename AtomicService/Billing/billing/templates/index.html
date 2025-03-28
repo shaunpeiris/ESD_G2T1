@@ -56,8 +56,9 @@
       async function fetchBillingDetails() {
         try {
           // 1. Get patient info from microservice
+          const patientServiceUrl = "{{ patient_url }}";
           const patientRes = await fetch(
-            `http://localhost:5100/patient/${patientId}`
+            `${patientServiceUrl}/${patientId}`
           );
           const patientJson = await patientRes.json();
 

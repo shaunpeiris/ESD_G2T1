@@ -1,4 +1,5 @@
 CREATE DATABASE IF NOT EXISTS billing;
+
 USE billing;
 
 -- Create the Payment Table

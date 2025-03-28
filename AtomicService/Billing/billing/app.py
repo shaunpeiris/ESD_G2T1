@@ -2,12 +2,8 @@ from flask import Flask, request, jsonify, render_template
 import stripe
 from flask_sqlalchemy import SQLAlchemy
 import requests
-from dotenv import load_dotenv
 from os import environ
 import os
-
-# Load environment variables from .env
-load_dotenv()
 
 app = Flask(__name__, template_folder="templates")
 
@@ -15,6 +11,8 @@ app = Flask(__name__, template_folder="templates")
 app.config['SQLALCHEMY_DATABASE_URI'] =  environ.get('dbURL') 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {'pool_recycle': 299}
+
+
 
 db = SQLAlchemy(app)
 
@@ -24,9 +22,16 @@ STRIPE_PUBLISHABLE_KEY = environ.get("STRIPE_PUBLISHABLE_KEY")
 STRIPE_WEBHOOK_SECRET = environ.get("STRIPE_WEBHOOK_SECRET")
 stripe.api_key = STRIPE_SECRET_KEY
 
+
 # Microservice & domain config
 YOUR_DOMAIN = environ.get("YOUR_DOMAIN")
 PATIENT_MICROSERVICE_URL = environ.get("PATIENT_MICROSERVICE_URL")
+
+print(f"STRIPE_SECRET_KEY: {STRIPE_SECRET_KEY}")
+print(f"STRIPE_PUBLISHABLE_KEY: {STRIPE_PUBLISHABLE_KEY}")
+print(f"STRIPE_WEBHOOK_SECRET: {STRIPE_WEBHOOK_SECRET}")
+print(f"YOUR_DOMAIN: {YOUR_DOMAIN}")
+print(f"PATIENT_MICROSERVICE_URL: {PATIENT_MICROSERVICE_URL}")
 
 # Dummy Prescription Data
 DUMMY_PRESCRIPTION = {
@@ -61,7 +66,7 @@ class Payment(db.Model):
 # Render Home Page
 @app.route("/")
 def home():
-    return render_template("index.html", stripe_publishable_key=STRIPE_PUBLISHABLE_KEY)
+    return render_template("index.html", stripe_publishable_key=STRIPE_PUBLISHABLE_KEY, patient_url=PATIENT_MICROSERVICE_URL)
 
 # Success Page
 @app.route("/success")
@@ -105,7 +110,7 @@ def create_checkout_session():
             return jsonify({"error": "Patient not found"}), 404
 
         patient = response.json()["data"]
-        print("Patient fetched:", patient)
+        print("Patient fetched:",patient)
 
         # Step 3: Calculate total cost
         medicines = DUMMY_PRESCRIPTION["medicines"]
@@ -194,7 +199,7 @@ def stripe_webhook():
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()
-    app.run(debug=True, port=5004)
+    app.run(host='0.0.0.0',debug=True, port=5004)
 
 
 
