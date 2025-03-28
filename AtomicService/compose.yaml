@@ -104,6 +104,7 @@ services:
       - "5014:5004"
     depends_on:
       - billing_db
+      - patient
     environment:
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
       STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY}
@@ -113,6 +114,8 @@ services:
       dbURL: mysql+mysqlconnector://root@host.docker.internal:3306/billing  
     env_file:
       - .env
+    networks:
+      - atomic_network
 
   #################################
   # Billing SQL Database
@@ -144,6 +147,8 @@ services:
       GMAIL_PASSWORD: ${GMAIL_PASSWORD}
     env_file:
       - .env
+    networks:
+      - atomic_network
 
   #################################
   # Availability Microservice

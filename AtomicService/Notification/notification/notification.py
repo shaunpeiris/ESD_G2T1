@@ -15,8 +15,12 @@ TWILIO_PHONE = environ.get("TWILIO_PHONE_NUMBER")
 
 GMAIL_USER = environ.get("GMAIL_USERNAME")
 GMAIL_PASS = environ.get("GMAIL_PASSWORD")
-load_dotenv()
 notifications = {}
+print(f"Twilio SID: {TWILIO_SID}")
+print(f"Twilio Token: {TWILIO_TOKEN}")
+print(f"Twilio Phone: {TWILIO_PHONE}")
+print(f"Gmail User: {GMAIL_USER}")
+print(f"Gmail Password: {GMAIL_PASS}")
 
 @app.route('/notify', methods=['POST'])
 def send_notification():
@@ -93,7 +97,7 @@ def resend_notification(notif_id):
 
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5005)
+    app.run(host='0.0.0.0', debug=True, port=5005)
 
 
 ######Use this to trigger notifications in your microservice######
