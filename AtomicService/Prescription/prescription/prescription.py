@@ -40,23 +40,41 @@ class Prescription(db.Model):
 def create_or_update_prescription():
     """
     This endpoint is used by the "Create Prescription" Composite microservice.
-    It expects a JSON payload with:
-      - appointment_id: The ID associated with the appointment.
-      - medicine: A JSON object/array containing the medicine details.
-    
-    It will either create a new prescription or update an existing one for the given appointment ID,
-    then return the updated prescription.
+    It accepts both camelCase and snake_case keys and various medicine formats.
     """
-    appointment_id = request.json.get('appointment_id')
-    medicine = request.json.get('medicine')
-    status = request.json.get('status', False)  # Default to False if not provided
+    # First, log the incoming data for debugging
+    print("Received prescription data:", request.json)
     
-    if not appointment_id or not medicine:
+    # Extract data using both snake_case and camelCase keys
+    appointment_id = request.json.get('appointmentID') or request.json.get('appointment_id')
+    
+    # Handle medicine data that could be nested or direct
+    medicine_data = request.json.get('medicine')
+    if isinstance(medicine_data, dict) and 'medications' in medicine_data:
+        # Extract from nested structure
+        medicine = medicine_data.get('medications')
+    else:
+        # Use as is
+        medicine = medicine_data
+    
+    print(f"Extracted appointment_id: {appointment_id}")
+    print(f"Extracted medicine: {medicine}")
+    
+    # Validate the data
+    if not appointment_id:
         return jsonify({
             "code": 400,
-            "message": "Missing appointment_id or medicine information."
+            "message": "Missing appointment_id - neither 'appointmentID' nor 'appointment_id' found in request."
         }), 400
 
+    if not medicine:
+        return jsonify({
+            "code": 400,
+            "message": "Missing medicine information - check the format of your request."
+        }), 400
+
+    status = request.json.get('status', False)  # Default to False if not provided
+    
     # Check if a prescription already exists for the given appointment ID
     prescription = Prescription.query.filter_by(appointment_id=appointment_id).first()
     
@@ -77,10 +95,17 @@ def create_or_update_prescription():
     
     try:
         db.session.commit()
+        # Ensure the ID is included in the response
+        response_data = prescription.json()
+        # Double-check that ID is included in multiple formats
+        if hasattr(prescription, 'id'):
+            response_data['id'] = prescription.id
+            response_data['prescription_id'] = prescription.id
+        
         return jsonify({
             "code": 200,
             "message": message,
-            "data": prescription.json()
+            "data": response_data
         }), 200
     except Exception as e:
         db.session.rollback()

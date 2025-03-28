@@ -1,0 +1,29 @@
+services:
+
+#################################
+# CreatePrescription: The CreatePrescription service
+#################################
+
+  createPrescription:
+    build:
+      context: ./CreatePrescription/createprescription
+      dockerfile: Dockerfile
+    image: ESDG2T1/createprescription:1.0
+    restart: always
+    ports:
+      - "6003:6003"
+    environment:
+      PYTHONUNBUFFERED: 1 
+
+
+#################################
+# Process Prescription: The Process Prescription complex microservice
+#################################
+
+  processPrescription:
+    build: ./ProcessPrescription/process
+    image: ESDG2T1/processprescription:1.0
+    restart: always
+    ports: [6001:5100]
+    environment:
+      PYTHONUNBUFFERED: 1
