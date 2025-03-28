@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-
+import amqp_connection
 import os, sys
 
 from invokes import invoke_http
@@ -226,61 +226,61 @@ def processPrescription(id):
         "message": f"Successfully processed {len(processed_medications)} medications"
     }
 
-# # Function to start listening to RabbitMQ for prescription IDs
-# def start_listening():
-#     connection = amqp_connection.create_connection()
-#     channel = connection.channel()
+# Function to start listening to RabbitMQ for prescription IDs
+def start_listening():
+    connection = amqp_connection.create_connection()
+    channel = connection.channel()
     
-#     # Declare the exchange
-#     exchangename = "dispenser_direct"
-#     channel.exchange_declare(exchange=exchangename, exchange_type='direct', durable=True)
+    # Declare the exchange
+    exchangename = "dispenser_direct"
+    channel.exchange_declare(exchange=exchangename, exchange_type='direct', durable=True)
     
-#     # Declare the queue
-#     queue_name = "prescription_processing"
-#     channel.queue_declare(queue=queue_name, durable=True)
+    # Declare the queue
+    queue_name = "Dispenser_Queue"
+    channel.queue_declare(queue=queue_name, durable=True)
     
-#     # Bind the queue to the exchange with the routing key
-#     channel.queue_bind(exchange=exchangename, queue=queue_name, routing_key="prescription.id")
+    # Bind the queue to the exchange with the routing key
+    channel.queue_bind(exchange=exchangename, queue=queue_name, routing_key="prescription.id")
     
-#     # Set up a callback function to handle messages
-#     def callback(ch, method, properties, body):
-#         print(" [x] Received %r" % body)
+    # Set up a callback function to handle messages
+    def callback(ch, method, properties, body):
+        print(" [x] Received %r" % body)
         
-#         try:
-#             # Decode the message body
-#             message = json.loads(body)
-#             prescription_id = message.get("prescription_id")
+        try:
+            # Decode the message body
+            message = json.loads(body)
+            prescription_id = message.get("prescription_id")
             
-#             if prescription_id:
-#                 # Process the prescription
-#                 result = processPrescription(prescription_id)
-#                 print("Processing result:", result)
+            if prescription_id:
+                # Process the prescription
+                result = processPrescription(prescription_id)
+                print("Processing result:", result)
                 
-#                 # Acknowledge the message
-#                 ch.basic_ack(delivery_tag=method.delivery_tag)
-#             else:
-#                 print("Invalid message format, missing prescription_id:", message)
-#                 ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
+                # Acknowledge the message
+                ch.basic_ack(delivery_tag=method.delivery_tag)
+            else:
+                print("Invalid message format, missing prescription_id:", message)
+                ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
         
-#         except Exception as e:
-#             print("Error processing message:", e)
-#             ch.basic_nack(delivery_tag=method.delivery_tag, requeue=True)
+        except Exception as e:
+            print("Error processing message:", e)
+            ch.basic_nack(delivery_tag=method.delivery_tag, requeue=True)
     
-#     # Set up the consumer
-#     channel.basic_qos(prefetch_count=1)
-#     channel.basic_consume(queue=queue_name, on_message_callback=callback)
+    # Set up the consumer
+    channel.basic_qos(prefetch_count=1)
+    channel.basic_consume(queue=queue_name, on_message_callback=callback)
     
-#     print(' [*] Waiting for prescription IDs. To exit press CTRL+C')
-#     channel.start_consuming()
+    print(' [*] Waiting for prescription IDs. To exit press CTRL+C')
+    channel.start_consuming()
 
 # Execute this program if it is run as a main script (not by 'import')
 if __name__ == "__main__":
     print("This is flask " + os.path.basename(__file__) + " for processing prescriptions...")
     
     # Start the RabbitMQ listener in a separate thread
-    # import threading
-    # listener_thread = threading.Thread(target=start_listening)
-    # listener_thread.daemon = True
-    # listener_thread.start()
+    import threading
+    listener_thread = threading.Thread(target=start_listening)
+    listener_thread.daemon = True
+    listener_thread.start()
     
     app.run(host="0.0.0.0", port=5100, debug=True)
