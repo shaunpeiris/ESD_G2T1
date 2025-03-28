@@ -4,14 +4,14 @@ services:
   #################################
   patient:
     build: ./Patient/patient
-    image: esdg2t1/patient:1.0
+    image: ESDG2T1/patient:1.0
     restart: always
     ports:
-      - "8501:5000"
+      - "5001:5001"
     depends_on:
       - patient_db
     environment:
-      dbURL: mysql+mysqlconnector://root@patient_db:3306/patientdb
+      dbURL: mysql+mysqlconnector://root@host.docker.internal:3306/patientdb
     networks:
       - atomic_network
 
@@ -35,14 +35,14 @@ services:
   #################################
   appointment:
     build: ./Appointment/appointment
-    image: esdg2t1/appointment:1.0
+    image: ESDG2T1/appointment:1.0
     restart: always
     ports:
-      - "5002:5001"
+      - "5002:5002"
     depends_on:
       - appointment_db
     environment:
-      dbURL: mysql+mysqlconnector://root@appointment_db:3306/appointmentdb
+      dbURL: mysql+mysqlconnector://root@host.docker.internal:3306/appointmentdb
     networks:
       - atomic_network
 
@@ -66,14 +66,14 @@ services:
   #################################
   prescription:
     build: ./Prescription/prescription
-    image: esdg2t1/prescription:1.0
+    image: ESDG2T1/prescription:1.0
     restart: always
     ports:
       - "5003:5003"
     depends_on:
       - prescription_db
     environment:
-      dbURL: mysql+mysqlconnector://root@prescriptiondb:3306/prescriptiondb
+      dbURL: mysql+mysqlconnector://root@host.docker.internal:3306/prescriptiondb
     networks:
       - atomic_network
 
