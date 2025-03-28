@@ -55,7 +55,7 @@ def delete_medication(medication_id):
 def get_prescription(prescription_id):
     try:
         # Get the prescription service URL from environment variable with fallback
-        prescription_service_url = os.environ.get('PRESCRIPTION_SERVICE_URL', 'http://prescription:5002')
+        prescription_service_url = os.environ.get('PRESCRIPTION_SERVICE_URL', 'http://prescription:5003')
         prescription_url = f"{prescription_service_url}/prescription/{prescription_id}"
         
         print(f"Requesting prescription from: {prescription_url}")

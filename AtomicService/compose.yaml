@@ -73,7 +73,7 @@ services:
     depends_on:
       - prescription_db
     environment:
-      dbURL: mysql+mysqlconnector://root@prescription_db:3306/prescription
+      dbURL: mysql+mysqlconnector://root@prescriptiondb:3306/prescriptiondb
     networks:
       - atomic_network
 
@@ -148,4 +148,5 @@ services:
 networks:
   atomic_network:
     driver: bridge
+    name: atomic_network
 
