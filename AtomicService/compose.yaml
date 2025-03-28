@@ -145,6 +145,21 @@ services:
     env_file:
       - .env
 
+  #################################
+  # Availability Microservice
+  #################################
+  availability:
+    build: ./Availability
+    image: ESDG2T1/availability:1.0
+    restart: always
+    ports:
+      - "5004:5000"
+    environment:
+      dbURL: GOOGLE_APPLICATION_CREDENTIALS=/app/serviceAccountKey.json
+    networks:
+      - atomic_network
+  
+
 networks:
   atomic_network:
     driver: bridge
