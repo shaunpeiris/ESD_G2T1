@@ -4,10 +4,10 @@ services:
   #################################
   patient:
     build: ./Patient/patient
-    image: esdg2t1/patient:1.0
+    image: ESDG2T1/patient:1.0
     restart: always
     ports:
-      - "8501:5000"
+      - "5001:5001"
     depends_on:
       - patient_db
     environment:
@@ -35,10 +35,10 @@ services:
   #################################
   appointment:
     build: ./Appointment/appointment
-    image: esdg2t1/appointment:1.0
+    image: ESDG2T1/appointment:1.0
     restart: always
     ports:
-      - "5002:5001"
+      - "5002:5002"
     depends_on:
       - appointment_db
     environment:
@@ -66,7 +66,7 @@ services:
   #################################
   prescription:
     build: ./Prescription/prescription
-    image: esdg2t1/prescription:1.0
+    image: ESDG2T1/prescription:1.0
     restart: always
     ports:
       - "5003:5003"
