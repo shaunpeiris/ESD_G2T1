@@ -93,10 +93,6 @@ services:
     networks:
       - atomic_network
 
-networks:
-  atomic_network:
-    driver: bridge
-
   #################################
   # Billing Microservice
   #################################
@@ -105,7 +101,7 @@ networks:
     image: ESDG2T1/billing:1.0
     restart: always
     ports:
-      - "5004:5004"
+      - "5014:5004"
     depends_on:
       - billing_db
     environment:
@@ -139,7 +135,7 @@ networks:
     image: ESDG2T1/notification:1.0
     restart: always
     ports:
-      - "5005:5005"
+      - "5015:5005"
     environment:
       TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID}
       TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN}
@@ -148,3 +144,8 @@ networks:
       GMAIL_PASSWORD: ${GMAIL_PASSWORD}
     env_file:
       - .env
+
+networks:
+  atomic_network:
+    driver: bridge
+
