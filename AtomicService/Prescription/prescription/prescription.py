@@ -3,6 +3,9 @@ from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from os import environ
 import os
+import json
+from sqlalchemy import event
+from datetime import datetime
 
 app = Flask(__name__)
 CORS(app)
@@ -22,19 +25,48 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {'pool_recycle': 299}
 db = SQLAlchemy(app)
 
 class Prescription(db.Model):
-    __tablename__ = 'prescription'  # Updated to lowercase to match database
-    prescription_id = db.Column('prescriptionID', db.Integer, primary_key=True, autoincrement=True)  # Updated to match column name
+    __tablename__ = 'prescription'
+    prescription_id = db.Column('prescriptionID', db.Integer, primary_key=True, autoincrement=True)
     medicine = db.Column('medicine', db.JSON, nullable=False)
-    appointment_id = db.Column('appointmentID', db.Integer, nullable=False)  # Updated to match column name
-    status = db.Column('status', db.Boolean, default=False)  # Added status field
-    
+    appointment_id = db.Column('appointmentID', db.Integer, nullable=False)
+    status = db.Column('status', db.Boolean, default=False)
+
     def json(self):
+        try:
+            # Handle both stringified JSON and direct JSON
+            if isinstance(self.medicine, str):
+                medicine_data = json.loads(self.medicine)
+            else:
+                medicine_data = self.medicine
+            
+            # Ensure proper structure
+            if 'medications' not in medicine_data:
+                medicine_data = {'medications': []}
+                
+        except (json.JSONDecodeError, TypeError):
+            medicine_data = {'medications': []}
+
         return {
             "prescription_id": self.prescription_id,
-            "medicine": self.medicine,
+            "medicine": medicine_data.get('medications', []),
             "appointment_id": self.appointment_id,
-            "status": self.status  # Added status to JSON response
+            "status": self.status
         }
+
+# Add validation for JSON structure
+@event.listens_for(Prescription.medicine, 'set')
+def validate_medicine(target, value, oldvalue, initiator):
+    if isinstance(value, str):
+        parsed = json.loads(value)
+    else:
+        parsed = value
+    
+    if not isinstance(parsed, dict) or 'medications' not in parsed:
+        raise ValueError("Invalid medicine format - must contain 'medications' array")
+    
+    for med in parsed['medications']:
+        if 'name' not in med or 'quantity' not in med:
+            raise ValueError("Medication must contain 'name' and 'quantity' fields")
 
 @app.route("/prescription", methods=['POST'])
 def create_or_update_prescription():
@@ -49,6 +81,21 @@ def create_or_update_prescription():
     """
     appointment_id = request.json.get('appointment_id')
     medicine = request.json.get('medicine')
+
+    # Add validation for medicine format
+    if not isinstance(medicine, list):
+        return jsonify({
+            "code": 400,
+            "message": "Medicine data must be a list of medication objects"
+        }), 400
+        
+    for med in medicine:
+        if not isinstance(med, dict) or 'name' not in med or 'quantity' not in med:
+            return jsonify({
+                "code": 400,
+                "message": "Each medication must be an object with 'name' and 'quantity'"
+            }), 400
+
     status = request.json.get('status', False)  # Default to False if not provided
     
     if not appointment_id or not medicine:
