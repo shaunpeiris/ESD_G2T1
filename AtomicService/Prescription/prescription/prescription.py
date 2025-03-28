@@ -98,4 +98,4 @@ def get_prescription(prescription_id):
 
 if __name__ == '__main__':
     print("Prescription Microservice is running on " + os.path.basename(__file__))
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5002, debug=True)
