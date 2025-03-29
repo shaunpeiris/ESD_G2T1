@@ -113,6 +113,8 @@ services:
       dbURL: mysql+mysqlconnector://root@host.docker.internal:3306/billing  
     env_file:
       - .env
+    networks:
+      - atomic_network
 
   #################################
   # Billing SQL Database
