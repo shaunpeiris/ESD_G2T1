@@ -3,25 +3,21 @@ const app = Vue.createApp({
         return {
             selectedSpeciality: 'Any',
             selectedLocation: 'Any',
-            selectedTime: '08:00',
             selectedDate: new Date().toISOString().split('T')[0],
             specialities: [],
             locations: [],
             doctors: [],
-            availabilities: [],
-            times: ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "13:00", "14:00", "15:00", "16:00",],  // default start
 
-            // 🔥 Required for modal
+            // Modal stuff
             selectedDoctor: null,
             modalSelectedTime: null,
             availableTimesForModal: [],
             reason: '',
-            sendReminders: true,
+            sendReminders: true
         };
     },
     mounted() {
         this.fetchSpecializations();
-        this.fetchDoctors();
         this.fetchPolyclinics();
     },
     methods: {
@@ -30,49 +26,35 @@ const app = Vue.createApp({
             const data = await res.json();
             this.specialities = ['Any', ...data.data];
         },
-        async fetchDoctors() {
-            const res = await fetch('http://104.214.186.4:5010/doctors');
-            const data = await res.json();
-            this.doctors = data.data;
-        },
         async fetchPolyclinics() {
             const res = await fetch('http://104.214.186.4:5010/polyclinics');
             const data = await res.json();
             this.locations = ['Any', ...data.data];
         },
         async searchDoctors() {
-            const formattedDate = new Date(this.selectedDate).toISOString().split("T")[0];
             try {
-                const res = await fetch(`http://104.214.186.4:5000/doctor_availabilities?date=${formattedDate}`);
-
-                let availabilityData = [];
-                if (res.ok) {
-                    const data = await res.json();
-                    availabilityData = data?.data || [];
+                const query = new URLSearchParams({
+                    specialization: this.selectedSpeciality,
+                    polyclinic: this.selectedLocation,
+                    date: this.selectedDate
+                }).toString();
+        
+                const response = await fetch(`http://localhost:5050/searchDoctors?${query}`);
+                const data = await response.json();
+        
+                if (data.data && Array.isArray(data.data)) {
+                    this.doctors = data.data.map(doc => ({
+                        ...doc,
+                        timeslots: doc.timeslots || []
+                    }));
                 } else {
-                    console.warn("⚠️ No availabilities found (non-200 response)");
+                    this.doctors = [];
+                    console.warn("Empty or invalid doctor list from API.");
                 }
-
-                this.availabilities = availabilityData;
-
-                // Filter + map doctor times
-                this.doctors = this.doctors.map(doc => {
-                    const matchesSpec = this.selectedSpeciality === 'Any' || doc.Specialization === this.selectedSpeciality;
-                    const matchesLoc = this.selectedLocation === 'Any' || doc.Polyclinic === this.selectedLocation;
-
-                    if (matchesSpec && matchesLoc) {
-                        const slots = availabilityData
-                            .filter(a => a.DoctorID === doc.Doctor_ID && a.Available)
-                            .map(a => a.StartTime);
-                        return { ...doc, timeslots: slots };
-                    } else {
-                        return { ...doc, timeslots: [] };
-                    }
-                });
-
+        
             } catch (err) {
-                console.error("❌ Error fetching availabilities:", err);
-                this.availabilities = [];
+                console.error("❌ Error fetching doctors:", err);
+                this.doctors = [];
             }
         },
         formatTime(time24) {
@@ -82,14 +64,16 @@ const app = Vue.createApp({
             const hour12 = h % 12 === 0 ? 12 : h % 12;
             return `${hour12}:${minute} ${suffix}`;
         },
-        selectAppointment(doctor, time) {
+        selectAppointment(doctor) {
             this.selectedDoctor = doctor;
-            this.modalSelectedTime = time; // use modal variable
-            this.availableTimesForModal = doctor.timeslots || [];
+            this.availableTimesForModal = doctor.timeslots || [];  // ✅ fix here
+            this.modalSelectedTime = this.availableTimesForModal[0] || null;
+        
+            const modal = new bootstrap.Modal(document.getElementById('bookingModal'));
+            modal.show();
         },
-
         confirmBooking() {
-            if (!this.selectedDoctor || !this.selectedTime) {
+            if (!this.selectedDoctor || !this.modalSelectedTime) {
                 alert("Please select a doctor and time.");
                 return;
             }
@@ -100,23 +84,13 @@ const app = Vue.createApp({
                 specialization: this.selectedDoctor.Specialization,
                 location: this.selectedDoctor.Polyclinic,
                 date: this.selectedDate,
-                time: this.selectedTime,
+                time: this.modalSelectedTime,
                 reason: this.reason,
                 sendReminders: this.sendReminders
             };
 
-            console.log("Booking submitted:", booking);
+            console.log("✅ Booking confirmed:", booking);
             alert("✅ Booking confirmed!");
-            // optionally send to backend...
-        },
-        selectAppointment(doctor) {
-            this.selectedDoctor = doctor;
-            this.modalSelectedTime = doctor.timeslots?.[0] || null; // default to first available time
-            this.availableTimesForModal = doctor.timeslots || [];
-
-            // Open modal via JS after state is ready
-            const modal = new bootstrap.Modal(document.getElementById('bookingModal'));
-            modal.show();
         }
     },
     computed: {
@@ -125,5 +99,4 @@ const app = Vue.createApp({
         }
     }
 });
-
-app.mount('#app');
+vm = app.mount('#app');
