@@ -129,6 +129,8 @@ services:
       MYSQL_ALLOW_EMPTY_PASSWORD: yes
     volumes:
       - ./Billing/db/billing.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+    - atomic_network
 
   #################################
   # Notification Microservice
