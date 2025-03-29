@@ -99,55 +99,68 @@ def error():
 @app.route("/create-checkout-session", methods=["POST"])
 def create_checkout_session():
     try:
-        # Step 1: Get patient ID (from header or hardcoded for now)
-        patient_id = request.headers.get("X-Patient-ID", 1)
-        print(f"Received patient ID: {patient_id}")
-
-        # Step 2: Fetch patient from microservice
-        response = requests.get(f"{PATIENT_MICROSERVICE_URL}/{patient_id}")
-        print("Patient microservice response:", response.status_code, response.text)
-        if response.status_code != 200:
-            return jsonify({"error": "Patient not found"}), 404
-
-        patient = response.json()["data"]
-        print("Patient fetched:",patient)
-
-        # Step 3: Calculate total cost
-        medicines = DUMMY_PRESCRIPTION["medicines"]
+        # Get data from request body
+        request_data = request.get_json()
+        
+        if not request_data:
+            return jsonify({"error": "No data provided"}), 400
+        
+        # Extract required patient information from request
+        patient_id = request_data.get('patient_id')
+        patient_email = request_data.get('patient_email')
+        
+        # Extract prescription information
+        prescription_id = request_data.get('prescription_id')
+        medicines = request_data.get('medicines', [])
+        
+        # Validate required fields
+        if not patient_id or not patient_email or not prescription_id or not medicines:
+            return jsonify({
+                "error": "Missing required fields. Need patient_id, patient_email, prescription_id, and medicines"
+            }), 400
+        
+        # Calculate total cost
         consultation_fee = 2000  # cents
-        total_price = sum(m["price"] for m in medicines) + consultation_fee
-
-        # Step 4: Save payment record
+        total_price = sum(m.get("price", 0) for m in medicines) + consultation_fee
+        
+        # Log the received data
+        print(f"Processing payment for patient ID: {patient_id}, prescription ID: {prescription_id}")
+        print(f"Medicines: {medicines}")
+        print(f"Total price: {total_price} cents")
+        
+        # Save payment record
         new_payment = Payment(
-            prescriptionID=DUMMY_PRESCRIPTION["prescription_id"],
-            patientID=patient["id"],
+            prescriptionID=prescription_id,
+            patientID=patient_id,
             amount=total_price / 100,
             status="pending"
         )
         db.session.add(new_payment)
         db.session.commit()
-
-        # Step 5: Create Stripe Checkout Session (with email prefilled)
+        
+        # Create Stripe Checkout Session
         checkout_session = stripe.checkout.Session.create(
-            payment_method_types=["card","paynow"],
+            payment_method_types=["card", "paynow"],
             line_items=[{
                 "price_data": {
                     "currency": "sgd",
                     "product_data": {"name": "Doctor Consultation & Medicines"},
-                    "unit_amount": total_price,
+                    "unit_amount": int(total_price),
                 },
                 "quantity": 1,
             }],
             mode="payment",
-            customer_email=patient["email"],
+            customer_email=patient_email,
             success_url=f"{YOUR_DOMAIN}/success",
             cancel_url=f"{YOUR_DOMAIN}/cancel",
         )
-
+        
         return jsonify({"url": checkout_session.url})
-
+        
     except Exception as e:
+        print(f"Error creating checkout session: {str(e)}")
         return jsonify({"error": str(e)}), 500
+
 
 
 
@@ -199,7 +212,7 @@ def stripe_webhook():
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()
-    app.run(host='0.0.0.0',debug=True, port=5004)
+    app.run(host='0.0.0.0',debug=True, port=5024)
 
 
 
