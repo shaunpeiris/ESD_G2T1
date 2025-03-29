@@ -151,6 +151,18 @@ services:
     networks:
       - atomic_network
 
+  #################################
+  # Book Appointment Microservice
+  #################################
+  availability:
+    build: ../CompositeService/BookAppointment
+    image: ESDG2T1/book_appointment:1.0
+    restart: always
+    ports:
+      - "5050:5000"
+    networks:
+      - atomic_network
+
 networks:
   atomic_network:
     driver: bridge
