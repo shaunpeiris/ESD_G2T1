@@ -38,10 +38,10 @@ const app = Vue.createApp({
                     polyclinic: this.selectedLocation,
                     date: this.selectedDate
                 }).toString();
-        
-                const response = await fetch(`http://localhost:5050/searchDoctors?${query}`);
+
+                const response = await fetch(`http://127.0.0.1:5050/searchDoctors?${query}`);
                 const data = await response.json();
-        
+
                 if (data.data && Array.isArray(data.data)) {
                     this.doctors = data.data.map(doc => ({
                         ...doc,
@@ -51,7 +51,7 @@ const app = Vue.createApp({
                     this.doctors = [];
                     console.warn("Empty or invalid doctor list from API.");
                 }
-        
+
             } catch (err) {
                 console.error("❌ Error fetching doctors:", err);
                 this.doctors = [];
@@ -68,29 +68,59 @@ const app = Vue.createApp({
             this.selectedDoctor = doctor;
             this.availableTimesForModal = doctor.timeslots || [];  // ✅ fix here
             this.modalSelectedTime = this.availableTimesForModal[0] || null;
-        
+
             const modal = new bootstrap.Modal(document.getElementById('bookingModal'));
             modal.show();
         },
-        confirmBooking() {
+        async confirmBooking() {
             if (!this.selectedDoctor || !this.modalSelectedTime) {
                 alert("Please select a doctor and time.");
                 return;
             }
 
-            const booking = {
-                doctorId: this.selectedDoctor.Doctor_ID,
-                doctorName: this.selectedDoctor.Doctor_Name,
-                specialization: this.selectedDoctor.Specialization,
-                location: this.selectedDoctor.Polyclinic,
-                date: this.selectedDate,
-                time: this.modalSelectedTime,
-                reason: this.reason,
-                sendReminders: this.sendReminders
+            const patientData = JSON.parse(sessionStorage.getItem("patient"));
+
+            const dateStr = this.selectedDate;
+            const timeStr = this.modalSelectedTime;
+
+            const payload = {
+                patient_id: patientData?.id,
+                doctor_id: this.selectedDoctor.Doctor_ID,
+                appointment_date: dateStr,
+                start_time: `${dateStr}T${timeStr}`,
+                end_time: `${dateStr}T${this.addOneHour(timeStr)}`,
+                notes: this.reason
             };
 
-            console.log("✅ Booking confirmed:", booking);
-            alert("✅ Booking confirmed!");
+            try {
+                const response = await fetch("http://127.0.0.1:5050/createAppointment", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+                if (response.ok && result.code === 201) {
+                    alert("✅ Appointment booked successfully!");
+                    this.searchDoctors(); // Refresh availability
+
+                    // ✅ Hide modal properly
+                    const modalElement = document.getElementById('bookingModal');
+                    const modal = bootstrap.Modal.getInstance(modalElement);
+                    modal?.hide();
+                } else {
+                    alert(`❌ Failed to book appointment: ${result.message || 'Unknown error'}`);
+                }
+
+            } catch (err) {
+                console.error("❌ Booking error:", err);
+                alert("❌ Failed to book appointment. Server error.");
+            }
+        },
+        addOneHour(timeStr) {
+            const [hour, minute] = timeStr.split(":").map(Number);
+            const newHour = (hour + 1).toString().padStart(2, "0");
+            return `${newHour}:${minute.toString().padStart(2, "0")}:00`;
         }
     },
     computed: {
