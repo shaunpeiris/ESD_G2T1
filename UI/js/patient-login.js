@@ -1,4 +1,5 @@
 const patientURL = 'http://127.0.0.1:5001/patient';
+const doctorURL = 'http://127.0.0.1:5010/doctor';
 
 const app = Vue.createApp({
     data() {
@@ -7,16 +8,22 @@ const app = Vue.createApp({
             password: '',
             wrong: false,
             error: '',
-            passwordVisible: false  
+            passwordVisible: false,
+            role: 'patient'
         }
     },
 
     methods: {
         checkLogin() {
             // Check if the user is logged in
-            let patient = JSON.parse(sessionStorage.getItem('patient'));
-            if (patient != null) {
-                window.location.href = './patientProfile.html';
+            let user = JSON.parse(sessionStorage.getItem(this.role)); // Dynamically check for role
+            if (user != null) {
+                // Redirect based on the role
+                if (this.role === 'patient') {
+                    window.location.href = './patientProfile.html';
+                } else if (this.role === 'doctor') {
+                    window.location.href = './doctorDashboard.html';
+                }
             }
         },
 
@@ -30,15 +37,20 @@ const app = Vue.createApp({
             }
             
             // Make sure this variable is properly defined with 'const' or 'let'
-            const loginURL = patientURL + '/login';
+            const loginURL = this.role === 'patient' ? patientURL + '/login' : doctorURL + '/login';
             
             axios.post(loginURL, params)
                 .then((response) => {
-                    let patient = response.data.data;
+                    let user = response.data.data;
                     // Add it into the session storage
-                    sessionStorage.setItem('patient', JSON.stringify(patient));
-                    // Redirect to the patient profile page
-                    window.location.href = './patientProfile.html';
+                    console.log(user)
+                    sessionStorage.setItem(this.role, JSON.stringify(user));
+                    // Redirect to the appropriate profile page
+                    if (this.role === 'patient') {
+                        window.location.href = './patientProfile.html';
+                    } else if (this.role === 'doctor') {
+                        window.location.href = './doctorDashboard.html';
+                    }
                 })
                 .catch((error) => {
                     this.wrong = true;
