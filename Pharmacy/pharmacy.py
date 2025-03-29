@@ -64,9 +64,10 @@ def update_medication_quantity():
     
     response = requests.put(
         f"{INVENTORY_API_BASE_URL}/inventory",
-        json={"Medications": [data]}
+        json=data  
     )
     return jsonify(response.json()), response.status_code
+
 
 @lru_cache(maxsize=128)
 def get_cached_inventory(medication_name):
@@ -161,21 +162,28 @@ def dispense_prescription(prescription_id):
         new_quantity = current_stock - required_qty
         
         # Update inventory
+        med_update_data = {
+            "medicationID": med_id,
+            "medicationName": med_name,
+            "quantity": new_quantity,
+            "price": med_price
+        }
+
         update_response = requests.put(
-            f"{INVENTORY_API_BASE_URL}/inventory",
-            json={
-                "Medications": [{
-                    "medicationID": med_id,
-                    "medicationName": med_name,
-                    "quantity": new_quantity,
-                    "price": med_price
-                }]
-            },
+            f"http://localhost:5004/pharmacy/inventory",  # Call our own endpoint
+            json=med_update_data,
             timeout=3
         )
         
         if update_response.status_code != 200:
             error_msg = f"Inventory update failed for {med_name}: {update_response.text}"
+            logger.error(error_msg)
+            return jsonify({"code": 500, "message": error_msg}), 500
+
+        # Check the response content for success status
+        update_result = update_response.json()
+        if not update_result.get('success', False):
+            error_msg = f"Inventory update failed for {med_name}: {update_result.get('errorMessage', 'Unknown error')}"
             logger.error(error_msg)
             return jsonify({"code": 500, "message": error_msg}), 500
 
@@ -186,6 +194,7 @@ def dispense_prescription(prescription_id):
             "new_quantity": new_quantity,
             "price": med_price
         })
+
 
     # Update prescription status
     status_response = requests.put(
