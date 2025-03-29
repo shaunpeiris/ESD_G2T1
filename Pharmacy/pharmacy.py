@@ -298,7 +298,7 @@ def get_prescription(prescription_id):
 @app.route("/pharmacy/prescription/<prescription_id>/dispense", methods=['POST'])
 @handle_api_error
 def dispense_prescription(prescription_id):
-    """Process prescription dispensing with inventory updates and billing"""
+    """Process prescription dispensing with billing first, then inventory updates"""
     prescription_data, status_code, message = get_prescription_data(prescription_id)
     
     if status_code != 200:
@@ -312,23 +312,27 @@ def dispense_prescription(prescription_id):
     if not isinstance(medications, list):
         return create_response(400, "Invalid medications format in prescription")
 
-    inventory_updates = []
+    # First validate all medications without updating inventory
+    medication_updates = []
     payment_medications = []
     
     for med in medications:
-        # Validate and process each medication
-        result, status_code, message = process_medication(med)
+        # Validate medication without updating inventory
+        validation_result, status_code, message = validate_medication(med)
         if status_code != 200:
             return create_response(status_code, message)
-        inventory_updates.append(result['inventory_update'])
-        payment_medications.append(result['payment_info'])
+        medication_updates.append(validation_result)
+        payment_medications.append({
+            "medication": validation_result["medication"],
+            "price": int(validation_result["price"] * 100)  # Convert to cents for Stripe
+        })
     
     # Get appointment ID from prescription data
     appointment_id = prescription_data.get('appointment_id')
     if not appointment_id:
         return create_response(400, "Appointment ID not found in prescription data")
     
-    # Create payment session using appointment_id
+    # Create payment session using appointment_id BEFORE updating inventory
     payment_success, payment_message, checkout_url = create_billing_session(
         prescription_id, 
         appointment_id,
@@ -337,13 +341,37 @@ def dispense_prescription(prescription_id):
     
     if not payment_success:
         logger.error(f"Billing session creation failed: {payment_message}")
-        return create_response(500, f"Prescription dispensed but billing failed: {payment_message}")
+        return create_response(500, f"Billing failed: {payment_message}")
     
-    # Update prescription status only if billing is successful
+    # Only update inventory AFTER successful billing URL generation
+    inventory_updates = []
+    for update in medication_updates:
+        # Now actually update the inventory
+        med_update_data = {
+            "medicationID": update["medicationID"],
+            "medicationName": update["medication"],
+            "quantity": update["new_quantity"],
+            "price": update["price"]
+        }
+        
+        result, status_code, message = update_inventory(med_update_data)
+        if status_code != 200:
+            logger.error(f"Inventory update failed after successful billing: {message}")
+            return create_response(500, f"Billing successful but inventory update failed: {message}")
+            
+        inventory_updates.append({
+            "medication": update["medication"],
+            "medicationID": update["medicationID"],
+            "previous_quantity": update["current_stock"],
+            "new_quantity": update["new_quantity"],
+            "price": update["price"]
+        })
+    
+    # Update prescription status after successful billing and inventory updates
     status_result, status_code, status_message = update_prescription_status(prescription_id, True)
     if status_code != 200:
         logger.error(f"Prescription status update failed: {status_message}")
-        return create_response(500, f"Prescription dispensed and billed, but status update failed: {status_message}")
+        return create_response(500, f"Billing and inventory updated, but status update failed: {status_message}")
     
     response_data = {
         "prescription_id": prescription_id,
@@ -351,8 +379,38 @@ def dispense_prescription(prescription_id):
         "payment_url": checkout_url
     }
     
-    logger.info(f"Prescription {prescription_id} successfully dispensed and billed")
-    return create_response(200, "Prescription dispensed and billed successfully", response_data)
+    logger.info(f"Prescription {prescription_id} successfully billed and dispensed")
+    return create_response(200, "Prescription billed and dispensed successfully", response_data)
+
+def validate_medication(med):
+    """Validate a medication without updating inventory"""
+    if not isinstance(med, dict) or 'name' not in med or 'quantity' not in med:
+        return None, 400, f"Invalid medication format: {med}"
+    
+    med_name = med['name']
+    required_qty = med['quantity']
+    
+    inventory_data = get_inventory_data(med_name)
+    if not inventory_data:
+        return None, 404, f"Medication {med_name} not found in inventory"
+
+    current_stock = inventory_data.get('quantity', 0)
+    med_id = inventory_data.get('medicationID', '')
+    med_price = inventory_data.get('price', 0.0)
+    
+    if current_stock < required_qty:
+        return None, 400, f"Insufficient stock for {med_name}. Required: {required_qty}, Available: {current_stock}"
+
+    new_quantity = current_stock - required_qty
+    
+    return {
+        "medication": med_name,
+        "medicationID": med_id,
+        "current_stock": current_stock,
+        "new_quantity": new_quantity,
+        "price": med_price
+    }, 200, "Medication validated successfully"
+
 
 
 def process_medication(med):
