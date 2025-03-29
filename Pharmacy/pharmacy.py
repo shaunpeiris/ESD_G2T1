@@ -99,51 +99,126 @@ def update_prescription_status(prescription_id, status):
     result = response.json()
     return result, 200, "Prescription status updated successfully"
 
-def create_billing_session(prescription_id, patient_id, medications):
+def create_billing_session(prescription_id, appointment_id, medications):
     """
     Create a billing session by calling the billing microservice
     
     Args:
         prescription_id: ID of the prescription
-        patient_id: ID of the patient
+        appointment_id: ID of the appointment
         medications: List of medications with prices
     
     Returns:
         tuple: (success, message, checkout_url)
     """
     try:
-        # First, get patient data to retrieve email
+        # Step 1: Get appointment data to retrieve patient ID
+        appointment_data, status_code, message = get_appointment_data(appointment_id)
+        
+        if status_code != 200:
+            logger.error(f"Failed to get appointment data: {message}")
+            return False, f"Failed to get appointment data: {message}", None
+        
+        # Step 2: Extract patient ID from appointment data
+        patient_id = appointment_data.get('patient_id')
+        if not patient_id:
+            logger.error(f"Patient ID not found in appointment data for appointment {appointment_id}")
+            return False, f"Patient ID not found in appointment data for appointment {appointment_id}", None
+        
+        logger.info(f"Retrieved patient ID {patient_id} from appointment {appointment_id}")
+        
+        # Step 3: Get patient details using the patient ID
         patient_data, status_code, message = get_patient_data(patient_id)
         
         if status_code != 200:
+            logger.error(f"Failed to get patient data for ID {patient_id}: {message}")
             return False, f"Failed to get patient data: {message}", None
         
+        # Step 4: Extract patient email
         patient_email = patient_data.get('email')
         if not patient_email:
-            return False, "Patient email not found", None
+            logger.error(f"Email not found for patient {patient_id}")
+            return False, f"Patient email not found for patient {patient_id}", None
         
-        # Now call the billing service with complete information
-        response = requests.post(
-            f"{BILLING_SERVICE_URL}/create-checkout-session",
-            json={
-                "prescription_id": prescription_id,
-                "patient_id": patient_id,
-                "patient_email": patient_email,
-                "medicines": medications
-            },
-            timeout=5
-        )
+        logger.info(f"Retrieved email for patient {patient_id}")
         
-        if response.status_code != 200:
-            error_msg = f"Billing service error: {response.status_code} - {response.text}"
+        # Step 5: Prepare request data for billing service
+        billing_data = {
+            "prescription_id": prescription_id,
+            "patient_id": patient_id,
+            "patient_email": patient_email,
+            "medicines": medications
+        }
+        
+        # Step 6: Call the billing service
+        try:
+            response = requests.post(
+                f"{BILLING_SERVICE_URL}/create-checkout-session",
+                json=billing_data,
+                timeout=5
+            )
+            
+            # Step 7: Handle billing service response
+            if response.status_code != 200:
+                error_msg = f"Billing service error: {response.status_code} - {response.text}"
+                logger.error(error_msg)
+                return False, error_msg, None
+                
+            checkout_url = response.json().get("url")
+            if not checkout_url:
+                logger.error("Billing service did not return a checkout URL")
+                return False, "Billing service did not return a checkout URL", None
+                
+            logger.info(f"Successfully created billing session for prescription {prescription_id}")
+            return True, "Billing session created successfully", checkout_url
+            
+        except requests.exceptions.Timeout:
+            error_msg = "Timeout while connecting to billing service"
+            logger.error(error_msg)
+            return False, error_msg, None
+        except requests.exceptions.ConnectionError:
+            error_msg = "Connection error while connecting to billing service"
             logger.error(error_msg)
             return False, error_msg, None
             
-        return True, "Billing session created successfully", response.json().get("url")
-    except requests.exceptions.RequestException as e:
-        error_msg = f"Error connecting to billing service: {str(e)}"
+    except Exception as e:
+        error_msg = f"Unexpected error in create_billing_session: {str(e)}"
         logger.error(error_msg)
         return False, error_msg, None
+
+
+
+def get_appointment_data(appointment_id):
+    """
+    Fetch appointment data from the appointment microservice
+    
+    Args:
+        appointment_id: ID of the appointment
+    
+    Returns:
+        tuple: (appointment_data, status_code, message)
+    """
+    try:
+        APPOINTMENT_SERVICE_URL = os.environ.get('APPOINTMENT_SERVICE_URL', 'http://appointment:5002')
+        response = make_api_request('GET', f"{APPOINTMENT_SERVICE_URL}/appointment/{appointment_id}")
+        
+        if response.status_code != 200:
+            error_msg = f"Appointment service error: {response.status_code} - {response.text}"
+            logger.error(error_msg)
+            return None, response.status_code, error_msg
+        
+        result = response.json()
+        if result.get('code') != 200:
+            error_msg = f"Appointment data retrieval failed: {result.get('message', 'Unknown error')}"
+            logger.error(error_msg)
+            return None, result.get('code', 500), error_msg
+        
+        appointment_data = result.get('data', {})
+        return appointment_data, 200, "Appointment data retrieved successfully"
+    except requests.exceptions.RequestException as e:
+        error_msg = f"Error connecting to appointment service: {str(e)}"
+        logger.error(error_msg)
+        return None, 503, error_msg
 
 
 def get_patient_data(patient_id):
@@ -248,13 +323,15 @@ def dispense_prescription(prescription_id):
         inventory_updates.append(result['inventory_update'])
         payment_medications.append(result['payment_info'])
     
-    # Get patient ID from prescription data
-    patient_id = prescription_data.get('appointment_id')  # Assuming appointment_id is linked to patient
+    # Get appointment ID from prescription data
+    appointment_id = prescription_data.get('appointment_id')
+    if not appointment_id:
+        return create_response(400, "Appointment ID not found in prescription data")
     
-    # Create payment session
+    # Create payment session using appointment_id
     payment_success, payment_message, checkout_url = create_billing_session(
         prescription_id, 
-        patient_id,
+        appointment_id,
         payment_medications
     )
     
@@ -276,6 +353,7 @@ def dispense_prescription(prescription_id):
     
     logger.info(f"Prescription {prescription_id} successfully dispensed and billed")
     return create_response(200, "Prescription dispensed and billed successfully", response_data)
+
 
 def process_medication(med):
     """Process a single medication for dispensing"""
