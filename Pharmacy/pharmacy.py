@@ -5,16 +5,23 @@ import os
 import logging
 from functools import lru_cache, wraps
 
+# Initialize Flask app
 app = Flask(__name__)
 CORS(app)
 
+# Configuration
 INVENTORY_API_BASE_URL = os.environ.get('INVENTORY_API_BASE_URL', "https://personal-dxi3ngjv.outsystemscloud.com/Inventory/rest/v1")
-PRESCRIPTION_SERVICE_URL = os.environ.get('PRESCRIPTION_SERVICE_URL', 'http://prescription:5003')
-BILLING_SERVICE_URL = os.environ.get('BILLING_SERVICE_URL', 'http://billing:5024')
+PRESCRIPTION_SERVICE_URL = os.environ.get('PRESCRIPTION_SERVICE_URL', 'http://atomicservice-prescription-1:5003')
+BILLING_SERVICE_URL = os.environ.get('BILLING_SERVICE_URL', 'http://atomicservice-billing-1:5024')
+PATIENT_SERVICE_URL = os.environ.get('PATIENT_SERVICE_URL', 'http://atomicservice-patient-1:5001')
+APPOINTMENT_SERVICE_URL = os.environ.get('APPOINTMENT_SERVICE_URL', 'http://atomicservice-appointment-1:5002')
+NOTIF_SERVICE_URL = os.environ.get('NOTIF_SERVICE_URL', 'http://172.25.0.5:5005')
 
+# Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Helper functions and decorators
 def handle_api_error(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -44,6 +51,7 @@ def make_api_request(method, url, json=None, timeout=5):
         logger.error(f"API request error: {str(e)}")
         raise
 
+# Inventory management functions
 @lru_cache(maxsize=128)
 def get_cached_inventory(medication_name):
     try:
@@ -81,6 +89,35 @@ def update_inventory(medication_data):
     
     return result, 200, "Inventory updated successfully"
 
+def validate_medication(med):
+    if not isinstance(med, dict) or 'name' not in med or 'quantity' not in med:
+        return None, 400, f"Invalid medication format: {med}"
+    
+    med_name = med['name']
+    required_qty = med['quantity']
+    
+    inventory_data = get_inventory_data(med_name)
+    if not inventory_data:
+        return None, 404, f"Medication {med_name} not found in inventory"
+
+    current_stock = inventory_data.get('quantity', 0)
+    med_id = inventory_data.get('medicationID', '')
+    med_price = inventory_data.get('price', 0.0)
+    
+    if current_stock < required_qty:
+        return None, 400, f"Insufficient stock for {med_name}. Required: {required_qty}, Available: {current_stock}"
+
+    new_quantity = current_stock - required_qty
+    
+    return {
+        "medication": med_name,
+        "medicationID": med_id,
+        "current_stock": current_stock,
+        "new_quantity": new_quantity,
+        "price": med_price
+    }, 200, "Medication validated successfully"
+
+# Prescription management functions
 def get_prescription_data(prescription_id):
     response = make_api_request('GET', f"{PRESCRIPTION_SERVICE_URL}/prescription/{prescription_id}")
     
@@ -99,27 +136,62 @@ def update_prescription_status(prescription_id, status):
     result = response.json()
     return result, 200, "Prescription status updated successfully"
 
-def create_billing_session(prescription_id, appointment_id, medications):
-    """
-    Create a billing session by calling the billing microservice
-    
-    Args:
-        prescription_id: ID of the prescription
-        appointment_id: ID of the appointment
-        medications: List of medications with prices
-    
-    Returns:
-        tuple: (success, message, checkout_url)
-    """
+# Appointment and patient functions
+def get_appointment_data(appointment_id):
     try:
-        # Step 1: Get appointment data to retrieve patient ID
+        response = make_api_request('GET', f"{APPOINTMENT_SERVICE_URL}/appointment/{appointment_id}")
+        
+        if response.status_code != 200:
+            error_msg = f"Appointment service error: {response.status_code} - {response.text}"
+            logger.error(error_msg)
+            return None, response.status_code, error_msg
+        
+        result = response.json()
+        if result.get('code') != 200:
+            error_msg = f"Appointment data retrieval failed: {result.get('message', 'Unknown error')}"
+            logger.error(error_msg)
+            return None, result.get('code', 500), error_msg
+        
+        appointment_data = result.get('data', {})
+        return appointment_data, 200, "Appointment data retrieved successfully"
+    except requests.exceptions.RequestException as e:
+        error_msg = f"Error connecting to appointment service: {str(e)}"
+        logger.error(error_msg)
+        return None, 503, error_msg
+
+def get_patient_data(patient_id):
+    try:
+        response = make_api_request('GET', f"{PATIENT_SERVICE_URL}/patient/{patient_id}")
+        
+        if response.status_code != 200:
+            error_msg = f"Patient service error: {response.status_code} - {response.text}"
+            logger.error(error_msg)
+            return None, response.status_code, error_msg
+        
+        result = response.json()
+        if result.get('code') != 200:
+            error_msg = f"Patient data retrieval failed: {result.get('message', 'Unknown error')}"
+            logger.error(error_msg)
+            return None, result.get('code', 500), error_msg
+        
+        patient_data = result.get('data', {})
+        return patient_data, 200, "Patient data retrieved successfully"
+    except requests.exceptions.RequestException as e:
+        error_msg = f"Error connecting to patient service: {str(e)}"
+        logger.error(error_msg)
+        return None, 503, error_msg
+
+# Billing function
+def create_billing_session(prescription_id, appointment_id, medications):
+    try:
+        # Get appointment data to retrieve patient ID
         appointment_data, status_code, message = get_appointment_data(appointment_id)
         
         if status_code != 200:
             logger.error(f"Failed to get appointment data: {message}")
             return False, f"Failed to get appointment data: {message}", None
         
-        # Step 2: Extract patient ID from appointment data
+        # Extract patient ID from appointment data
         patient_id = appointment_data.get('patient_id')
         if not patient_id:
             logger.error(f"Patient ID not found in appointment data for appointment {appointment_id}")
@@ -127,14 +199,14 @@ def create_billing_session(prescription_id, appointment_id, medications):
         
         logger.info(f"Retrieved patient ID {patient_id} from appointment {appointment_id}")
         
-        # Step 3: Get patient details using the patient ID
+        # Get patient details using the patient ID
         patient_data, status_code, message = get_patient_data(patient_id)
         
         if status_code != 200:
             logger.error(f"Failed to get patient data for ID {patient_id}: {message}")
             return False, f"Failed to get patient data: {message}", None
         
-        # Step 4: Extract patient email
+        # Extract patient email
         patient_email = patient_data.get('email')
         if not patient_email:
             logger.error(f"Email not found for patient {patient_id}")
@@ -142,7 +214,7 @@ def create_billing_session(prescription_id, appointment_id, medications):
         
         logger.info(f"Retrieved email for patient {patient_id}")
         
-        # Step 5: Prepare request data for billing service
+        # Prepare request data for billing service
         billing_data = {
             "prescription_id": prescription_id,
             "patient_id": patient_id,
@@ -150,7 +222,7 @@ def create_billing_session(prescription_id, appointment_id, medications):
             "medicines": medications
         }
         
-        # Step 6: Call the billing service
+        # Call the billing service
         try:
             response = requests.post(
                 f"{BILLING_SERVICE_URL}/create-checkout-session",
@@ -158,7 +230,7 @@ def create_billing_session(prescription_id, appointment_id, medications):
                 timeout=5
             )
             
-            # Step 7: Handle billing service response
+            # Handle billing service response
             if response.status_code != 200:
                 error_msg = f"Billing service error: {response.status_code} - {response.text}"
                 logger.error(error_msg)
@@ -186,74 +258,57 @@ def create_billing_session(prescription_id, appointment_id, medications):
         logger.error(error_msg)
         return False, error_msg, None
 
-
-
-def get_appointment_data(appointment_id):
-    """
-    Fetch appointment data from the appointment microservice
-    
-    Args:
-        appointment_id: ID of the appointment
-    
-    Returns:
-        tuple: (appointment_data, status_code, message)
-    """
+# Notification functions
+def send_sms_notification(phone_number, message):
+    payload = {
+        "method": "sms",
+        "recipient": phone_number,
+        "message": message
+    }
     try:
-        APPOINTMENT_SERVICE_URL = os.environ.get('APPOINTMENT_SERVICE_URL', 'http://appointment:5002')
-        response = make_api_request('GET', f"{APPOINTMENT_SERVICE_URL}/appointment/{appointment_id}")
-        
-        if response.status_code != 200:
-            error_msg = f"Appointment service error: {response.status_code} - {response.text}"
-            logger.error(error_msg)
-            return None, response.status_code, error_msg
-        
-        result = response.json()
-        if result.get('code') != 200:
-            error_msg = f"Appointment data retrieval failed: {result.get('message', 'Unknown error')}"
-            logger.error(error_msg)
-            return None, result.get('code', 500), error_msg
-        
-        appointment_data = result.get('data', {})
-        return appointment_data, 200, "Appointment data retrieved successfully"
-    except requests.exceptions.RequestException as e:
-        error_msg = f"Error connecting to appointment service: {str(e)}"
-        logger.error(error_msg)
-        return None, 503, error_msg
+        response = requests.post(f"{NOTIF_SERVICE_URL}/notify", json=payload, timeout=5)
+        if response.status_code == 201:
+            logger.info(f"SMS notification sent successfully to {phone_number}")
+            return True
+        else:
+            logger.error(f"Failed to send SMS notification: Status code {response.status_code}, Response: {response.text}")
+            return False
+    except requests.exceptions.Timeout:
+        logger.error(f"Timeout error while sending SMS notification to {phone_number}")
+        return False
+    except requests.exceptions.ConnectionError:
+        logger.error(f"Connection error while sending SMS notification to {phone_number}")
+        return False
+    except Exception as e:
+        logger.error(f"Unexpected error sending SMS notification to {phone_number}: {str(e)}")
+        return False
 
-
-def get_patient_data(patient_id):
-    """
-    Fetch patient data from the patient microservice
-    
-    Args:
-        patient_id: ID of the patient
-    
-    Returns:
-        tuple: (patient_data, status_code, message)
-    """
+def send_email_notification(email, subject, message):
+    payload = {
+        "method": "email",
+        "recipient": email,
+        "subject": subject,
+        "message": message
+    }
     try:
-        PATIENT_SERVICE_URL = os.environ.get('PATIENT_SERVICE_URL', 'http://patient:5001')
-        response = make_api_request('GET', f"{PATIENT_SERVICE_URL}/patient/{patient_id}")
-        
-        if response.status_code != 200:
-            error_msg = f"Patient service error: {response.status_code} - {response.text}"
-            logger.error(error_msg)
-            return None, response.status_code, error_msg
-        
-        result = response.json()
-        if result.get('code') != 200:
-            error_msg = f"Patient data retrieval failed: {result.get('message', 'Unknown error')}"
-            logger.error(error_msg)
-            return None, result.get('code', 500), error_msg
-        
-        patient_data = result.get('data', {})
-        return patient_data, 200, "Patient data retrieved successfully"
-    except requests.exceptions.RequestException as e:
-        error_msg = f"Error connecting to patient service: {str(e)}"
-        logger.error(error_msg)
-        return None, 503, error_msg
+        response = requests.post(f"{NOTIF_SERVICE_URL}/notify", json=payload, timeout=5)
+        if response.status_code == 201:
+            logger.info(f"Email notification sent successfully to {email}")
+            return True
+        else:
+            logger.error(f"Failed to send email notification: Status code {response.status_code}, Response: {response.text}")
+            return False
+    except requests.exceptions.Timeout:
+        logger.error(f"Timeout error while sending email notification to {email}")
+        return False
+    except requests.exceptions.ConnectionError:
+        logger.error(f"Connection error while sending email notification to {email}")
+        return False
+    except Exception as e:
+        logger.error(f"Unexpected error sending email notification to {email}: {str(e)}")
+        return False
 
-
+# API Routes
 @app.route("/pharmacy/inventory", methods=['GET'])
 @handle_api_error
 def list_all_medications():
@@ -298,7 +353,6 @@ def get_prescription(prescription_id):
 @app.route("/pharmacy/prescription/<prescription_id>/dispense", methods=['POST'])
 @handle_api_error
 def dispense_prescription(prescription_id):
-    """Process prescription dispensing with billing first, then inventory updates"""
     prescription_data, status_code, message = get_prescription_data(prescription_id)
     
     if status_code != 200:
@@ -312,12 +366,11 @@ def dispense_prescription(prescription_id):
     if not isinstance(medications, list):
         return create_response(400, "Invalid medications format in prescription")
 
-    # First validate all medications without updating inventory
+    # Validate all medications without updating inventory
     medication_updates = []
     payment_medications = []
     
     for med in medications:
-        # Validate medication without updating inventory
         validation_result, status_code, message = validate_medication(med)
         if status_code != 200:
             return create_response(status_code, message)
@@ -343,10 +396,46 @@ def dispense_prescription(prescription_id):
         logger.error(f"Billing session creation failed: {payment_message}")
         return create_response(500, f"Billing failed: {payment_message}")
     
-    # Only update inventory AFTER successful billing URL generation
+    appointment_data, status_code, message = get_appointment_data(appointment_id)
+    if status_code != 200:
+        return create_response(400, f"Failed to get appointment data: {message}")
+
+    patient_id = appointment_data.get('patient_id')
+    if not patient_id:
+        return create_response(400, "Patient ID not found in appointment data")
+
+    patient_data, status_code, message = get_patient_data(patient_id)
+    if status_code != 200:
+        return create_response(400, f"Failed to get patient data: {message}")
+
+    # Send SMS notification
+    test_phone_number = "+6598345858"  # For testing purposes
+    phone_number = test_phone_number if test_phone_number else patient_data.get('phone_number')
+    
+    if not phone_number:
+        return create_response(400, "Patient phone number not found")
+
+    sms_message = f"Your prescription has been collected. Please check your email for the payment link. Thanks for coming la see u again have a nice day :)"
+    sms_sent = send_sms_notification(phone_number, sms_message)
+    
+    # Send email notification
+    test_email = "kesterfun@live.com"  # For testing purposes
+    email = test_email if test_email else patient_data.get('email')
+    
+    if not email:
+        return create_response(400, "Patient email not found")
+
+    email_subject = f"Pay up"
+    email_message = f"Your prescription has been completed. Please complete the payment at: {checkout_url}"
+    email_sent = send_email_notification(email, email_subject, email_message)
+    
+    if not sms_sent or not email_sent:
+        logger.error("Failed to send notifications")
+        return create_response(500, "Failed to send notifications. Prescription not dispensed.")
+    
+    # Only update inventory AFTER successful billing URL generation and notifications
     inventory_updates = []
     for update in medication_updates:
-        # Now actually update the inventory
         med_update_data = {
             "medicationID": update["medicationID"],
             "medicationName": update["medication"],
@@ -356,8 +445,8 @@ def dispense_prescription(prescription_id):
         
         result, status_code, message = update_inventory(med_update_data)
         if status_code != 200:
-            logger.error(f"Inventory update failed after successful billing: {message}")
-            return create_response(500, f"Billing successful but inventory update failed: {message}")
+            logger.error(f"Inventory update failed after successful billing and notifications: {message}")
+            return create_response(500, f"Billing and notifications successful but inventory update failed: {message}")
             
         inventory_updates.append({
             "medication": update["medication"],
@@ -367,99 +456,22 @@ def dispense_prescription(prescription_id):
             "price": update["price"]
         })
     
-    # Update prescription status after successful billing and inventory updates
+    # Update prescription status after successful billing, notifications, and inventory updates
     status_result, status_code, status_message = update_prescription_status(prescription_id, True)
     if status_code != 200:
         logger.error(f"Prescription status update failed: {status_message}")
-        return create_response(500, f"Billing and inventory updated, but status update failed: {status_message}")
+        return create_response(500, f"Billing, notifications, and inventory updated, but status update failed: {status_message}")
     
     response_data = {
         "prescription_id": prescription_id,
         "inventory_updates": inventory_updates,
-        "payment_url": checkout_url
+        "payment_url": checkout_url,
+        "sms_notification_sent": sms_sent,
+        "email_notification_sent": email_sent
     }
     
-    logger.info(f"Prescription {prescription_id} successfully billed and dispensed")
-    return create_response(200, "Prescription billed and dispensed successfully", response_data)
-
-def validate_medication(med):
-    """Validate a medication without updating inventory"""
-    if not isinstance(med, dict) or 'name' not in med or 'quantity' not in med:
-        return None, 400, f"Invalid medication format: {med}"
-    
-    med_name = med['name']
-    required_qty = med['quantity']
-    
-    inventory_data = get_inventory_data(med_name)
-    if not inventory_data:
-        return None, 404, f"Medication {med_name} not found in inventory"
-
-    current_stock = inventory_data.get('quantity', 0)
-    med_id = inventory_data.get('medicationID', '')
-    med_price = inventory_data.get('price', 0.0)
-    
-    if current_stock < required_qty:
-        return None, 400, f"Insufficient stock for {med_name}. Required: {required_qty}, Available: {current_stock}"
-
-    new_quantity = current_stock - required_qty
-    
-    return {
-        "medication": med_name,
-        "medicationID": med_id,
-        "current_stock": current_stock,
-        "new_quantity": new_quantity,
-        "price": med_price
-    }, 200, "Medication validated successfully"
-
-
-
-def process_medication(med):
-    """Process a single medication for dispensing"""
-    if not isinstance(med, dict) or 'name' not in med or 'quantity' not in med:
-        return None, 400, f"Invalid medication format: {med}"
-    
-    med_name = med['name']
-    required_qty = med['quantity']
-    
-    inventory_data = get_inventory_data(med_name)
-    if not inventory_data:
-        return None, 404, f"Medication {med_name} not found in inventory"
-
-    current_stock = inventory_data.get('quantity', 0)
-    med_id = inventory_data.get('medicationID', '')
-    med_price = inventory_data.get('price', 0.0)
-    
-    if current_stock < required_qty:
-        return None, 400, f"Insufficient stock for {med_name}. Required: {required_qty}, Available: {current_stock}"
-
-    new_quantity = current_stock - required_qty
-    
-    med_update_data = {
-        "medicationID": med_id,
-        "medicationName": med_name,
-        "quantity": new_quantity,
-        "price": med_price
-    }
-
-    result, status_code, message = update_inventory(med_update_data)
-    
-    if status_code != 200:
-        return None, status_code, f"Inventory update failed for {med_name}: {message}"
-
-    return {
-        'inventory_update': {
-            "medication": med_name,
-            "medicationID": med_id,
-            "previous_quantity": current_stock,
-            "new_quantity": new_quantity,
-            "price": med_price
-        },
-        'payment_info': {
-            "medication": med_name,
-            "price": int(med_price * 100)  # Convert to cents and ensure it's an integer
-        }
-    }, 200, "Medication processed successfully"
-
+    logger.info(f"Prescription {prescription_id} successfully billed, notified, and dispensed")
+    return create_response(200, "Prescription billed, notified, and dispensed successfully", response_data)
 
 if __name__ == '__main__':
     logger.info("Starting Pharmacy Service")
