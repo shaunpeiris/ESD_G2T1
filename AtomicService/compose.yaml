@@ -148,6 +148,8 @@ services:
       GMAIL_PASSWORD: ${GMAIL_PASSWORD}
     env_file:
       - .env
+    networks:
+      - atomic_network
 
 networks:
   atomic_network:
