@@ -95,6 +95,7 @@
                             <button type="submit" class="btn btn-primary mt-3" @click.prevent="searchDoctors">Search
                                 Doctors</button>
                         </div>
+
                     </div>
                 </form>
             </div>
@@ -111,9 +112,12 @@
                                 <div>
                                     <h5 class="card-title mb-1">{{ doctor.Doctor_Name }}</h5>
                                     <p class="card-subtitle text-muted">{{ doctor.Specialization }}</p>
-                                    <div class="mt-1">
+                                    <!-- <div class="mt-1">
                                         <span class="badge bg-success">4.9 ★</span>
                                         <small class="text-muted">(128 reviews)</small>
+                                    </div> -->
+                                    <div class="mt-1">
+                                        <span class="badge bg-success">{{ doctor.Polyclinic }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -133,14 +137,15 @@
                                 <span v-else class="text-muted">No slots available</span>
                             </div>
 
-                            <button class="btn btn-primary w-100" data-bs-toggle="modal"
-                                data-bs-target="#bookingModal">Book
-                                Appointment</button>
+                            <button class="btn btn-primary w-100" @click="selectAppointment(doctor)">
+                                Book Appointment
+                            </button>
                         </div>
                     </div>
                 </div>
-
-
+            </div>
+            <div v-if="filteredDoctors.length === 0" class="text-center text-muted mt-4">
+                😕 No doctors available for the selected filters.
             </div>
         </div>
 
@@ -155,33 +160,44 @@
                     <div class="modal-body">
                         <div class="mb-3">
                             <h6>Doctor</h6>
-                            <p class="mb-1">Dr. Sarah Johnson - Cardiology</p>
-                            <p class="text-muted mb-0">Downtown Clinic, 5th Floor</p>
+                            <p class="mb-1">
+                                {{ selectedDoctor?.Doctor_Name }} - {{ selectedDoctor?.Specialization }}
+                            </p>
+                            <p class="text-muted mb-0">{{ selectedDoctor?.Polyclinic }}</p>
                         </div>
+
                         <div class="mb-3">
                             <h6>Appointment Details</h6>
-                            <p class="mb-1">Date: March 19, 2025</p>
-                            <p class="mb-1">Time: 10:30 AM</p>
+                            <p class="mb-1">Date: {{ selectedDate }}</p>
+
+                            <label class="form-label">Select Time</label>
+                            <select class="form-select" v-model="modalSelectedTime">
+                                <option v-for="time in availableTimesForModal" :value="time" :key="time">
+                                    {{ formatTime(time) }}
+                                </option>
+                            </select>
                         </div>
+
                         <div class="mb-3">
                             <h6>Reason for Visit</h6>
-                            <textarea class="form-control" rows="3"
-                                placeholder="Please briefly describe your symptoms or reason for visit"></textarea>
+                            <textarea class="form-control" rows="3" v-model="reason"
+                                placeholder="Briefly describe your symptoms"></textarea>
                         </div>
+
                         <div class="mb-3 form-check">
-                            <input type="checkbox" class="form-check-input" id="reminderCheck" checked>
-                            <label class="form-check-label" for="reminderCheck">Send me appointment reminders via email
-                                and
-                                SMS</label>
+                            <input type="checkbox" class="form-check-input" id="reminderCheck" v-model="sendReminders">
+                            <label class="form-check-label" for="reminderCheck">Send reminders via email & SMS</label>
                         </div>
                     </div>
+
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="button" class="btn btn-primary">Confirm Booking</button>
+                        <button type="button" class="btn btn-primary" @click="confirmBooking">Confirm Booking</button>
                     </div>
                 </div>
             </div>
         </div>
+
     </div>
 
 
