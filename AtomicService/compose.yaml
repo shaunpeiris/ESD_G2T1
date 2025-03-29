@@ -104,7 +104,6 @@ services:
       - "5014:5004"
     depends_on:
       - billing_db
-      - patient
     environment:
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
       STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY}
@@ -114,8 +113,6 @@ services:
       dbURL: mysql+mysqlconnector://root@host.docker.internal:3306/billing  
     env_file:
       - .env
-    networks:
-      - atomic_network
 
   #################################
   # Billing SQL Database
@@ -149,23 +146,6 @@ services:
       GMAIL_PASSWORD: ${GMAIL_PASSWORD}
     env_file:
       - .env
-    networks:
-      - atomic_network
-
-  #################################
-  # Availability Microservice
-  #################################
-  availability:
-    build: ./Availability
-    image: ESDG2T1/availability:1.0
-    restart: always
-    ports:
-      - "5024:5000"
-    environment:
-      dbURL: GOOGLE_APPLICATION_CREDENTIALS=/app/serviceAccountKey.json
-    networks:
-      - atomic_network
-  
 
 networks:
   atomic_network:

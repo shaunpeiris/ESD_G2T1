@@ -1,5 +1,5 @@
 const patientURL = 'http://127.0.0.1:5001/patient';
-const doctorURL = 'http://127.0.0.1:5010/doctor';
+const doctorURL = 'http://104.214.186.4:5010/doctor';
 
 const app = Vue.createApp({
     data() {
