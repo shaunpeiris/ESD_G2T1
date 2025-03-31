@@ -11,7 +11,7 @@ services:
     depends_on:
       - patient_db
     environment:
-      dbURL: mysql+mysqlconnector://root@host.docker.internal:3306/patientdb
+      dbURL: mysql+mysqlconnector://root:root@host.docker.internal:3306/patientdb
     networks:
       - atomic_network
 
@@ -42,7 +42,7 @@ services:
     depends_on:
       - appointment_db
     environment:
-      dbURL: mysql+mysqlconnector://root@host.docker.internal:3306/appointmentdb
+      dbURL: mysql+mysqlconnector://root:root@host.docker.internal:3306/appointmentdb
     networks:
       - atomic_network
 
@@ -73,7 +73,7 @@ services:
     depends_on:
       - prescription_db
     environment:
-      dbURL: mysql+mysqlconnector://root@host.docker.internal:3306/prescriptiondb
+      dbURL: mysql+mysqlconnector://root:root@host.docker.internal:3306/prescriptiondb
     networks:
       - atomic_network
 
@@ -110,7 +110,7 @@ services:
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
       YOUR_DOMAIN: ${YOUR_DOMAIN}
       PATIENT_MICROSERVICE_URL: ${PATIENT_MICROSERVICE_URL}
-      dbURL: mysql+mysqlconnector://root@host.docker.internal:3306/billing  
+      dbURL: mysql+mysqlconnector://root:root@host.docker.internal:3306/billing  
     env_file:
       - .env
     networks:
@@ -144,8 +144,10 @@ services:
       TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID}
       TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN}
       TWILIO_PHONE_NUMBER: ${TWILIO_PHONE_NUMBER}
-      GMAIL_USERNAME: ${GMAIL_USERNAME}
-      GMAIL_PASSWORD: ${GMAIL_PASSWORD}
+      # GMAIL_USERNAME: ${GMAIL_USERNAME}
+      # GMAIL_PASSWORD: ${GMAIL_PASSWORD}
+      MAILERSEND_API_KEY: ${MAILERSEND_API_KEY}
+      SENDER_EMAIL: ${SENDER_EMAIL}
     env_file:
       - .env
     networks:

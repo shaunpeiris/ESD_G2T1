@@ -1,26 +1,21 @@
 from flask import Flask, request, jsonify
 from twilio.rest import Client
 from dotenv import load_dotenv
-import smtplib
-from email.mime.text import MIMEText
-from os import environ
 import os
+from mailersend import emails
 
 app = Flask(__name__)
 
-# Environment Variables
-TWILIO_SID = environ.get("TWILIO_ACCOUNT_SID")
-TWILIO_TOKEN = environ.get("TWILIO_AUTH_TOKEN")
-TWILIO_PHONE = environ.get("TWILIO_PHONE_NUMBER")
+# Load environment variables
+load_dotenv()
 
-GMAIL_USER = environ.get("GMAIL_USERNAME")
-GMAIL_PASS = environ.get("GMAIL_PASSWORD")
+TWILIO_SID = os.getenv("TWILIO_ACCOUNT_SID")
+TWILIO_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
+TWILIO_PHONE = os.getenv("TWILIO_PHONE_NUMBER")
+MAILERSEND_API_KEY = os.getenv("MAILERSEND_API_KEY")
+SENDER_EMAIL = os.getenv("SENDER_EMAIL")
+
 notifications = {}
-print(f"Twilio SID: {TWILIO_SID}")
-print(f"Twilio Token: {TWILIO_TOKEN}")
-print(f"Twilio Phone: {TWILIO_PHONE}")
-print(f"Gmail User: {GMAIL_USER}")
-print(f"Gmail Password: {GMAIL_PASS}")
 
 @app.route('/notify', methods=['POST'])
 def send_notification():
@@ -29,7 +24,7 @@ def send_notification():
     message = data.get('message')
     recipient = data.get('recipient')
     method = data.get('method')  # "sms" or "email"
-    subject = data.get('subject', 'Appointment Reminder') 
+    subject = data.get('subject', 'Appointment Reminder')
 
     try:
         if method == 'sms':
@@ -40,14 +35,18 @@ def send_notification():
                 to=recipient
             )
         elif method == 'email':
-            msg = MIMEText(message)
-            msg['Subject'] = subject
-            msg['From'] = GMAIL_USER
-            msg['To'] = recipient
+            mailer = emails.NewEmail(MAILERSEND_API_KEY)
+            mail_body = {}
 
-            with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
-                server.login(GMAIL_USER, GMAIL_PASS)
-                server.send_message(msg)
+            mail_from = {"email": SENDER_EMAIL}
+            recipients = [{"email": recipient}]
+
+            mailer.set_mail_from(mail_from, mail_body)
+            mailer.set_mail_to(recipients, mail_body)
+            mailer.set_subject(subject, mail_body)
+            mailer.set_plaintext_content(message, mail_body)
+
+            mailer.send(mail_body)
         else:
             return jsonify({'error': 'Invalid method'}), 400
 
@@ -64,7 +63,6 @@ def send_notification():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-
 @app.route('/notify/resend/<notif_id>', methods=['POST'])
 def resend_notification(notif_id):
     notif = notifications.get(notif_id)
@@ -80,14 +78,18 @@ def resend_notification(notif_id):
                 to=notif['recipient']
             )
         elif notif['method'] == 'email':
-            msg = MIMEText(notif['message'])
-            msg['Subject'] = notif.get('subject', 'Reminder (Resent)')
-            msg['From'] = GMAIL_USER
-            msg['To'] = notif['recipient']
+            mailer = emails.NewEmail(MAILERSEND_API_KEY)
+            mail_body = {}
 
-            with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
-                server.login(GMAIL_USER, GMAIL_PASS)
-                server.send_message(msg)
+            mail_from = {"email": SENDER_EMAIL}
+            recipients = [{"email": notif['recipient']}]
+
+            mailer.set_mail_from(mail_from, mail_body)
+            mailer.set_mail_to(recipients, mail_body)
+            mailer.set_subject(notif.get('subject', 'Reminder (Resent)'), mail_body)
+            mailer.set_plaintext_content(notif['message'], mail_body)
+
+            mailer.send(mail_body)
 
         notif['status'] = 'resent'
         return jsonify({'notification_id': notif_id, 'status': 'resent'}), 200
@@ -95,9 +97,9 @@ def resend_notification(notif_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True, port=5005)
+
 
 
 ######Use this to trigger notifications in your microservice######
