@@ -27,3 +27,18 @@ services:
     ports: [6001:5100]
     environment:
       PYTHONUNBUFFERED: 1
+
+#################################
+# Doctor Management: The Doctor Management composite microservice
+#################################
+
+  doctorManagement:
+    build:
+      context: ./DoctorManagement/doctormanagement
+      dockerfile: Dockerfile
+    image: ESDG2T1/doctormanagement:1.0
+    restart: always
+    ports:
+      - "6002:6002"
+    environment:
+      PYTHONUNBUFFERED: 1
