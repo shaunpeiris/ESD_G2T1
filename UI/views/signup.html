@@ -153,6 +153,25 @@
                                 </div>
                             </div>
                             
+                            <!-- Mobile Number -->
+                            <div class="mb-4">
+                                <div class="form-floating">
+                                    <input 
+                                        type="tel" 
+                                        class="form-control" 
+                                        :class="{'is-invalid': formErrors.mobile}" 
+                                        id="mobile" 
+                                        placeholder="Mobile Number" 
+                                        v-model="mobile"
+                                        @input="clearInvalidClass('mobile')"
+                                        required>
+                                    <label for="mobile">Mobile Number</label>
+                                    <div class="invalid-feedback">
+                                        {{ formErrors.mobile }}
+                                    </div>
+                                </div>
+                            </div>
+                            
                             <!-- Password -->
                             <div class="mb-4">
                                 <div class="form-floating position-relative">

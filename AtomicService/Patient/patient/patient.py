@@ -20,18 +20,20 @@ class Patient(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(64), nullable=False)
     email = db.Column(db.String(64), nullable=False)
+    mobile = db.Column(db.String(20), nullable=False)  # Added mobile field
     password = db.Column(db.String(64), nullable=False)
     medicalHistory = db.Column(db.JSON, nullable=True)
 
-    def __init__(self, id, name, email, password, medicalHistory):
+    def __init__(self, id, name, email, mobile, password, medicalHistory):
         self.id = id
         self.name = name
         self.email = email
+        self.mobile = mobile  # Added mobile field
         self.password = password
         self.medicalHistory = medicalHistory
 
     def json(self):
-        return {"id": self.id, "name": self.name, "email": self.email, "password": self.password, "medicalHistory": self.medicalHistory}
+        return {"id": self.id, "name": self.name, "email": self.email, "mobile": self.mobile, "password": self.password, "medicalHistory": self.medicalHistory}
 
 @app.route("/patient")
 def get_all():
@@ -84,7 +86,7 @@ def create_patient():
     data = request.get_json()
     
     # Validate required fields
-    if not all(key in data for key in ('name', 'email', 'password')):
+    if not all(key in data for key in ('name', 'email', 'mobile', 'password')):  # Added mobile to required fields
         return jsonify(
             {
                 "code": 400,
@@ -111,6 +113,7 @@ def create_patient():
         id=None,  # Auto-increment will handle this
         name=data["name"],
         email=data["email"],
+        mobile=data["mobile"],  # Added mobile field
         password=data["password"],
         medicalHistory=data.get("medicalHistory", None)
     )
@@ -221,7 +224,7 @@ def login():
 
 @app.route("/patient/update/personal", methods=['PUT', 'OPTIONS'])
 def update_personal_info():
-    """Update a patient's personal information (name and email)"""
+    """Update a patient's personal information (name, email, and mobile)"""
     if request.method == 'OPTIONS':
         return '', 200
         
@@ -229,6 +232,7 @@ def update_personal_info():
     id = data["id"]
     new_name = data.get("name")
     new_email = data.get("email")
+    new_mobile = data.get("mobile")  # Added mobile update
 
     patient = db.session.scalars(
         db.select(Patient).filter_by(id=int(id)).
@@ -248,6 +252,8 @@ def update_personal_info():
         patient.name = new_name
     if new_email:
         patient.email = new_email
+    if new_mobile:  # Added mobile update logic
+        patient.mobile = new_mobile
 
     try:
         db.session.commit()

@@ -9,7 +9,7 @@ const app = Vue.createApp({
             email: '',
             password: '',
             confirmPassword: '',
-            phoneNumber: '',
+            mobile: '',  // Added mobile field
             dob: '',
             termsAgreed: false,
             
@@ -36,6 +36,7 @@ const app = Vue.createApp({
                    this.password && 
                    this.firstName && 
                    this.lastName && 
+                   this.mobile &&  // Added mobile to form validation
                    this.password === this.confirmPassword && 
                    this.password.length >= 8 && 
                    this.termsAgreed;
@@ -68,6 +69,15 @@ const app = Vue.createApp({
                 isValid = false;
             }
             
+            // Validate mobile number
+            if (!this.mobile) {
+                this.formErrors.mobile = 'Mobile number is required';
+                isValid = false;
+            } else if (!this.validateMobile(this.mobile)) {
+                this.formErrors.mobile = 'Please enter a valid mobile number (digits only)';
+                isValid = false;
+            }
+            
             // Validate password
             if (!this.password) {
                 this.formErrors.password = 'Password is required';
@@ -95,6 +105,12 @@ const app = Vue.createApp({
         validateEmail(email) {
             const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             return re.test(email);
+        },
+        
+        validateMobile(mobile) {
+            // Validate that mobile contains only digits
+            const re = /^\d+$/;
+            return re.test(mobile);
         },
         
         togglePasswordVisibility(field) {
@@ -125,6 +141,7 @@ const app = Vue.createApp({
                 const userData = {
                     name: this.fullName,
                     email: this.email,
+                    mobile: this.mobile,  // Added mobile to user data
                     password: this.password,
                     medicalHistory: {
                         allergies: [],
