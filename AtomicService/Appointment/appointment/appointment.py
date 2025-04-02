@@ -51,29 +51,12 @@ class Appointment(db.Model):
             "updated_at": self.updated_at.isoformat()
         }
 
-# Helper functions 
-# this ensures that their appointments dont clash 
-def check_availability(doctor_id, start_time, end_time, appointment_id=None):
-    """Check if doctor is available during the specified time"""
-    query = db.select(Appointment).filter(
-        Appointment.doctor_id == doctor_id,
-        Appointment.start_time < end_time,
-        Appointment.end_time > start_time
-    )
-    
-    # Exclude current appointment when updating
-    if appointment_id:
-        query = query.filter(Appointment.appointment_id != appointment_id)
-        
-    conflicting_appointments = db.session.scalars(query).all()
-    return len(conflicting_appointments) == 0
-
 # Routes
 
 #this is just for testing 
-@app.route('/')
-def home():
-    return "Welcome to the Appointment Service API"
+# @app.route('/')
+# def home():
+#     return "Welcome to the Appointment Service API"
 
 #part of scenario 
 #doctor management composite service requests for the patient appointment details via appointment_id 
@@ -94,6 +77,60 @@ def get_appointment(appointment_id):
     }), 404
 
 #part of scenario 
+#appointment ms returns ALL appointment details for a specific doctor 
+@app.route("/appointment/doctor/<int:doctor_id>")
+def get_doctor_appointments(doctor_id):
+    """Get all appointments for a doctor"""
+    appointments = db.session.scalars(db.select(Appointment).filter_by(doctor_id=doctor_id)).all()
+
+    if appointments:
+        return jsonify({
+            "code": 200,
+            "data": {
+                "appointments": [appointment.json() for appointment in appointments]
+            }
+        })
+    return jsonify({
+        "code": 404,
+        "message": f"No appointments found for doctor {doctor_id}."
+    }), 404
+
+#get appointment details based on the date of an appointment of that specific doctor 
+@app.route("/appointment/doctor/<int:doctor_id>/date/<string:date>")
+def get_doctor_appointments_by_date(doctor_id, date):
+    """Get all appointments for a doctor on a specific date"""
+    try:
+        appointment_date = datetime.strptime(date, "%Y-%m-%d").date()
+        
+        appointments = db.session.scalars(
+            db.select(Appointment).filter_by(
+                doctor_id=doctor_id, 
+                appointment_date=appointment_date
+            )
+        ).all()
+
+        if appointments:
+            return jsonify({
+                "code": 200,
+                "data": {
+                    "appointments": [appointment.json() for appointment in appointments]
+                }
+            })
+        return jsonify({
+            "code": 404,
+            "message": f"No appointments found for doctor {doctor_id} on {date}."
+        }), 404
+    except ValueError:
+        return jsonify({
+            "code": 400,
+            "message": "Invalid date format. Please use YYYY-MM-DD format."
+        }), 400
+
+#scenario get appointments of that specific doctor based on scheduled / completed
+
+
+
+#part of scenario 
 #appointment microservice returns ALL appointment details based on the patient id to the doctor management composite UI 
 @app.route("/appointment/patient/<int:patient_id>")
 def get_patient_appointments(patient_id):
@@ -112,75 +149,24 @@ def get_patient_appointments(patient_id):
         "message": f"No appointments found for patient {patient_id}."
     }), 404
 
-#part of scenario : create new appointment 
-#the patient requests an appointment and the function validates the request & ensures that all required fields are present 
-#this function checks doctor's availability using the check_availability function to ensure that the doctor is free 
-#once validated, the new appointment is added into the db and assigned the status of "SCHEDULED"
-@app.route("/appointment", methods=['POST'])
-def create_appointment():
-    """Create a new appointment"""
-    data = request.get_json()
-    
-    # Validate required fields
-    required_fields = ['patient_id', 'doctor_id', 'appointment_date', 'start_time', 'end_time']
-    for field in required_fields:
-        if field not in data:
-            return jsonify({
-                "code": 400,
-                "message": f"Missing required field: {field}"
-            }), 400
-    
-    try:
-        # Parse dates and times
-        appointment_date = datetime.strptime(data['appointment_date'], "%Y-%m-%d").date()
-        start_time = datetime.fromisoformat(data['start_time'])
-        end_time = datetime.fromisoformat(data['end_time'])
-        
-        # Validate time logic
-        if start_time >= end_time:
-            return jsonify({
-                "code": 400,
-                "message": "Start time must be before end time."
-            }), 400
-            
-        # Check doctor availability
-        if not check_availability(data['doctor_id'], start_time, end_time):
-            return jsonify({
-                "code": 409,
-                "message": "Doctor is not available during the requested time."
-            }), 409
-        
-        # Create appointment
-        appointment = Appointment(
-            patient_id=data['patient_id'],
-            doctor_id=data['doctor_id'],
-            appointment_date=appointment_date,
-            start_time=start_time,
-            end_time=end_time,
-            appointment_status="SCHEDULED",
-            notes=data.get('notes')
-        )
-        
-        db.session.add(appointment)
-        db.session.commit()
-        
+#get the status of an appointment 
+@app.route("/appointment/<int:appointment_id>/status", methods=['GET'])
+def get_appointment_status(appointment_id):
+    """Get the status of a specific appointment by ID"""
+    appointment = db.session.scalar(db.select(Appointment).filter_by(appointment_id=appointment_id))
+
+    if appointment:
         return jsonify({
-            "code": 201,
-            "data": appointment.json(),
-            "message": "Appointment created successfully."
-        }), 201
-        
-    except ValueError as e:
-        return jsonify({
-            "code": 400,
-            "message": f"Invalid date or time format: {str(e)}"
-        }), 400
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({
-            "code": 500,
-            "message": f"An error occurred creating the appointment: {str(e)}"
-        }), 500
+            "code": 200,
+            "data": {
+                "appointment_id": appointment.appointment_id,
+                "status": appointment.appointment_status
+            }
+        })
+    return jsonify({
+        "code": 404,
+        "message": f"Appointment with ID {appointment_id} not found."
+    }), 404
 
 #updates the appointment status - scheduled / completed 
 @app.route("/appointment/<int:appointment_id>/status", methods=['PATCH'])
@@ -202,7 +188,7 @@ def update_appointment_status(appointment_id):
             "message": "Missing required field: status"
         }), 400
     
-    valid_statuses = ["SCHEDULED", "COMPLETED"]  
+    valid_statuses = ["ASSIGNED", "COMPLETED"]  
     if data['status'] not in valid_statuses:
         return jsonify({
             "code": 400,
@@ -216,7 +202,7 @@ def update_appointment_status(appointment_id):
         return jsonify({
             "code": 200,
             "data": appointment.json(),
-            "message": "Appointment status updated successfully."
+            "message": f"Appointment status updated to {data['status']} successfully."
         })
     except Exception as e:
         db.session.rollback()
@@ -253,53 +239,97 @@ if __name__ == '__main__':
 
 
 #not part of scenario but part of UI 
-# @app.route("/appointment/doctor/<int:doctor_id>")
-# def get_doctor_appointments(doctor_id):
-#     """Get all appointments for a doctor"""
-#     appointments = db.session.scalars(db.select(Appointment).filter_by(doctor_id=doctor_id)).all()
 
-#     if appointments:
-#         return jsonify({
-#             "code": 200,
-#             "data": {
-#                 "appointments": [appointment.json() for appointment in appointments]
-#             }
-#         })
-#     return jsonify({
-#         "code": 404,
-#         "message": f"No appointments found for doctor {doctor_id}."
-#     }), 404
 
 #not part of scenario but part of UI under upcoming appointments 
-# @app.route("/appointment/doctor/<int:doctor_id>/date/<string:date>")
-# def get_doctor_appointments_by_date(doctor_id, date):
-#     """Get all appointments for a doctor on a specific date"""
-#     try:
-#         appointment_date = datetime.strptime(date, "%Y-%m-%d").date()
-        
-#         appointments = db.session.scalars(
-#             db.select(Appointment).filter_by(
-#                 doctor_id=doctor_id, 
-#                 appointment_date=appointment_date
-#             )
-#         ).all()
 
-#         if appointments:
+# Helper functions 
+# this ensures that their appointments dont clash 
+# def check_availability(doctor_id, start_time, end_time, appointment_id=None):
+#     """Check if doctor is available during the specified time"""
+#     query = db.select(Appointment).filter(
+#         Appointment.doctor_id == doctor_id,
+#         Appointment.start_time < end_time,
+#         Appointment.end_time > start_time
+#     )
+    
+#     # Exclude current appointment when updating
+#     if appointment_id:
+#         query = query.filter(Appointment.appointment_id != appointment_id)
+        
+#     conflicting_appointments = db.session.scalars(query).all()
+#     return len(conflicting_appointments) == 0
+
+
+#part of scenario : create new appointment 
+#the patient requests an appointment and the function validates the request & ensures that all required fields are present 
+#this function checks doctor's availability using the check_availability function to ensure that the doctor is free 
+#once validated, the new appointment is added into the db and assigned the status of "SCHEDULED"
+# @app.route("/appointment", methods=['POST'])
+# def create_appointment():
+#     """Create a new appointment"""
+#     data = request.get_json()
+    
+#     # Validate required fields
+#     required_fields = ['patient_id', 'doctor_id', 'appointment_date', 'start_time', 'end_time']
+#     for field in required_fields:
+#         if field not in data:
 #             return jsonify({
-#                 "code": 200,
-#                 "data": {
-#                     "appointments": [appointment.json() for appointment in appointments]
-#                 }
-#             })
+#                 "code": 400,
+#                 "message": f"Missing required field: {field}"
+#             }), 400
+    
+#     try:
+#         # Parse dates and times
+#         appointment_date = datetime.strptime(data['appointment_date'], "%Y-%m-%d").date()
+#         start_time = datetime.fromisoformat(data['start_time'])
+#         end_time = datetime.fromisoformat(data['end_time'])
+        
+#         # Validate time logic
+#         if start_time >= end_time:
+#             return jsonify({
+#                 "code": 400,
+#                 "message": "Start time must be before end time."
+#             }), 400
+            
+#         # Check doctor availability
+#         if not check_availability(data['doctor_id'], start_time, end_time):
+#             return jsonify({
+#                 "code": 409,
+#                 "message": "Doctor is not available during the requested time."
+#             }), 409
+        
+#         # Create appointment
+#         appointment = Appointment(
+#             patient_id=data['patient_id'],
+#             doctor_id=data['doctor_id'],
+#             appointment_date=appointment_date,
+#             start_time=start_time,
+#             end_time=end_time,
+#             appointment_status="SCHEDULED",
+#             notes=data.get('notes')
+#         )
+        
+#         db.session.add(appointment)
+#         db.session.commit()
+        
 #         return jsonify({
-#             "code": 404,
-#             "message": f"No appointments found for doctor {doctor_id} on {date}."
-#         }), 404
-#     except ValueError:
+#             "code": 201,
+#             "data": appointment.json(),
+#             "message": "Appointment created successfully."
+#         }), 201
+        
+#     except ValueError as e:
 #         return jsonify({
 #             "code": 400,
-#             "message": "Invalid date format. Please use YYYY-MM-DD format."
+#             "message": f"Invalid date or time format: {str(e)}"
 #         }), 400
+#     except Exception as e:
+#         db.session.rollback()
+#         return jsonify({
+#             "code": 500,
+#             "message": f"An error occurred creating the appointment: {str(e)}"
+#         }), 500
 
 
 #not part of scenario, maybe can delete 
