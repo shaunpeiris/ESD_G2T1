@@ -105,6 +105,7 @@ def create_appointment():
         doctor_name = payload["doctor_name"]
         appointment_date = payload["appointment_date"]
         start_time = payload["start_time"]
+        payload["appointment_status"] = "Assigned"
         end_time = payload["end_time"]
 
         response = requests.post(APPOINTMENT_API_URL, json=payload)
