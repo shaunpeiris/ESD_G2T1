@@ -1,4 +1,4 @@
-const patientURL = 'http://127.0.0.1:5001/patient';
+const doctorURL = 'http://104.214.186.4:5010/doctor';
 
 const app = Vue.createApp({
     data() {
@@ -8,7 +8,7 @@ const app = Vue.createApp({
             wrong: false,
             error: '',
             passwordVisible: false,
-            role: 'patient'
+            role: 'doctor'
         }
     },
 
@@ -16,14 +16,14 @@ const app = Vue.createApp({
         checkLogin() {
             let user = JSON.parse(sessionStorage.getItem(this.role));
             if (user != null) {
-                window.location.href = './patientProfile.html';
+                window.location.href = './doctorDashboard.html';
             }
         },
 
         login(event) {
             if (event) event.preventDefault();
 
-            const loginURL = patientURL + '/login';
+            const loginURL = doctorURL + '/login';
 
             axios.post(loginURL, {
                 email: this.email,
@@ -32,7 +32,7 @@ const app = Vue.createApp({
             .then((response) => {
                 const user = response.data.data;
                 sessionStorage.setItem(this.role, JSON.stringify(user));
-                window.location.href = './patientProfile.html';
+                window.location.href = './doctorDashboard.html';
             })
             .catch((error) => {
                 this.wrong = true;

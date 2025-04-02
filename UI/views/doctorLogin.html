@@ -27,14 +27,14 @@
             overflow: hidden;
             max-width: 450px;
             width: 100%;
-            border-top: 5px solid #0d6efd;
+            border-top: 5px solid #198754;
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.05);
         }
 
         .logo {
             font-size: 1.8rem;
             font-weight: bold;
-            color: #0d6efd;
+            color: #198754;
         }
 
         .password-toggle {
@@ -100,6 +100,7 @@
                             </div>
                         </div>
 
+                        <!--
                         <div class="mb-4">
                             <div class="d-flex">
                                 <div class="form-check me-3">
@@ -116,19 +117,23 @@
                                 </div>
                             </div>
                         </div>
+                        -->
+                        
 
                         <div v-if="wrong" class="alert alert-danger" role="alert">
                             {{ error }}
                         </div>
 
                         <div class="d-grid mb-4">
-                            <button type="submit" class="btn btn-lg btn-primary">Sign In</button>
+                            <button type="submit" class="btn btn-lg btn-success">Sign In</button>
                         </div>
 
+                        <!--
                         <div class="text-center">
                             <p class="mb-0">Don't have an account? <a href="signup.html"
                                     class="text-decoration-none">Create account</a></p>
                         </div>
+                        -->
                     </form>
                 </div>
             </div>
@@ -160,7 +165,7 @@
 
 
     <!-- Vue app script -->
-    <script src="../js/patient-login.js"></script>
+    <script src="../js/doctor-login.js"></script>
     <!-- <script src="../js/signout.js"></script> -->
 </body>
 

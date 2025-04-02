@@ -22,7 +22,8 @@ services:
     depends_on:
       - patient_db
     environment:
-      dbURL: mysql+mysqlconnector://root:@host.docker.internal:3306/patientdb
+      # dbURL: mysql+mysqlconnector://root:@host.docker.internal:3306/patientdb
+      dbURL: mysql+mysqlconnector://root:@patient_db:3306/patientdb
     networks:
       - atomic_network
 

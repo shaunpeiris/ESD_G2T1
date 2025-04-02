@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -14,57 +15,71 @@
       background-color: #f8f9fa;
       border-right: 1px solid #dee2e6;
     }
+
     .sidebar .nav-link {
       color: #495057;
       border-radius: 0;
       padding: 0.75rem 1.25rem;
     }
+
     .sidebar .nav-link.active {
       background-color: #0d6efd;
       color: white;
     }
+
     .sidebar .nav-link:hover:not(.active) {
       background-color: #e9ecef;
     }
+
     .appointment-card {
       transition: transform 0.2s;
       border-left: 5px solid #0d6efd;
     }
+
     .appointment-card:hover {
       transform: translateY(-3px);
       box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
     }
+
     .appointment-card.urgent {
       border-left-color: #dc3545;
     }
+
     .appointment-card.completed {
       border-left-color: #198754;
     }
+
     .patient-info-header {
       background-color: #f8f9fa;
       border-radius: 8px 8px 0 0;
       padding: 15px;
       border-bottom: 1px solid #dee2e6;
     }
+
     .medical-record-item {
       border-left: 3px solid #6c757d;
       padding-left: 15px;
       margin-bottom: 15px;
     }
+
     .medical-record-item.diagnosis {
       border-left-color: #0d6efd;
     }
+
     .medical-record-item.medication {
       border-left-color: #198754;
     }
+
     .medical-record-item.allergy {
       border-left-color: #dc3545;
     }
+
     .tab-content {
       min-height: 400px;
     }
   </style>
 </head>
+
 <body>
   <div class="container-fluid">
     <div class="row">
@@ -117,7 +132,8 @@
 
       <!-- Main Content -->
       <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
-        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <div
+          class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
           <h1 class="h2">Doctor Dashboard</h1>
           <div class="btn-toolbar mb-2 mb-md-0">
             <div class="btn-group me-2">
@@ -137,7 +153,7 @@
           <div id="appointmentsContainer" class="row mb-4">
             <!-- Appointment cards will be dynamically injected here -->
           </div>
-          
+
           <!-- Tomorrow's Schedule (static example) -->
           <h3 class="h4 mb-3">Tomorrow's Schedule</h3>
           <div class="table-responsive">
@@ -158,7 +174,8 @@
                   <td><span class="badge bg-primary">Follow-up</span></td>
                   <td>Post-surgery checkup</td>
                   <td>
-                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#patientRecordModal">View Records</button>
+                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"
+                      data-bs-target="#patientRecordModal">View Records</button>
                   </td>
                 </tr>
                 <!-- Additional rows as needed -->
@@ -171,7 +188,8 @@
   </div>
 
   <!-- Patient Record Modal -->
-  <div class="modal fade" id="patientRecordModal" tabindex="-1" aria-labelledby="patientRecordModalLabel" aria-hidden="true">
+  <div class="modal fade" id="patientRecordModal" tabindex="-1" aria-labelledby="patientRecordModalLabel"
+    aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
       <div class="modal-content">
         <div class="modal-header">
@@ -199,19 +217,24 @@
           <!-- Medical Records Tabs -->
           <ul class="nav nav-tabs" id="myTab" role="tablist">
             <li class="nav-item" role="presentation">
-              <button class="nav-link active" id="summary-tab" data-bs-toggle="tab" data-bs-target="#summary" type="button" role="tab" aria-controls="summary" aria-selected="true">Summary</button>
+              <button class="nav-link active" id="summary-tab" data-bs-toggle="tab" data-bs-target="#summary"
+                type="button" role="tab" aria-controls="summary" aria-selected="true">Summary</button>
             </li>
             <li class="nav-item" role="presentation">
-              <button class="nav-link" id="history-tab" data-bs-toggle="tab" data-bs-target="#history" type="button" role="tab" aria-controls="history" aria-selected="false">Medical History</button>
+              <button class="nav-link" id="history-tab" data-bs-toggle="tab" data-bs-target="#history" type="button"
+                role="tab" aria-controls="history" aria-selected="false">Medical History</button>
             </li>
             <li class="nav-item" role="presentation">
-              <button class="nav-link" id="medications-tab" data-bs-toggle="tab" data-bs-target="#medications" type="button" role="tab" aria-controls="medications" aria-selected="false">Medications</button>
+              <button class="nav-link" id="medications-tab" data-bs-toggle="tab" data-bs-target="#medications"
+                type="button" role="tab" aria-controls="medications" aria-selected="false">Medications</button>
             </li>
             <li class="nav-item" role="presentation">
-              <button class="nav-link" id="tests-tab" data-bs-toggle="tab" data-bs-target="#tests" type="button" role="tab" aria-controls="tests" aria-selected="false">Test Results</button>
+              <button class="nav-link" id="tests-tab" data-bs-toggle="tab" data-bs-target="#tests" type="button"
+                role="tab" aria-controls="tests" aria-selected="false">Test Results</button>
             </li>
             <li class="nav-item" role="presentation">
-              <button class="nav-link" id="notes-tab" data-bs-toggle="tab" data-bs-target="#notes" type="button" role="tab" aria-controls="notes" aria-selected="false">Clinical Notes</button>
+              <button class="nav-link" id="notes-tab" data-bs-toggle="tab" data-bs-target="#notes" type="button"
+                role="tab" aria-controls="notes" aria-selected="false">Clinical Notes</button>
             </li>
           </ul>
           <div class="tab-content p-3 border border-top-0 rounded-bottom" id="myTabContent">
@@ -431,4 +454,5 @@
     }
   </script>
 </body>
+
 </html>

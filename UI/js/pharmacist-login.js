@@ -1,4 +1,4 @@
-const patientURL = 'http://127.0.0.1:5001/patient';
+const pharmacistURL = 'http://104.214.186.4:5015/pharmacy'; // Adjust port if needed
 
 const app = Vue.createApp({
     data() {
@@ -8,7 +8,7 @@ const app = Vue.createApp({
             wrong: false,
             error: '',
             passwordVisible: false,
-            role: 'patient'
+            role: 'pharmacy'
         }
     },
 
@@ -16,14 +16,14 @@ const app = Vue.createApp({
         checkLogin() {
             let user = JSON.parse(sessionStorage.getItem(this.role));
             if (user != null) {
-                window.location.href = './patientProfile.html';
+                window.location.href = './pharmacistDashboard.html';
             }
         },
 
         login(event) {
             if (event) event.preventDefault();
 
-            const loginURL = patientURL + '/login';
+            const loginURL = pharmacistURL + '/login';
 
             axios.post(loginURL, {
                 email: this.email,
@@ -32,7 +32,7 @@ const app = Vue.createApp({
             .then((response) => {
                 const user = response.data.data;
                 sessionStorage.setItem(this.role, JSON.stringify(user));
-                window.location.href = './patientProfile.html';
+                window.location.href = './pharmacistDashboard.html';
             })
             .catch((error) => {
                 this.wrong = true;
@@ -48,6 +48,21 @@ const app = Vue.createApp({
 
     created() {
         this.checkLogin();
+    }
+
+    methods: {
+        // Logout function that will be called when the button is clicked
+        logout() {
+            // Check if the user is logged in
+            const patient = JSON.parse(sessionStorage.getItem('patient'));
+            console.log('Logging out user:', patient ? patient.name : 'No user found');
+            
+            // Clear the session storage
+            sessionStorage.removeItem('patient');
+            
+            // Redirect to login page
+            window.location.href = './login.html';
+        }
     }
 });
 
