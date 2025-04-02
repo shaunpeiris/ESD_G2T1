@@ -4,6 +4,8 @@ from flask_cors import CORS
 import os
 import logging
 from functools import lru_cache, wraps
+import amqp_connection
+import json
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -350,7 +352,7 @@ def get_prescription(prescription_id):
     
     return create_response(200, data=prescription_data)
 
-@app.route("/pharmacy/prescription/<prescription_id>/dispense", methods=['POST'])
+@app.route("/pharmacy/dispense/<prescription_id>", methods=['POST'])
 @handle_api_error
 def dispense_prescription(prescription_id):
     prescription_data, status_code, message = get_prescription_data(prescription_id)
@@ -473,6 +475,257 @@ def dispense_prescription(prescription_id):
     logger.info(f"Prescription {prescription_id} successfully billed, notified, and dispensed")
     return create_response(200, "Prescription billed, notified, and dispensed successfully", response_data)
 
+def setup_prescription_queue_consumer():
+    """
+    Set up the AMQP consumer to listen for prescription messages.
+    This should be called when the application starts.
+    """
+    try:
+        # Create a connection (using your existing amqp_connection module)
+        connection = amqp_connection.create_connection()
+        channel = connection.channel()
+        
+        # Declare the exchange (same as in your CreatePrescription service)
+        exchange_name = "dispenser_direct"
+        channel.exchange_declare(exchange=exchange_name, exchange_type='direct', durable=True)
+        
+        # Declare a queue
+        result = channel.queue_declare(queue='prescription_processing_queue', durable=True)
+        queue_name = result.method.queue
+        
+        # Bind the queue to the exchange with the routing key
+        routing_key = "prescription.id"
+        channel.queue_bind(exchange=exchange_name, queue=queue_name, routing_key=routing_key)
+        
+        # Set prefetch count to limit concurrent processing
+        channel.basic_qos(prefetch_count=1)
+        
+        # Set up the consumer
+        channel.basic_consume(queue=queue_name, on_message_callback=process_prescription_from_queue)
+        
+        logger.info(f"AMQP consumer set up. Waiting for prescription messages.")
+        
+        # Start consuming (this is a blocking call)
+        channel.start_consuming()
+        
+    except Exception as e:
+        logger.error(f"Error setting up AMQP consumer: {str(e)}")
+        raise
+
+# URLs from environment variables - same as in your pharmacy service
+INVENTORY_API_BASE_URL = os.environ.get('INVENTORY_API_BASE_URL')
+PRESCRIPTION_SERVICE_URL = os.environ.get('PRESCRIPTION_SERVICE_URL')
+BILLING_SERVICE_URL = os.environ.get('BILLING_SERVICE_URL')
+PATIENT_SERVICE_URL = os.environ.get('PATIENT_SERVICE_URL')
+APPOINTMENT_SERVICE_URL = os.environ.get('APPOINTMENT_SERVICE_URL')
+NOTIF_SERVICE_URL = os.environ.get('NOTIF_SERVICE_URL')
+
+def process_prescription_from_queue(ch, method, properties, body):
+    """
+    Process a prescription message received from the AMQP queue.
+    This function should be called by an AMQP consumer as a callback.
+    """
+    try:
+        # Parse the message body
+        message = json.loads(body)
+        prescription_id = message.get('prescription_id')
+        
+        if not prescription_id:
+            logger.error("Received message without prescription_id")
+            ch.basic_ack(delivery_tag=method.delivery_tag)
+            return
+            
+        logger.info(f"Processing prescription {prescription_id} from queue")
+        
+        # Get prescription data
+        prescription_data, status_code, message = get_prescription_data(prescription_id)
+        
+        if status_code != 200:
+            logger.error(f"Failed to get prescription data: {message}")
+            ch.basic_ack(delivery_tag=method.delivery_tag)
+            return
+            
+        # Get appointment ID from prescription data
+        appointment_id = prescription_data.get('appointment_id')
+        if not appointment_id:
+            logger.error("Appointment ID not found in prescription data")
+            ch.basic_ack(delivery_tag=method.delivery_tag)
+            return
+        
+        # Process medications from prescription
+        medications = prescription_data.get('medicine', [])
+        
+        if not isinstance(medications, list):
+            logger.error("Invalid medications format in prescription")
+            ch.basic_ack(delivery_tag=method.delivery_tag)
+            return
+            
+        # Validate all medications without updating inventory yet
+        medication_updates = []
+        payment_medications = []
+        
+        for med in medications:
+            validation_result, status_code, message = validate_medication(med)
+            if status_code != 200:
+                logger.error(f"Medication validation failed: {message}")
+                ch.basic_ack(delivery_tag=method.delivery_tag)
+                return
+                
+            medication_updates.append(validation_result)
+            payment_medications.append({
+                "medication": validation_result["medication"],
+                "medicationID": validation_result["medicationID"],
+                "price": validation_result["price"]
+            })
+        
+        # Create billing session
+        payment_success, payment_message, checkout_url = create_billing_session(
+            prescription_id, 
+            appointment_id,
+            payment_medications
+        )
+        
+        if not payment_success:
+            logger.error(f"Billing failed: {payment_message}")
+            ch.basic_ack(delivery_tag=method.delivery_tag)
+            return
+        
+        # Get patient data for notifications
+        appointment_data, status_code, message = get_appointment_data(appointment_id)
+        if status_code != 200:
+            logger.error(f"Failed to get appointment data: {message}")
+            ch.basic_ack(delivery_tag=method.delivery_tag)
+            return
+
+        patient_id = appointment_data.get('patient_id')
+        if not patient_id:
+            logger.error("Patient ID not found in appointment data")
+            ch.basic_ack(delivery_tag=method.delivery_tag)
+            return
+
+        patient_data, status_code, message = get_patient_data(patient_id)
+        if status_code != 200:
+            logger.error(f"Failed to get patient data: {message}")
+            ch.basic_ack(delivery_tag=method.delivery_tag)
+            return
+
+        # Send SMS notification
+        phone_number = patient_data.get('mobile')  # Assuming field name from error message
+        if not phone_number:
+            logger.warning("Patient phone number not found, skipping SMS notification")
+            sms_sent = {"error": "Patient phone number not available", "status": "skipped"}
+        else:
+            sms_message = f"Your prescription has been processed. Please check your email for the payment link."
+            sms_sent = send_sms_notification(phone_number, sms_message)
+            # Add verification of SMS success
+            if not sms_sent:
+                logger.error(f"Failed to send SMS notification to {phone_number} for prescription {prescription_id}. Aborting inventory update.")
+                ch.basic_ack(delivery_tag=method.delivery_tag)
+                return
+        
+        # Send email notification
+        email = patient_data.get('email')
+        if not email:
+            logger.error("Patient email not found, cannot send payment link")
+            ch.basic_ack(delivery_tag=method.delivery_tag)
+            return
+
+        email_subject = "Your Prescription Payment"
+        email_message = f"Your prescription has been processed. Please complete the payment at: {checkout_url}"
+        email_sent = send_email_notification(email, email_subject, email_message)
+        
+        if not email_sent:
+            logger.error(f"Failed to send email notification to {email} for prescription {prescription_id}. Aborting inventory update.")
+            ch.basic_ack(delivery_tag=method.delivery_tag)
+            return
+
+        # Update inventory after successful notifications
+        inventory_updates = []
+        for update in medication_updates:
+            med_update_data = {
+                "medicationID": update["medicationID"],
+                "medicationName": update["medication"],
+                "quantity": update["new_quantity"],
+                "price": update["price"]
+            }
+            
+            result, status_code, message = update_inventory(med_update_data)
+            if status_code != 200:
+                logger.error(f"Inventory update failed: {message}")
+                ch.basic_ack(delivery_tag=method.delivery_tag)
+                return
+                
+            inventory_updates.append({
+                "medication": update["medication"],
+                "medicationID": update["medicationID"],
+                "previous_quantity": update["current_stock"],
+                "new_quantity": update["new_quantity"],
+                "price": update["price"]
+            })
+        
+        # Update prescription status to processed
+        status_result, status_code, status_message = update_prescription_status(prescription_id, True)
+        if status_code != 200:
+            logger.error(f"Prescription status update failed: {status_message}")
+            ch.basic_ack(delivery_tag=method.delivery_tag)
+            return
+        
+        logger.info(f"Prescription {prescription_id} successfully processed from queue")
+        
+        # Log the successful processing
+        processing_result = {
+            "prescription_id": prescription_id,
+            "inventory_updates": inventory_updates,
+            "payment_url": checkout_url,
+            "sms_notification_sent": sms_sent,
+            "email_notification_sent": email_sent
+        }
+        logger.info(f"Processing result: {json.dumps(processing_result)}")
+        
+        # Acknowledge the message
+        ch.basic_ack(delivery_tag=method.delivery_tag)
+        
+    except json.JSONDecodeError:
+        logger.error("Invalid JSON in message")
+        ch.basic_ack(delivery_tag=method.delivery_tag)
+    except Exception as e:
+        logger.error(f"Error processing prescription from queue: {str(e)}")
+        ch.basic_ack(delivery_tag=method.delivery_tag)
+
+# test function
+@app.route("/pharmacy/test/process-queue", methods=['POST'])
+@handle_api_error
+def test_process_queue():
+    data = request.json
+    prescription_id = data.get('prescription_id')
+    
+    if not prescription_id:
+        return create_response(400, "prescription_id is required")
+    
+    # Manually create the message that would come from the queue
+    ch_mock = type('obj', (object,), {
+        'basic_ack': lambda delivery_tag: None
+    })
+    method_mock = type('obj', (object,), {
+        'delivery_tag': 1
+    })
+    
+    # Invoke the queue processor directly with the mocked objects
+    process_prescription_from_queue(
+        ch_mock, 
+        method_mock,
+        None,
+        json.dumps({"prescription_id": prescription_id}).encode()
+    )
+    
+    return create_response(200, f"Test processing of prescription {prescription_id} initiated")
+
+import threading
 if __name__ == '__main__':
     logger.info("Starting Pharmacy Service")
+    # Start the AMQP consumer in a background thread
+    consumer_thread = threading.Thread(target=setup_prescription_queue_consumer)
+    consumer_thread.daemon = True
+    consumer_thread.start()
+    
     app.run(host='0.0.0.0', port=5004, debug=False)
