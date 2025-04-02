@@ -212,44 +212,46 @@ services:
   #################################
   # Doctor Management Microservice
   #################################
-  # doctorManagement:
-  #   build:
-  #     context: ./CompositeService/DoctorManagement
-  #     dockerfile: Dockerfile
-  #   image: ESDG2T1/doctormanagement:1.0
-  #   restart: always
-  #   ports:
-  #     - "6002:6002"
-  #   environment:
-  #     PYTHONUNBUFFERED: 1
-  #   networks:
-  #     - atomic_network
+  doctorManagement:
+    build:
+      context: ./CompositeService/DoctorManagement
+      dockerfile: Dockerfile
+    image: ESDG2T1/doctormanagement:1.0
+    restart: always
+    ports:
+      - "6002:6002"
+    environment:
+      PYTHONUNBUFFERED: 1
+      APPOINTMENT_SERVICE_URL: "http://appointment:5002"
+      PATIENT_SERVICE_URL: "http://patient:5001"
+    networks:
+      - atomic_network
 
   #################################
   # AMQP: RabbitMQ Microservice
-  #################################
-  rabbitmq:
-    build:
-      context: ./ExternalService/amqp
-      dockerfile: Dockerfile
-    image: mondo/amqp
-    restart: always
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-      - "15674:15674"
-      - "61613:61613"
-    networks:
-      - atomic_network
+  # #################################
+  # rabbitmq:
+  #   build:
+  #     context: ./ExternalService/amqp
+  #     dockerfile: Dockerfile
+  #   image: mondo/amqp
+  #   restart: always
+  #   ports:
+  #     - "5672:5672"
+  #     - "15672:15672"
+  #     - "15674:15674"
+  #     - "61613:61613"
+  #   networks:
+  #     - atomic_network
 
-  setup:
-    build:
-      context: ./ExternalService/amqp
-      dockerfile: setup.Dockerfile
-    depends_on:
-      - rabbitmq
-    networks:
-      - atomic_network
+  # setup:
+  #   build:
+  #     context: ./ExternalService/amqp
+  #     dockerfile: setup.Dockerfile
+  #   depends_on:
+  #     - rabbitmq
+  #   networks:
+  #     - atomic_network
 
 networks:
   atomic_network:

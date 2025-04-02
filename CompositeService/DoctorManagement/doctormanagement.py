@@ -88,7 +88,7 @@ def get_patient_records(patient_id):
     try:
         # Step 6: Invoke the Patient Service to retrieve patient records
         patient_result = invoke_http(
-            f"{patient_URL}/{patient_id}",
+            f"{patient_URL}/patient/{patient_id}",
             method="GET"
         )
         print("[Doctor Management] Patient service response:", patient_result)
