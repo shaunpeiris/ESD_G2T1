@@ -1,9 +1,256 @@
 services:
   php-apache:
-    build:
+    build: 
       context: .
-      dockerfile: UI.DockerFile
+      dockerfile: ./UI/UI.DockerFile
     ports:
       - "8080:80"
     volumes:
       - ./UI:/var/www/html
+    networks:
+      - atomic_network
+
+  #################################
+  # Patient Microservice
+  #################################
+  patient:
+    build: ./AtomicService/Patient/patient
+    image: ESDG2T1/patient:1.0
+    restart: always
+    ports:
+      - "5001:5001"
+    depends_on:
+      - patient_db
+    environment:
+      dbURL: mysql+mysqlconnector://root:@host.docker.internal:3306/patientdb
+    networks:
+      - atomic_network
+
+  patient_db:
+    image: mysql:latest
+    restart: always
+    ports:
+      - "3301:3306"
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: yes
+    volumes:
+      - ./AtomicService/Patient/db/patient.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - atomic_network
+
+  #################################
+  # Appointment Microservice
+  #################################
+  appointment:
+    build: ./AtomicService/Appointment/appointment
+    image: ESDG2T1/appointment:1.0
+    restart: always
+    ports:
+      - "5002:5002"
+    depends_on:
+      - appointment_db
+    environment:
+      dbURL: mysql+mysqlconnector://root:@host.docker.internal:3306/appointmentdb
+    networks:
+      - atomic_network
+
+  appointment_db:
+    image: mysql:latest
+    restart: always
+    ports:
+      - "3302:3306"
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: yes
+    volumes:
+      - ./AtomicService/Appointment/db/appointment.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - atomic_network
+
+  #################################
+  # Prescription Microservice
+  #################################
+  prescription:
+    build: ./AtomicService/Prescription/prescription
+    image: ESDG2T1/prescription:1.0
+    restart: always
+    ports:
+      - "5003:5003"
+    depends_on:
+      - prescription_db
+    environment:
+      dbURL: mysql+mysqlconnector://root:@host.docker.internal:3306/prescriptiondb
+    networks:
+      - atomic_network
+
+  prescription_db:
+    image: mysql:latest
+    restart: always
+    ports:
+      - "3303:3306"
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: yes
+    volumes:
+      - ./AtomicService/Prescription/db/prescription.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - atomic_network
+
+  #################################
+  # Billing Microservice
+  #################################
+  billing:
+    build: ./AtomicService/Billing/billing
+    image: ESDG2T1/billing:1.0
+    restart: always
+    ports:
+      - "5014:5004"
+    depends_on:
+      - billing_db
+    environment:
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
+      YOUR_DOMAIN: ${YOUR_DOMAIN}
+      PATIENT_MICROSERVICE_URL: ${PATIENT_MICROSERVICE_URL}
+      dbURL: mysql+mysqlconnector://root:@host.docker.internal:3306/billing
+    env_file:
+      - .env
+    networks:
+      - atomic_network
+
+  billing_db:
+    image: mysql:latest
+    restart: always
+    ports:
+      - "3304:3306"
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: yes
+    volumes:
+      - ./AtomicService/Billing/db/billing.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - atomic_network
+
+  #################################
+  # Notification Microservice
+  #################################
+  notification:
+    build: ./AtomicService/Notification/notification
+    image: ESDG2T1/notification:1.0
+    restart: always
+    ports:
+      - "5015:5005"
+    environment:
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN}
+      TWILIO_PHONE_NUMBER: ${TWILIO_PHONE_NUMBER}
+      MAILERSEND_API_KEY: ${MAILERSEND_API_KEY}
+      SENDER_EMAIL: ${SENDER_EMAIL}
+    env_file:
+      - .env
+    networks:
+      - atomic_network
+
+  #################################
+  # Book Appointment Microservice
+  #################################
+  availability:
+    build: ./CompositeService/BookAppointment
+    image: ESDG2T1/book_appointment:1.0
+    restart: always
+    ports:
+      - "5050:5000"
+    networks:
+      - atomic_network
+
+  #################################
+  # Pharmacy Microservice
+  #################################
+  pharmacy:
+    build: ./CompositeService/Pharmacy
+    image: ESDG2T1/pharmacy:1.0
+    restart: always
+    ports:
+      - "5004:5004"
+    environment:
+      INVENTORY_API_BASE_URL: "https://personal-dxi3ngjv.outsystemscloud.com/Inventory/rest/v1"
+      PRESCRIPTION_SERVICE_URL: "http://prescription:5003"
+    networks:
+      - atomic_network
+    env_file:
+      - .env
+
+  #################################
+  # CreatePrescription Microservice
+  #################################
+  createPrescription:
+    build:
+      context: ./CompositeService/CreatePrescription
+      dockerfile: Dockerfile
+    image: ESDG2T1/createprescription:1.0
+    restart: always
+    ports:
+      - "6003:6003"
+    environment:
+      PYTHONUNBUFFERED: 1
+    networks:
+      - atomic_network
+
+  #################################
+  # Process Prescription Microservice
+  #################################
+  # processPrescription:
+  #   build: ./CompositeService/ProcessPrescription
+  #   image: ESDG2T1/processprescription:1.0
+  #   restart: always
+  #   ports:
+  #     - "6001:5100"
+  #   environment:
+  #     PYTHONUNBUFFERED: 1
+  #   networks:
+  #     - atomic_network
+
+  #################################
+  # Doctor Management Microservice
+  #################################
+  # doctorManagement:
+  #   build:
+  #     context: ./CompositeService/DoctorManagement
+  #     dockerfile: Dockerfile
+  #   image: ESDG2T1/doctormanagement:1.0
+  #   restart: always
+  #   ports:
+  #     - "6002:6002"
+  #   environment:
+  #     PYTHONUNBUFFERED: 1
+  #   networks:
+  #     - atomic_network
+
+  #################################
+  # AMQP: RabbitMQ Microservice
+  #################################
+  rabbitmq:
+    build:
+      context: ./ExternalService/amqp
+      dockerfile: Dockerfile
+    image: mondo/amqp
+    restart: always
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+      - "15674:15674"
+      - "61613:61613"
+    networks:
+      - atomic_network
+
+  setup:
+    build:
+      context: ./ExternalService/amqp
+      dockerfile: setup.Dockerfile
+    depends_on:
+      - rabbitmq
+    networks:
+      - atomic_network
+
+networks:
+  atomic_network:
+    driver: bridge
+    name: atomic_network
