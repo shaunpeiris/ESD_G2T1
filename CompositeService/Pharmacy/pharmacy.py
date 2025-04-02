@@ -10,12 +10,12 @@ app = Flask(__name__)
 CORS(app)
 
 # Configuration
-INVENTORY_API_BASE_URL = os.environ.get('INVENTORY_API_BASE_URL', "https://personal-dxi3ngjv.outsystemscloud.com/Inventory/rest/v1")
+INVENTORY_API_BASE_URL = os.environ.get('INVENTORY_API_BASE_URL')
 PRESCRIPTION_SERVICE_URL = os.environ.get('PRESCRIPTION_SERVICE_URL')
-BILLING_SERVICE_URL = os.environ.get('BILLING_SERVICE_URL', 'http://atomicservice-billing-1:5024')
-PATIENT_SERVICE_URL = os.environ.get('PATIENT_SERVICE_URL', 'http://atomicservice-patient-1:5001')
-APPOINTMENT_SERVICE_URL = os.environ.get('APPOINTMENT_SERVICE_URL', 'http://atomicservice-appointment-1:5002')
-NOTIF_SERVICE_URL = os.environ.get('NOTIF_SERVICE_URL', 'http://172.25.0.5:5005')
+BILLING_SERVICE_URL = os.environ.get('BILLING_SERVICE_URL')
+PATIENT_SERVICE_URL = os.environ.get('PATIENT_SERVICE_URL')
+APPOINTMENT_SERVICE_URL = os.environ.get('APPOINTMENT_SERVICE_URL')
+NOTIF_SERVICE_URL = os.environ.get('NOTIF_SERVICE_URL')
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
