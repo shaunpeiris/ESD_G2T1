@@ -22,7 +22,7 @@ services:
     depends_on:
       - patient_db
     environment:
-      dbURL: mysql+mysqlconnector://root:@host.docker.internal:3306/patientdb
+      dbURL: mysql+mysqlconnector://root@host.docker.internal:3306/patientdb
       # dbURL: mysql+mysqlconnector://root:@patient_db:3306/patientdb
     networks:
       - atomic_network
@@ -51,7 +51,7 @@ services:
     depends_on:
       - appointment_db
     environment:
-      dbURL: mysql+mysqlconnector://root:@host.docker.internal:3306/appointmentdb
+      dbURL: mysql+mysqlconnector://root@host.docker.internal:3306/appointmentdb
     networks:
       - atomic_network
 
@@ -79,7 +79,7 @@ services:
     depends_on:
       - prescription_db
     environment:
-      dbURL: mysql+mysqlconnector://root:@host.docker.internal:3306/prescriptiondb
+      dbURL: mysql+mysqlconnector://root@host.docker.internal:3306/prescriptiondb
     networks:
       - atomic_network
 
@@ -112,7 +112,7 @@ services:
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
       YOUR_DOMAIN: ${YOUR_DOMAIN}
       PATIENT_MICROSERVICE_URL: ${PATIENT_MICROSERVICE_URL}
-      dbURL: mysql+mysqlconnector://root:@host.docker.internal:3306/billing
+      dbURL: mysql+mysqlconnector://root@host.docker.internal:3306/billing
     env_file:
       - .env
     networks:
@@ -253,7 +253,85 @@ services:
     networks:
       - atomic_network
 
+
+  #######################################
+  # Postgres: The database used by Kong
+  #######################################
+  kong-database:
+    image: postgres:17.4
+    platform: linux/amd64  # <- required for Mac M1 chip. Otherwise, can remove
+    restart: always
+    networks:
+      - atomic_network
+    environment:
+      POSTGRES_DB: kong
+      POSTGRES_USER: kong
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "kong"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+#######################################
+  # Kong database migration
+  #######################################
+  kong-migration:
+    image: kong/kong-gateway:3.9
+    platform: linux/amd64  # <- required for Mac M1 chip. Otherwise, can remove
+    command: "kong migrations bootstrap"
+    restart: on-failure
+    networks:
+      - atomic_network
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: kong-database
+      KONG_PG_USER: kong
+      KONG_PG_PASSWORD: password
+    depends_on:
+      - kong-database
+
+
+#######################################
+  # Kong: The API Gateway
+  #######################################
+  kong:
+    image: kong/kong-gateway:3.9
+    platform: linux/amd64  # <- required for Mac M1 chip. Otherwise, can remove
+    restart: always
+    networks:
+      - atomic_network
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: kong-database
+      KONG_PG_USER: kong
+      KONG_PG_PASSWORD: password
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_LISTEN: 0.0.0.0:8001
+      KONG_ADMIN_GUI_URL: http://localhost:8002
+    depends_on:
+      - kong-migration
+    ports: # https://docs.konghq.com/gateway/latest/production/networking/default-ports/
+      - "8000:8000" # Takes incoming HTTP traffic from Consumers, and forwards it to upstream Services.
+      - "8001:8001" # Admin API. Listens for calls from the command line over HTTP.
+      - "8002:8002" # Kong Manager (GUI). Listens for HTTP traffic.
+
+  
+
+
 networks:
   atomic_network:
     driver: bridge
     name: atomic_network
+
+volumes:
+  pgdata:
+    driver: local
+
