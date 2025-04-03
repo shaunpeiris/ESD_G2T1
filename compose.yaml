@@ -22,8 +22,8 @@ services:
     depends_on:
       - patient_db
     environment:
-      # dbURL: mysql+mysqlconnector://root:@host.docker.internal:3306/patientdb
-      dbURL: mysql+mysqlconnector://root:@patient_db:3306/patientdb
+      dbURL: mysql+mysqlconnector://root:@host.docker.internal:3306/patientdb
+      # dbURL: mysql+mysqlconnector://root:@patient_db:3306/patientdb
     networks:
       - atomic_network
 
@@ -227,31 +227,31 @@ services:
     networks:
       - atomic_network
 
+  ################################
+  #AMQP: RabbitMQ Microservice
   #################################
-  # AMQP: RabbitMQ Microservice
-  # #################################
-  # rabbitmq:
-  #   build:
-  #     context: ./ExternalService/amqp
-  #     dockerfile: Dockerfile
-  #   image: mondo/amqp
-  #   restart: always
-  #   ports:
-  #     - "5672:5672"
-  #     - "15672:15672"
-  #     - "15674:15674"
-  #     - "61613:61613"
-  #   networks:
-  #     - atomic_network
+  rabbitmq:
+    build:
+      context: ./ExternalService/amqp
+      dockerfile: Dockerfile
+    image: mondo/amqp
+    restart: always
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+      - "15674:15674"
+      - "61613:61613"
+    networks:
+      - atomic_network
 
-  # setup:
-  #   build:
-  #     context: ./ExternalService/amqp
-  #     dockerfile: setup.Dockerfile
-  #   depends_on:
-  #     - rabbitmq
-  #   networks:
-  #     - atomic_network
+  setup:
+    build:
+      context: ./ExternalService/amqp
+      dockerfile: setup.Dockerfile
+    depends_on:
+      - rabbitmq
+    networks:
+      - atomic_network
 
 networks:
   atomic_network:

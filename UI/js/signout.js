@@ -16,7 +16,7 @@ const logoutApp = Vue.createApp({
             sessionStorage.removeItem('patient');
             
             // Redirect to login page
-            window.location.href = './login.html';
+            window.location.href = './patientLogin.html';
         }
     }
 });

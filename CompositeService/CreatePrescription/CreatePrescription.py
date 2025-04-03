@@ -10,11 +10,11 @@ app = Flask(__name__)
 CORS(app)
 
 # URLs for microservices
-patient_URL = "http://host.docker.internal:5001/patient"
-appointment_URL = "http://host.docker.internal:5002/appointment"
-prescription_URL = "http://host.docker.internal:5003/prescription"
-inventory_URL = "https://personal-dxi3ngjv.outsystemscloud.com/Inventory/rest/v1/inventory"
-inventory_name_URL = "https://personal-dxi3ngjv.outsystemscloud.com/Inventory/rest/v1/inventory/name"
+patient_URL = os.environ.get('PATIENT_SERVICE_URL')
+appointment_URL = os.environ.get('APPOINTMENT_SERVICE_URL')
+prescription_URL = os.environ.get('PRESCRIPTION_SERVICE_URL')
+inventory_URL = os.environ.get('INVENTORY_API_BASE_URL')
+inventory_name_URL = os.environ.get('INVENTORY_API_NAME_URL')
 
 @app.route("/create_prescription", methods=['POST'])
 def create_prescription():

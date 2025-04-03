@@ -193,7 +193,7 @@ const app = Vue.createApp({
                 this.redirectCountdown--;
                 if (this.redirectCountdown <= 0) {
                     clearInterval(countdownInterval);
-                    window.location.href = 'login.html';
+                    window.location.href = 'patientLogin.html';
                 }
             }, 1000);
         }
