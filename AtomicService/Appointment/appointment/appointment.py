@@ -211,10 +211,7 @@ def update_appointment_status(appointment_id):
             "message": f"An error occurred updating the appointment status: {str(e)}"
         }), 500
 
-if __name__ == '__main__':
-    with app.app_context(): #push an application context
-        db.create_all() #create table 
-    app.run(host='0.0.0.0', port=5002, debug=True)
+
 
 
 
@@ -245,91 +242,91 @@ if __name__ == '__main__':
 
 # Helper functions 
 # this ensures that their appointments dont clash 
-# def check_availability(doctor_id, start_time, end_time, appointment_id=None):
-#     """Check if doctor is available during the specified time"""
-#     query = db.select(Appointment).filter(
-#         Appointment.doctor_id == doctor_id,
-#         Appointment.start_time < end_time,
-#         Appointment.end_time > start_time
-#     )
+def check_availability(doctor_id, start_time, end_time, appointment_id=None):
+    """Check if doctor is available during the specified time"""
+    query = db.select(Appointment).filter(
+        Appointment.doctor_id == doctor_id,
+        Appointment.start_time < end_time,
+        Appointment.end_time > start_time
+    )
     
-#     # Exclude current appointment when updating
-#     if appointment_id:
-#         query = query.filter(Appointment.appointment_id != appointment_id)
+    # Exclude current appointment when updating
+    if appointment_id:
+        query = query.filter(Appointment.appointment_id != appointment_id)
         
-#     conflicting_appointments = db.session.scalars(query).all()
-#     return len(conflicting_appointments) == 0
+    conflicting_appointments = db.session.scalars(query).all()
+    return len(conflicting_appointments) == 0
 
 
 #part of scenario : create new appointment 
 #the patient requests an appointment and the function validates the request & ensures that all required fields are present 
 #this function checks doctor's availability using the check_availability function to ensure that the doctor is free 
 #once validated, the new appointment is added into the db and assigned the status of "SCHEDULED"
-# @app.route("/appointment", methods=['POST'])
-# def create_appointment():
-#     """Create a new appointment"""
-#     data = request.get_json()
+@app.route("/appointment", methods=['POST'])
+def create_appointment():
+    """Create a new appointment"""
+    data = request.get_json()
     
-#     # Validate required fields
-#     required_fields = ['patient_id', 'doctor_id', 'appointment_date', 'start_time', 'end_time']
-#     for field in required_fields:
-#         if field not in data:
-#             return jsonify({
-#                 "code": 400,
-#                 "message": f"Missing required field: {field}"
-#             }), 400
+    # Validate required fields
+    required_fields = ['patient_id', 'doctor_id', 'appointment_date', 'start_time', 'end_time']
+    for field in required_fields:
+        if field not in data:
+            return jsonify({
+                "code": 400,
+                "message": f"Missing required field: {field}"
+            }), 400
     
-#     try:
-#         # Parse dates and times
-#         appointment_date = datetime.strptime(data['appointment_date'], "%Y-%m-%d").date()
-#         start_time = datetime.fromisoformat(data['start_time'])
-#         end_time = datetime.fromisoformat(data['end_time'])
+    try:
+        # Parse dates and times
+        appointment_date = datetime.strptime(data['appointment_date'], "%Y-%m-%d").date()
+        start_time = datetime.fromisoformat(data['start_time'])
+        end_time = datetime.fromisoformat(data['end_time'])
         
-#         # Validate time logic
-#         if start_time >= end_time:
-#             return jsonify({
-#                 "code": 400,
-#                 "message": "Start time must be before end time."
-#             }), 400
+        # Validate time logic
+        if start_time >= end_time:
+            return jsonify({
+                "code": 400,
+                "message": "Start time must be before end time."
+            }), 400
             
-#         # Check doctor availability
-#         if not check_availability(data['doctor_id'], start_time, end_time):
-#             return jsonify({
-#                 "code": 409,
-#                 "message": "Doctor is not available during the requested time."
-#             }), 409
+        # Check doctor availability
+        if not check_availability(data['doctor_id'], start_time, end_time):
+            return jsonify({
+                "code": 409,
+                "message": "Doctor is not available during the requested time."
+            }), 409
         
-#         # Create appointment
-#         appointment = Appointment(
-#             patient_id=data['patient_id'],
-#             doctor_id=data['doctor_id'],
-#             appointment_date=appointment_date,
-#             start_time=start_time,
-#             end_time=end_time,
-#             appointment_status="SCHEDULED",
-#             notes=data.get('notes')
-#         )
+        # Create appointment
+        appointment = Appointment(
+            patient_id=data['patient_id'],
+            doctor_id=data['doctor_id'],
+            appointment_date=appointment_date,
+            start_time=start_time,
+            end_time=end_time,
+            appointment_status="ASSIGNED",
+            notes=data.get('notes')
+        )
         
-#         db.session.add(appointment)
-#         db.session.commit()
+        db.session.add(appointment)
+        db.session.commit()
         
-#         return jsonify({
-#             "code": 201,
-#             "data": appointment.json(),
-#             "message": "Appointment created successfully."
-#         }), 201
+        return jsonify({
+            "code": 201,
+            "data": appointment.json(),
+            "message": "Appointment created successfully."
+        }), 201
         
-#     except ValueError as e:
-#         return jsonify({
-#             "code": 400,
-#             "message": f"Invalid date or time format: {str(e)}"
-#         }), 400
-#     except Exception as e:
-#         db.session.rollback()
-#         return jsonify({
-#             "code": 500,
-#             "message": f"An error occurred creating the appointment: {str(e)}"
-#         }), 500
+    except ValueError as e:
+        return jsonify({
+            "code": 400,
+            "message": f"Invalid date or time format: {str(e)}"
+        }), 400
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            "code": 500,
+            "message": f"An error occurred creating the appointment: {str(e)}"
+        }), 500
 
 
 #not part of scenario, maybe can delete 
@@ -358,3 +355,8 @@ if __name__ == '__main__':
 #             "code": 500,
 #             "message": f"An error occurred deleting the appointment: {str(e)}"
 #         }), 500
+
+if __name__ == '__main__':
+    with app.app_context(): #push an application context
+        db.create_all() #create table 
+    app.run(host='0.0.0.0', port=5002, debug=True)

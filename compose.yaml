@@ -153,7 +153,7 @@ services:
   #################################
   # Book Appointment Microservice
   #################################
-  availability:
+  bookAppointment:
     build: ./CompositeService/BookAppointment
     image: ESDG2T1/book_appointment:1.0
     restart: always

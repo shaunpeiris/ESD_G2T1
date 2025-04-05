@@ -16,7 +16,7 @@ const app = Vue.createApp({
         checkLogin() {
             let user = JSON.parse(sessionStorage.getItem(this.role));
             if (user != null) {
-                window.location.href = './doctorDashboard.html';
+                window.location.href = './doctorDashboard2.html';
             }
         },
 
@@ -32,7 +32,7 @@ const app = Vue.createApp({
             .then((response) => {
                 const user = response.data.data;
                 sessionStorage.setItem(this.role, JSON.stringify(user));
-                window.location.href = './doctorDashboard.html';
+                window.location.href = './doctorDashboard2.html';
             })
             .catch((error) => {
                 this.wrong = true;
