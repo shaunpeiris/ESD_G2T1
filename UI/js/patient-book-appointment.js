@@ -3,10 +3,11 @@ const app = Vue.createApp({
         return {
             selectedSpeciality: 'Any',
             selectedLocation: 'Any',
-            selectedDate: new Date().toISOString().split('T')[0],
+            selectedDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
             specialities: [],
             locations: [],
             doctors: [],
+            minDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
 
             // Modal stuff
             selectedDoctor: null,
