@@ -88,8 +88,8 @@
         <div class="d-flex flex-column p-3">
           <div class="text-center mb-4">
             <!-- Profile image removed -->
-            <h5 class="mb-0">Dr. James Wilson</h5>
-            <p class="text-muted small">Cardiology</p>
+            <h5 id="doctor-name" class="mb-0 mt-4">Dr. James Wilson</h5>
+            <p id="doctor-specilization" class="text-muted small">Cardiology</p>
           </div>
           <ul class="nav nav-pills flex-column mb-auto">
             <li class="nav-item">
@@ -280,6 +280,10 @@
 
     // Fetch and display upcoming appointments for the doctor on page load
     document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('doctor-name').textContent = JSON.parse(sessionStorage.doctor).Doctor_Name;
+      document.getElementById('doctor-specialization').textContent = JSON.parse(sessionStorage.doctor).Specialization;
+
+
       fetch(`${compositeBaseURL}/doctor_management/appointments/doctor/${doctorId}`)
         .then(response => response.json())
         .then(data => {

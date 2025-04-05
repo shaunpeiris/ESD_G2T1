@@ -21,7 +21,17 @@ const app = Vue.createApp({
         this.fetchSpecializations();
         this.fetchPolyclinics();
     },
+    created() {
+        this.checkLogin();
+    },
     methods: {
+        async checkLogin() {
+            const patientData = sessionStorage.getItem('patient');
+            if (!patientData) {
+                window.location.href = 'patientLogin.html';
+                return;
+            }
+        },
         async fetchSpecializations() {
             const res = await fetch('http://104.214.186.4:5010/specializations');
             const data = await res.json();
