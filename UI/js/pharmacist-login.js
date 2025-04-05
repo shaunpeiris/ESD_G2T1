@@ -1,4 +1,4 @@
-const pharmacistURL = 'http://104.214.186.4:5015/pharmacy'; // Adjust port if needed
+const pharmacistURL = 'http://104.214.186.4:5020/pharmacy';
 
 const app = Vue.createApp({
     data() {
@@ -16,7 +16,7 @@ const app = Vue.createApp({
         checkLogin() {
             let user = JSON.parse(sessionStorage.getItem(this.role));
             if (user != null) {
-                window.location.href = './pharmacistDashboard.html';
+                window.location.href = './pharmacist.html';
             }
         },
 
@@ -32,7 +32,7 @@ const app = Vue.createApp({
             .then((response) => {
                 const user = response.data.data;
                 sessionStorage.setItem(this.role, JSON.stringify(user));
-                window.location.href = './pharmacistDashboard.html';
+                window.location.href = './pharmacist.html';
             })
             .catch((error) => {
                 this.wrong = true;
@@ -48,21 +48,6 @@ const app = Vue.createApp({
 
     created() {
         this.checkLogin();
-    }
-
-    methods: {
-        // Logout function that will be called when the button is clicked
-        logout() {
-            // Check if the user is logged in
-            const patient = JSON.parse(sessionStorage.getItem('patient'));
-            console.log('Logging out user:', patient ? patient.name : 'No user found');
-            
-            // Clear the session storage
-            sessionStorage.removeItem('patient');
-            
-            // Redirect to login page
-            window.location.href = './login.html';
-        }
     }
 });
 
