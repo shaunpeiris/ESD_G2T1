@@ -303,7 +303,7 @@ def create_appointment():
             appointment_date=appointment_date,
             start_time=start_time,
             end_time=end_time,
-            appointment_status="ASSIGNED",
+            appointment_status="SCHEDULED",
             notes=data.get('notes')
         )
         
