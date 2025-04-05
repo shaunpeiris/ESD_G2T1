@@ -50,7 +50,7 @@ const app = Vue.createApp({
                     date: this.selectedDate
                 }).toString();
 
-                const response = await fetch(`http://127.0.0.1:5050/searchDoctors?${query}`);
+                const response = await fetch(`http://localhost:8000/searchDoctors?${query}`);
                 const data = await response.json();
 
                 if (data.data && Array.isArray(data.data)) {
@@ -113,7 +113,7 @@ const app = Vue.createApp({
             console.log("📦 Payload:", payload); // Debug logging
         
             try {
-                const response = await fetch("http://127.0.0.1:5050/createAppointment", {
+                const response = await fetch("http://localhost:8000/createAppointment", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(payload)

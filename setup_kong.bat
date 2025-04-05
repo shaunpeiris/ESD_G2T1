@@ -32,7 +32,7 @@ echo     ↳ Route added: /create_prescription
 
 REM Register book-appointment-service
 echo 🔗 Registering book-appointment-service...
-curl -s -X POST http://localhost:8001/services --data name=book-appointment-service --data url=http://availability:5000 >nul
+curl -s -X POST http://localhost:8001/services --data name=book-appointment-service --data url=http://bookAppointment:5000 >nul
 curl -s -X POST http://localhost:8001/services/book-appointment-service/routes --data "paths[]=/searchDoctors" --data strip_path=false >nul
 echo     ↳ Route added: /searchDoctors
 curl -s -X POST http://localhost:8001/services/book-appointment-service/routes --data "paths[]=/createAppointment" --data strip_path=false >nul
