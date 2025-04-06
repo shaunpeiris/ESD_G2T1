@@ -1,664 +1,214 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pharmacy Inventory | HealthConnect</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    <style>
-        .sidebar {
-            height: 100vh;
-            position: sticky;
-            top: 0;
-            background-color: #f8f9fa;
-            border-right: 1px solid #dee2e6;
-        }
-
-        .sidebar .nav-link {
-            color: #495057;
-            border-radius: 0;
-            padding: 0.75rem 1.25rem;
-        }
-
-        .sidebar .nav-link.active {
-            background-color: #0d6efd;
-            color: white;
-        }
-
-        .sidebar .nav-link:hover:not(.active) {
-            background-color: #e9ecef;
-        }
-
-        .inventory-card {
-            transition: transform 0.2s;
-            border-radius: 8px;
-        }
-
-        .inventory-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .stock-badge {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-        }
-
-        .low-stock {
-            background-color: #fff3cd;
-            border-left: 4px solid #ffc107;
-        }
-
-        .out-of-stock {
-            background-color: #f8d7da;
-            border-left: 4px solid #dc3545;
-        }
-
-        .expiring-soon {
-            background-color: #d1e7dd;
-            border-left: 4px solid #198754;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pharmacy Inventory | HealthConnect</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+  <style>
+    .low-stock {
+      background-color: #fff3cd;
+      border-left: 4px solid #ffc107;
+    }
+    .out-of-stock {
+      background-color: #f8d7da;
+      border-left: 4px solid #dc3545;
+    }
+    .sidebar {
+      height: 100vh;
+      background-color: #f8f9fa;
+      border-right: 1px solid #dee2e6;
+    }
+    .sidebar .nav-link.active {
+      background-color: #0d6efd;
+      color: white;
+    }
+  </style>
 </head>
-
 <body>
-    <div class="container-fluid">
-        <div class="row">
-            <!-- Sidebar -->
-            <div class="col-md-3 col-lg-2 d-md-block sidebar collapse">
-                <div class="d-flex flex-column p-3">
-                    <div class="text-center mb-4">
-                        <img src="https://via.placeholder.com/80" class="rounded-circle mb-2" alt="Pharmacist profile">
-                        <h5 class="mb-0">Sarah Johnson</h5>
-                        <p class="text-muted small">Lead Pharmacist</p>
-                    </div>
-                    <ul class="nav nav-pills flex-column mb-auto">
-                        <li class="nav-item">
-                            <a href="dashboard.html" class="nav-link">
-                                <i class="bi bi-speedometer2 me-2"></i> Dashboard
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="pharmacist.html" class="nav-link">
-                                <i class="bi bi-prescription2 me-2"></i> Prescriptions
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="inventory.html" class="nav-link active">
-                                <i class="bi bi-box-seam me-2"></i> Inventory
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="patients.html" class="nav-link">
-                                <i class="bi bi-people me-2"></i> Patients
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="reports.html" class="nav-link">
-                                <i class="bi bi-file-earmark-bar-graph me-2"></i> Reports
-                            </a>
-                        </li>
-                    </ul>
-                    <hr>
-                    <div id="signout">
-                        <a href="javascript:void(0)" class="btn btn-outline-danger w-100" @click="logout">
-                            <i class="bi bi-box-arrow-right me-2"></i> Sign Out
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Main Content -->
-            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
-                <div
-                    class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                    <h1 class="h2">Pharmacy Inventory</h1>
-                    <div class="btn-toolbar mb-2 mb-md-0">
-                        <div class="btn-group me-2">
-                            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal"
-                                data-bs-target="#addMedicationModal">
-                                <i class="bi bi-plus-circle me-1"></i> Add Medication
-                            </button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary">
-                                <i class="bi bi-upload me-1"></i> Import
-                            </button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary">
-                                <i class="bi bi-printer me-1"></i> Print
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Inventory Search and Filters -->
-                <div class="row mb-4">
-                    <div class="col-md-8">
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="bi bi-search"></i></span>
-                            <input type="text" class="form-control" id="inventorySearch"
-                                placeholder="Search medications by name, category, or ID">
-                            <button class="btn btn-outline-secondary" type="button">Search</button>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <select class="form-select" id="inventoryFilter">
-                            <option selected>All Items</option>
-                            <option>Low Stock</option>
-                            <option>Out of Stock</option>
-                            <option>Expiring Soon</option>
-                            <option>Recently Added</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- Inventory Stats -->
-                <div class="row mb-4">
-                    <div class="col-md-3">
-                        <div class="card text-white bg-primary">
-                            <div class="card-body">
-                                <h5 class="card-title">Total Items</h5>
-                                <h2 class="card-text">487</h2>
-                                <p class="card-text small">Across 12 categories</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card text-white bg-warning">
-                            <div class="card-body">
-                                <h5 class="card-title">Low Stock</h5>
-                                <h2 class="card-text">24</h2>
-                                <p class="card-text small">Items need reordering</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card text-white bg-danger">
-                            <div class="card-body">
-                                <h5 class="card-title">Out of Stock</h5>
-                                <h2 class="card-text">8</h2>
-                                <p class="card-text small">Items unavailable</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card text-white bg-success">
-                            <div class="card-body">
-                                <h5 class="card-title">Expiring Soon</h5>
-                                <h2 class="card-text">15</h2>
-                                <p class="card-text small">Within 30 days</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Inventory Categories Tabs -->
-                <ul class="nav nav-tabs" id="inventoryTabs" role="tablist">
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all"
-                            type="button" role="tab" aria-controls="all" aria-selected="true">All</button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="cardiovascular-tab" data-bs-toggle="tab"
-                            data-bs-target="#cardiovascular" type="button" role="tab" aria-controls="cardiovascular"
-                            aria-selected="false">Cardiovascular</button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="antibiotics-tab" data-bs-toggle="tab" data-bs-target="#antibiotics"
-                            type="button" role="tab" aria-controls="antibiotics"
-                            aria-selected="false">Antibiotics</button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="analgesics-tab" data-bs-toggle="tab" data-bs-target="#analgesics"
-                            type="button" role="tab" aria-controls="analgesics"
-                            aria-selected="false">Analgesics</button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="respiratory-tab" data-bs-toggle="tab" data-bs-target="#respiratory"
-                            type="button" role="tab" aria-controls="respiratory"
-                            aria-selected="false">Respiratory</button>
-                    </li>
-                </ul>
-
-                <div class="tab-content p-3 border border-top-0 rounded-bottom" id="inventoryTabContent">
-                    <!-- All Medications Tab -->
-                    <div class="tab-pane fade show active" id="all" role="tabpanel" aria-labelledby="all-tab">
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Medication Name</th>
-                                        <th>Category</th>
-                                        <th>Stock Level</th>
-                                        <th>Expiration</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>Lisinopril 10mg</td>
-                                        <td>Cardiovascular</td>
-                                        <td>
-                                            <div class="progress" style="height: 20px;">
-                                                <div class="progress-bar bg-success" role="progressbar"
-                                                    style="width: 75%;" aria-valuenow="75" aria-valuemin="0"
-                                                    aria-valuemax="100">120 units</div>
-                                            </div>
-                                        </td>
-                                        <td>Dec 15, 2025</td>
-                                        <td>
-                                            <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"
-                                                data-bs-target="#editMedicationModal">
-                                                <i class="bi bi-pencil"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-outline-success">
-                                                <i class="bi bi-plus-circle"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    <tr class="low-stock">
-                                        <td>Amlodipine 5mg</td>
-                                        <td>Cardiovascular</td>
-                                        <td>
-                                            <div class="progress" style="height: 20px;">
-                                                <div class="progress-bar bg-warning" role="progressbar"
-                                                    style="width: 25%;" aria-valuenow="25" aria-valuemin="0"
-                                                    aria-valuemax="100">35 units</div>
-                                            </div>
-                                        </td>
-                                        <td>Nov 30, 2025</td>
-                                        <td>
-                                            <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"
-                                                data-bs-target="#editMedicationModal">
-                                                <i class="bi bi-pencil"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-outline-success">
-                                                <i class="bi bi-plus-circle"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    <tr class="out-of-stock">
-                                        <td>Hydrochlorothiazide 25mg</td>
-                                        <td>Cardiovascular</td>
-                                        <td>
-                                            <div class="progress" style="height: 20px;">
-                                                <div class="progress-bar bg-danger" role="progressbar"
-                                                    style="width: 0%;" aria-valuenow="0" aria-valuemin="0"
-                                                    aria-valuemax="100">0 units</div>
-                                            </div>
-                                        </td>
-                                        <td>N/A</td>
-                                        <td>
-                                            <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"
-                                                data-bs-target="#editMedicationModal">
-                                                <i class="bi bi-pencil"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-outline-success">
-                                                <i class="bi bi-plus-circle"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>Atorvastatin 20mg</td>
-                                        <td>Cardiovascular</td>
-                                        <td>
-                                            <div class="progress" style="height: 20px;">
-                                                <div class="progress-bar bg-success" role="progressbar"
-                                                    style="width: 50%;" aria-valuenow="50" aria-valuemin="0"
-                                                    aria-valuemax="100">80 units</div>
-                                            </div>
-                                        </td>
-                                        <td>Jan 20, 2026</td>
-                                        <td>
-                                            <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"
-                                                data-bs-target="#editMedicationModal">
-                                                <i class="bi bi-pencil"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-outline-success">
-                                                <i class="bi bi-plus-circle"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>Metoprolol 50mg</td>
-                                        <td>Cardiovascular</td>
-                                        <td>
-                                            <div class="progress" style="height: 20px;">
-                                                <div class="progress-bar bg-success" role="progressbar"
-                                                    style="width: 40%;" aria-valuenow="40" aria-valuemin="0"
-                                                    aria-valuemax="100">50 units</div>
-                                            </div>
-                                        </td>
-                                        <td>Feb 10, 2026</td>
-                                        <td>
-                                            <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"
-                                                data-bs-target="#editMedicationModal">
-                                                <i class="bi bi-pencil"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-outline-success">
-                                                <i class="bi bi-plus-circle"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <!-- Other category tabs would be implemented similarly -->
-                    <div class="tab-pane fade" id="cardiovascular" role="tabpanel" aria-labelledby="cardiovascular-tab">
-                        <!-- Cardiovascular medications would be listed here -->
-                    </div>
-
-                    <div class="tab-pane fade" id="antibiotics" role="tabpanel" aria-labelledby="antibiotics-tab">
-                        <!-- Antibiotics would be listed here -->
-                    </div>
-
-                    <div class="tab-pane fade" id="analgesics" role="tabpanel" aria-labelledby="analgesics-tab">
-                        <!-- Analgesics would be listed here -->
-                    </div>
-
-                    <div class="tab-pane fade" id="respiratory" role="tabpanel" aria-labelledby="respiratory-tab">
-                        <!-- Respiratory medications would be listed here -->
-                    </div>
-                </div>
-
-                <!-- Recent Activity -->
-                <div class="card mb-4">
-                    <div class="card-header bg-light">
-                        <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Recent Inventory Activity</h5>
-                    </div>
-                    <div class="card-body">
-                        <ul class="list-group">
-                            <li class="list-group-item">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <strong>Dispensed:</strong> Lisinopril 10mg (30 units)
-                                        <p class="text-muted mb-0 small">For patient Emily Parker (PT-78945)</p>
-                                    </div>
-                                    <span class="text-muted small">Today, 11:45 AM</span>
-                                </div>
-                            </li>
-                            <li class="list-group-item">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <strong>Restocked:</strong> Metoprolol 50mg (100 units)
-                                        <p class="text-muted mb-0 small">Supplier: MedSupply Inc.</p>
-                                    </div>
-                                    <span class="text-muted small">Today, 9:30 AM</span>
-                                </div>
-                            </li>
-                            <li class="list-group-item">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <strong>Dispensed:</strong> Atorvastatin 20mg (60 units)
-                                        <p class="text-muted mb-0 small">For patient Michael Johnson (PT-78946)</p>
-                                    </div>
-                                    <span class="text-muted small">Yesterday, 3:15 PM</span>
-                                </div>
-                            </li>
-                            <li class="list-group-item">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <strong>Adjusted:</strong> Amoxicillin 500mg (-5 units)
-                                        <p class="text-muted mb-0 small">Reason: Damaged packaging</p>
-                                    </div>
-                                    <span class="text-muted small">Yesterday, 1:20 PM</span>
-                                </div>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </main>
+  <div class="container-fluid">
+    <div class="row">
+      <!-- Sidebar -->
+      <div class="col-md-2 sidebar p-3">
+        <div class="text-center mb-4">
+          <img src="https://via.placeholder.com/80" class="rounded-circle mb-2" alt="Pharmacist profile">
+          <h5 class="mb-0">Sarah Johnson</h5>
+          <p class="text-muted small">Lead Pharmacist</p>
         </div>
-    </div>
+        <ul class="nav nav-pills flex-column">
+          <li class="nav-item"><a class="nav-link" href="dashboard.html"><i class="bi bi-speedometer2 me-2"></i> Dashboard</a></li>
+          <li class="nav-item"><a class="nav-link" href="prescriptions.html"><i class="bi bi-prescription2 me-2"></i> Prescriptions</a></li>
+          <li class="nav-item"><a class="nav-link active" href="#"><i class="bi bi-box-seam me-2"></i> Inventory</a></li>
+          <li class="nav-item"><a class="nav-link" href="patients.html"><i class="bi bi-people me-2"></i> Patients</a></li>
+          <li class="nav-item"><a class="nav-link" href="reports.html"><i class="bi bi-file-earmark-bar-graph me-2"></i> Reports</a></li>
+        </ul>
+        <hr>
+        <button class="btn btn-outline-danger w-100" onclick="logout()">
+          <i class="bi bi-box-arrow-right me-2"></i> Sign Out
+        </button>
+      </div>
 
-    <!-- Add Medication Modal -->
-    <div class="modal fade" id="addMedicationModal" tabindex="-1" aria-labelledby="addMedicationModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="addMedicationModalLabel">Add New Medication</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="addMedicationForm">
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label for="medicationName" class="form-label">Medication Name</label>
-                                <input type="text" class="form-control" id="medicationName" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label for="medicationCategory" class="form-label">Category</label>
-                                <select class="form-select" id="medicationCategory" required>
-                                    <option value="">Select Category</option>
-                                    <option>Cardiovascular</option>
-                                    <option>Antibiotics</option>
-                                    <option>Analgesics</option>
-                                    <option>Respiratory</option>
-                                    <option>Gastrointestinal</option>
-                                    <option>Endocrine</option>
-                                    <option>Other</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="row mb-3">
-                            <div class="col-md-4">
-                                <label for="medicationDosage" class="form-label">Dosage</label>
-                                <input type="text" class="form-control" id="medicationDosage" required>
-                            </div>
-                            <div class="col-md-4">
-                                <label for="medicationForm" class="form-label">Form</label>
-                                <select class="form-select" id="medicationForm" required>
-                                    <option value="">Select Form</option>
-                                    <option>Tablet</option>
-                                    <option>Capsule</option>
-                                    <option>Liquid</option>
-                                    <option>Injection</option>
-                                    <option>Cream/Ointment</option>
-                                    <option>Patch</option>
-                                    <option>Other</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <label for="medicationStrength" class="form-label">Strength</label>
-                                <input type="text" class="form-control" id="medicationStrength" required>
-                            </div>
-                        </div>
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label for="medicationSupplier" class="form-label">Supplier</label>
-                                <select class="form-select" id="medicationSupplier" required>
-                                    <option value="">Select Supplier</option>
-                                    <option>MedSupply Inc.</option>
-                                    <option>PharmaDist Co.</option>
-                                    <option>HealthPharma Ltd.</option>
-                                    <option>Global Meds</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label for="medicationNDC" class="form-label">NDC Code</label>
-                                <input type="text" class="form-control" id="medicationNDC">
-                            </div>
-                        </div>
-                        <div class="row mb-3">
-                            <div class="col-md-4">
-                                <label for="medicationQuantity" class="form-label">Initial Quantity</label>
-                                <input type="number" class="form-control" id="medicationQuantity" required>
-                            </div>
-                            <div class="col-md-4">
-                                <label for="medicationReorderLevel" class="form-label">Reorder Level</label>
-                                <input type="number" class="form-control" id="medicationReorderLevel" required>
-                            </div>
-                            <div class="col-md-4">
-                                <label for="medicationExpiry" class="form-label">Expiration Date</label>
-                                <input type="date" class="form-control" id="medicationExpiry" required>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="medicationNotes" class="form-label">Notes</label>
-                            <textarea class="form-control" id="medicationNotes" rows="3"></textarea>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="saveMedicationBtn">Add Medication</button>
-                </div>
-            </div>
+      <!-- Main Content -->
+      <main class="col-md-10 py-4 px-4" id="app">
+        <h2 class="mb-4">Pharmacy Inventory</h2>
+        <div v-if="error" class="alert alert-danger">{{ error }}</div>
+
+        <!-- Inventory Table -->
+        <div class="table-responsive">
+          <table class="table table-bordered align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Stock</th>
+                <th>Updated</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="med in paginatedMedications" :key="med.medicationID" :class="getRowClass(med)">
+                <td>{{ med.medicationName }}</td>
+                <td>{{ med.category || 'N/A' }}</td>
+                <td>
+                  <div class="progress" style="height: 20px;">
+                    <div class="progress-bar" :class="getProgressBarClass(med.quantity)" :style="{ width: getStockWidth(med.quantity) + '%' }">
+                      {{ med.quantity }} units
+                    </div>
+                  </div>
+                </td>
+                <td>{{ formatDate(med.updatedAt) }}</td>
+                <td>
+                  <button class="btn btn-sm btn-outline-primary" @click="edit(med)">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button class="btn btn-sm btn-outline-success" @click="restock(med)">
+                    <i class="bi bi-plus-circle"></i>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-    </div>
 
-    <!-- Edit Medication Modal -->
-    <div class="modal fade" id="editMedicationModal" tabindex="-1" aria-labelledby="editMedicationModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="editMedicationModalLabel">Edit Medication</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <!-- Similar form to Add Medication, but pre-filled with existing data -->
-                    <form id="editMedicationForm">
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label for="editMedicationName" class="form-label">Medication Name</label>
-                                <input type="text" class="form-control" id="editMedicationName" value="Lisinopril 10mg"
-                                    required>
-                            </div>
-                            <div class="col-md-6">
-                                <label for="editMedicationCategory" class="form-label">Category</label>
-                                <select class="form-select" id="editMedicationCategory" required>
-                                    <option>Cardiovascular</option>
-                                    <option>Antibiotics</option>
-                                    <option>Analgesics</option>
-                                    <option>Respiratory</option>
-                                    <option>Gastrointestinal</option>
-                                    <option>Endocrine</option>
-                                    <option>Other</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="row mb-3">
-                            <div class="col-md-4">
-                                <label for="editMedicationQuantity" class="form-label">Current Quantity</label>
-                                <input type="number" class="form-control" id="editMedicationQuantity" value="120"
-                                    required>
-                            </div>
-                            <div class="col-md-4">
-                                <label for="editMedicationReorderLevel" class="form-label">Reorder Level</label>
-                                <input type="number" class="form-control" id="editMedicationReorderLevel" value="50"
-                                    required>
-                            </div>
-                            <div class="col-md-4">
-                                <label for="editMedicationExpiry" class="form-label">Expiration Date</label>
-                                <input type="date" class="form-control" id="editMedicationExpiry" value="2025-12-15"
-                                    required>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="editMedicationNotes" class="form-label">Notes</label>
-                            <textarea class="form-control" id="editMedicationNotes"
-                                rows="3">Store at room temperature. Keep away from direct sunlight.</textarea>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="updateMedicationBtn">Update Medication</button>
-                </div>
-            </div>
+        <!-- Pagination -->
+        <div class="d-flex justify-content-between align-items-center mt-3">
+          <small class="text-muted">Page {{ currentPage }} of {{ totalPages }}</small>
+          <div>
+            <button class="btn btn-outline-secondary btn-sm me-2" @click="prevPage" :disabled="currentPage === 1">
+              <i class="bi bi-chevron-left"></i> Prev
+            </button>
+            <button class="btn btn-outline-secondary btn-sm" @click="nextPage" :disabled="currentPage === totalPages">
+              Next <i class="bi bi-chevron-right"></i>
+            </button>
+          </div>
         </div>
+      </main>
     </div>
+  </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/vue@3.2.31/dist/vue.global.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@3.2.31/dist/vue.global.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const { createApp, ref, computed, onMounted } = Vue;
 
-    <script src="../js/signout.js"></script>
-    
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-    // Function to update inventory levels dynamically
-    function updateInventoryLevels(medicationName, dispensedQuantity) {
-        const tableRows = document.querySelectorAll('tbody tr');
-        
-        tableRows.forEach(row => {
-            const nameCell = row.querySelector('td:first-child');
-            if (nameCell && nameCell.textContent.trim() === medicationName) {
-                const stockCell   = row.querySelector('td:nth-child(3)');
-                const progressBar = stockCell.querySelector('.progress-bar');
-                
-                if (progressBar) {
-                    const currentStock = parseInt(progressBar.textContent);
-                    const maxStock     = 200; // Assuming max stock is 200, adjust as needed
-                    
-                    // Update stock level
-                    const newStock                = Math.max(0, currentStock - dispensedQuantity);
-                          progressBar.style.width = `${(newStock / maxStock) * 100}%`;
-                          progressBar.textContent = `${newStock} units`;
-                    progressBar.setAttribute('aria-valuenow', newStock);
-                    
-                    // Update color dynamically
-                    if (newStock === 0) {
-                        progressBar.className = 'progress-bar bg-danger';
-                        row.className         = 'out-of-stock';
-                    } else if (newStock <= 40) {
-                        progressBar.className = 'progress-bar bg-warning';
-                        row.className         = 'low-stock';
-                    } else {
-                        progressBar.className = 'progress-bar bg-success';
-                        row.className         = '';
-                    }
-                    
-                    // Add to recent activity
-                    addActivityRecord(medicationName, dispensedQuantity);
-                }
-            }
+    createApp({
+      setup() {
+        const medications = ref([]);
+        const error = ref("");
+        const currentPage = ref(1);
+        const pageSize = 10;
+
+        const fetchInventory = async () => {
+          try {
+            const res = await axios.get("http://localhost:5004/pharmacy/inventory");
+            medications.value = res.data.Medications || [];
+          } catch (err) {
+            console.error(err);
+            error.value = "❌ Failed to load inventory.";
+          }
+        };
+
+        const getProgressBarClass = (qty) => {
+          if (qty === 0) return "bg-danger";
+          if (qty <= 40) return "bg-warning";
+          return "bg-success";
+        };
+
+        const getRowClass = (med) => {
+          if (med.quantity === 0) return "out-of-stock";
+          if (med.quantity <= 40) return "low-stock";
+          return "";
+        };
+
+        const getStockWidth = (qty, max = 500) => Math.min(100, (qty / max) * 100);
+
+        const formatDate = (dateStr) => {
+          const d = new Date(dateStr);
+          return d.toLocaleDateString("en-SG", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit"
+          });
+        };
+
+        const restock = (med) => {
+          alert(`Restock clicked for ${med.medicationName}`);
+        };
+
+        const edit = (med) => {
+          alert(`Edit clicked for ${med.medicationName}`);
+        };
+
+        const paginatedMedications = computed(() => {
+          const start = (currentPage.value - 1) * pageSize;
+          return medications.value.slice(start, start + pageSize);
         });
-    }
-    
-    // Function to add activity record to the Recent Inventory Activity section
-    function addActivityRecord(medicationName, quantity) {
-        const activityList = document.querySelector('.list-group');
-        if (activityList) {
-            const now        = new Date();
-            const timeString = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            
-            const newActivity           = document.createElement('li');
-                  newActivity.className = 'list-group-item';
-                  newActivity.innerHTML = `
-                <div class = "d-flex justify-content-between align-items-center">
-                    <div>
-                        <strong>Dispensed: </strong> ${medicationName} (${quantity} units)
-                        <p class = "text-muted mb-0 small">For current prescription</p>
-                    </div>
-                    <span class = "text-muted small">Today, ${timeString}</span>
-                </div>
-            `;
-            
-            // Insert at the top of the list
-            activityList.insertBefore(newActivity, activityList.firstChild);
-        }
-    }
-    
-    // Example of how to use the function - these would be triggered by user actions
-    document.querySelectorAll('.dispense-button').forEach(button => {
-        button.addEventListener('click', function() {
-            const medicationName = this.getAttribute('data-medication');
-            const quantity       = parseInt(this.getAttribute('data-quantity'));
-            updateInventoryLevels(medicationName, quantity);
-        });
-    });
-    
-    // For testing purposes
-    window.updateInventoryLevels = updateInventoryLevels;
-});
 
-    </script>
+        const totalPages = computed(() =>
+          Math.ceil(medications.value.length / pageSize)
+        );
+
+        const nextPage = () => {
+          if (currentPage.value < totalPages.value) currentPage.value++;
+        };
+
+        const prevPage = () => {
+          if (currentPage.value > 1) currentPage.value--;
+        };
+
+        onMounted(fetchInventory);
+
+        return {
+          medications,
+          error,
+          currentPage,
+          totalPages,
+          paginatedMedications,
+          formatDate,
+          getRowClass,
+          getProgressBarClass,
+          getStockWidth,
+          restock,
+          edit,
+          nextPage,
+          prevPage
+        };
+      }
+    }).mount("#app");
+
+    function logout() {
+      sessionStorage.clear();
+      window.location.href = "pharmacyLogin.html";
+    }
+  </script>
 </body>
-
 </html>
+
+
+
+
