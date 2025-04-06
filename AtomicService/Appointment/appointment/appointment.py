@@ -119,7 +119,7 @@ def create_appointment():
         }), 500
 
 #to get ALL appointment details for a specific doctor and status is scheduled and the date is for the same day
-@app.route("/appointments/doctor/<string:doctor_id>")
+@app.route("/appointment/doctor/<string:doctor_id>")
 def get_doctor_appointments(doctor_id):
     """Get all appointments for a doctor that are scheduled for the current date"""
     current_date = datetime.now().date()
@@ -144,7 +144,7 @@ def get_doctor_appointments(doctor_id):
     }), 404
 
 #to get patient appointment details via the appointment ID 
-@app.route("/appointments/<int:appointment_id>")
+@app.route("/appointment/<int:appointment_id>")
 def get_appointment(appointment_id):
     """Get a specific appointment by ID"""
     appointment = db.session.scalar(db.select(Appointment).filter_by(appointment_id=appointment_id))
@@ -161,7 +161,7 @@ def get_appointment(appointment_id):
 
 
 # to update appointment notes
-@app.route("/appointments/<int:appointment_id>/notes", methods=["PATCH"])
+@app.route("/appointment/<int:appointment_id>/notes", methods=["PATCH"])
 def update_appointment_notes(appointment_id):
     appointment = db.session.scalar(db.select(Appointment).filter_by(appointment_id=appointment_id))
     
@@ -194,7 +194,7 @@ def update_appointment_notes(appointment_id):
         }), 500
     
 # to update status of appointment to completed after prescription is updated
-@app.route("/appointments/<int:appointment_id>/status", methods=["PATCH"])
+@app.route("/appointment/<int:appointment_id>/status", methods=["PATCH"])
 def update_appointment_status(appointment_id):
     # Retrieve the appointment (assumes it exists)
     appointment = db.session.scalar(db.select(Appointment).filter_by(appointment_id=appointment_id))
