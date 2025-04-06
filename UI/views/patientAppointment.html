@@ -18,7 +18,7 @@
 
 <body>
     <!-- Navbar -->
-    <nav class="navbar navbar-dark navbar-expand-lg bg-primary">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
             <a class="navbar-brand" href="patientProfile.html">MediSync</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -26,14 +26,18 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
-                    <li class="nav-item"><a class="nav-link" href="patientBookAppointment.html">Book Appointment</a>
-                    </li>
-                    <li class="nav-item"><a class="nav-link active" href="#">My Appointments</a></li>
+                    <li class="nav-item"><a class="nav-link" href="patientBookAppointment.html">Book
+                            Appointment</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="patientAppointment.html">My Appointments</a></li>
+                    <!--
+                    <li class="nav-item"><a class="nav-link" href="medical-records.html">Medical Records</a></li>
+                    <li class="nav-item"><a class="nav-link" href="billing.html">Billing</a></li>
+                    <li class="nav-item"><a class="nav-link" href="notifications.html">Notifications</a></li>
+                    -->
                 </ul>
-                <div class="d-flex">
+                <div class="d-flex" id="signout">
                     <a href="patientProfile.html" class="btn btn-outline-light me-2">My Profile</a>
-                    <button class="btn btn-danger"
-                        onclick="sessionStorage.clear(); window.location.href='patientLogin.html'">Sign Out</button>
+                    <button class="btn btn-danger" @click="logout">Sign Out</button>
                 </div>
             </div>
         </div>
