@@ -1,22 +1,28 @@
 const logoutApp = Vue.createApp({
     data() {
-        return {
-            // We don't need any data properties for this simple component
-        }
+        return {};
     },
-
     methods: {
-        // Logout function that will be called when the button is clicked
         logout() {
-            // Check if the user is logged in
-            const patient = JSON.parse(sessionStorage.getItem('patient'));
-            console.log('Logging out user:', patient ? patient.name : 'No user found');
-            
-            // Clear the session storage
-            sessionStorage.removeItem('patient');
-            
-            // Redirect to login page
-            window.location.href = './patientLogin.html';
+            const roles = ['patient', 'doctor', 'pharmacy'];
+            let userFound = false;
+
+            for (const role of roles) {
+                const user = JSON.parse(sessionStorage.getItem(role));
+                if (user) {
+                    console.log(`Logging out ${role}:`, user.Email || user.name || 'User');
+                    sessionStorage.removeItem(role);
+                    userFound = true;
+                    break;
+                }
+            }
+
+            if (!userFound) {
+                console.log('No user found in sessionStorage.');
+            }
+
+            // Redirect to a common login page or customize based on role
+            window.location.href = './index.html';
         }
     }
 });

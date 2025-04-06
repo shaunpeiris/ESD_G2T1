@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>MediSync | My Appointments</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/patient.css">
+    <style>
+        #appointmentApp h3 {
+            font-weight: 600;
+            border-left: 4px solid #0d6efd;
+            padding-left: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-dark navbar-expand-lg bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="patientProfile.html">MediSync</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link" href="patientBookAppointment.html">Book Appointment</a>
+                    </li>
+                    <li class="nav-item"><a class="nav-link active" href="#">My Appointments</a></li>
+                </ul>
+                <div class="d-flex">
+                    <a href="patientProfile.html" class="btn btn-outline-light me-2">My Profile</a>
+                    <button class="btn btn-danger"
+                        onclick="sessionStorage.clear(); window.location.href='patientLogin.html'">Sign Out</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Section -->
+    <main id="appointmentApp" class="container py-4">
+
+        <!-- Upcoming Appointments -->
+        <section v-if="upcomingAppointments.length" class="mb-5">
+            <h3 class="mb-4 border-start border-4 ps-3 fw-bold text-dark">
+                <i class="bi bi-calendar2-week me-2 text-primary"></i> Upcoming Appointments
+            </h3>
+
+            <div v-for="appt in upcomingAppointments" :key="appt.appointment_id"
+                class="d-flex justify-content-between align-items-start py-3 border-bottom">
+                <div>
+                    <h5 class="text-dark mb-2">Dr. {{ cleanName(appt.doctor_name) }}</h5>
+                    <p class="mb-1"><strong>Date:</strong> {{ formatDate(appt.appointment_date) }}</p>
+                    <p class="mb-1"><strong>Time:</strong> {{ formatTime(appt.start_time) }} – {{
+                        formatTime(appt.end_time) }}</p>
+                    <p class="mb-0" v-if="appt.notes"><strong>Notes:</strong> {{ appt.notes }}</p>
+                </div>
+                <span class="badge rounded-pill bg-success align-self-center px-3 py-2">
+                    {{ appt.appointment_status }}
+                </span>
+            </div>
+        </section>
+
+        <!-- Completed Appointments -->
+        <section v-if="completedAppointments.length">
+            <h3 class="mb-4 border-start border-4 ps-3 fw-bold text-dark">
+                <i class="bi bi-check2-square me-2 text-secondary"></i> Completed Appointments
+            </h3>
+
+            <div v-for="appt in completedAppointments" :key="appt.appointment_id"
+                class="d-flex justify-content-between align-items-start py-3 border-bottom">
+                <div>
+                    <h5 class="text-dark mb-2">Dr. {{ cleanName(appt.doctor_name) }}</h5>
+                    <p class="mb-1"><strong>Date:</strong> {{ formatDate(appt.appointment_date) }}</p>
+                    <p class="mb-1"><strong>Time:</strong> {{ formatTime(appt.start_time) }} – {{
+                        formatTime(appt.end_time) }}</p>
+                    <p class="mb-0" v-if="appt.notes"><strong>Notes:</strong> {{ appt.notes }}</p>
+                </div>
+                <span class="badge rounded-pill bg-secondary align-self-center px-3 py-2">
+                    {{ appt.appointment_status }}
+                </span>
+            </div>
+        </section>
+
+    </main>
+
+
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.2.31/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        const app = Vue.createApp({
+            data() {
+                return {
+                    appointments: [],
+                    doctorsMap: {}
+                };
+            },
+            async mounted() {
+                const patient = JSON.parse(sessionStorage.getItem("patient"));
+                if (!patient?.id) {
+                    window.location.href = "patientLogin.html";
+                    return;
+                }
+
+                try {
+                    // Fetch all doctors first
+                    const docRes = await fetch("http://104.214.186.4:5010/doctors");
+                    const docData = await docRes.json();
+                    const doctors = docData.data || [];
+
+                    // Create map: doctor_id => doctor_name
+                    doctors.forEach(doc => {
+                        this.doctorsMap[doc.Doctor_ID] = doc.Doctor_Name;
+                    });
+
+                    // Fetch appointments
+                    const res = await fetch(`http://127.0.0.1:5002/appointment/patient/${patient.id}`);
+                    const data = await res.json();
+                    const appointments = data.data.appointments || [];
+
+                    // Attach doctor names to appointments
+                    appointments.forEach(appt => {
+                        appt.doctor_name = this.doctorsMap[appt.doctor_id] || "Unknown";
+                    });
+
+                    this.appointments = appointments;
+
+                } catch (err) {
+                    console.error("❌ Error loading data:", err);
+                }
+            },
+            computed: {
+                upcomingAppointments() {
+                    const now = new Date();
+                    return this.appointments.filter(a => {
+                        const startTime = new Date(a.start_time);
+                        return startTime >= now;
+                    });
+                },
+                completedAppointments() {
+                    const now = new Date();
+                    return this.appointments.filter(a => {
+                        const startTime = new Date(a.start_time);
+                        return startTime < now;
+                    });
+                }
+            },
+            methods: {
+                formatTime(isoString) {
+                    const t = new Date(isoString);
+                    return `${t.getHours().toString().padStart(2, "0")}:${t.getMinutes().toString().padStart(2, "0")}`;
+                },
+                formatDate(dateString) {
+                    return new Date(dateString).toLocaleDateString("en-SG", {
+                        year: "numeric", month: "short", day: "numeric"
+                    });
+                },
+                cleanName(name) {
+                    return name.replace(/^Dr\.?\s*/gi, "");
+                }
+            }
+        });
+        vm = app.mount("#appointmentApp");
+    </script>
+
+
+
+</body>
+
+</html>

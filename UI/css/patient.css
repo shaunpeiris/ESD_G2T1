@@ -1,0 +1,106 @@
+body {
+    background-color: #f8f9fa;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+.logo {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #fff;
+}
+.profile-container {
+    flex: 1;
+    padding: 2rem 0;
+}
+.nav-pills .nav-link.active {
+    background-color: #0d6efd;
+}
+.nav-pills .nav-link {
+    color: #495057;
+}
+.nav-pills .nav-link:hover:not(.active) {
+    background-color: #e9ecef;
+}
+.profile-card {
+    border-radius: 12px;
+    overflow: hidden;
+    border-top: 4px solid #0d6efd;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+.profile-header {
+    background-color: #f1f8ff;
+    padding: 2rem;
+    position: relative;
+}
+.profile-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background-color: #0d6efd;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    border: 5px solid white;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+.password-toggle {
+    cursor: pointer;
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    color: #6c757d;
+}
+.info-item {
+    padding: 0.75rem;
+    border-bottom: 1px solid #e9ecef;
+}
+.info-item:last-child {
+    border-bottom: none;
+}
+.alert-saved {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1050;
+}
+.allergy-tag {
+    margin-right: 5px;
+    margin-bottom: 5px;
+    display: inline-block;
+}
+.doctor-card {
+    transition: transform 0.2s;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.doctor-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.search-container {
+    background-color: #f8f9fa;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.appointment-time {
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.appointment-time:hover {
+    background-color: #e9f5ff !important;
+}
+
+.appointment-time.selected {
+    background-color: #0d6efd !important;
+    color: white !important;
+}

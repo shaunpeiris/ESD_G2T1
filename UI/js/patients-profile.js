@@ -32,7 +32,7 @@ const app = Vue.createApp({
             // Check if the user is logged in
             const patientData = sessionStorage.getItem('patient');
             if (!patientData) {
-                window.location.href = 'login.html';
+                window.location.href = 'patientLogin.html';
                 return;
             }
             

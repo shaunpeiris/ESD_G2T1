@@ -80,11 +80,29 @@ def search_available_doctors():
 
 @app.route("/createAppointment", methods=['POST'])
 def create_appointment():
+    print("🧠 HIT /createAppointment endpoint")
     try:
-        patient_id = 12  # Example static value
-        if not patient_id:
-            return jsonify({"success": False, "message": "Missing Patient ID"}), 401
+        payload = request.get_json()
+        print("📥 Payload received:", payload)
 
+        # ✅ Required fields
+        required_fields = ["doctor_id", "appointment_date", "start_time", "end_time", "patient_id", "doctor_name"]
+        missing_fields = [f for f in required_fields if f not in payload or not payload[f]]
+        if missing_fields:
+            return jsonify({
+                "success": False,
+                "message": f"Missing required fields: {', '.join(missing_fields)}"
+            }), 400
+
+        doctor_id = payload["doctor_id"]
+        doctor_name = payload["doctor_name"]
+        patient_id = payload["patient_id"]
+        appointment_date = payload["appointment_date"]
+        start_time = payload["start_time"]
+        end_time = payload["end_time"]
+        notes = payload.get("notes", "")
+
+        # ✅ Get patient details
         patient_res = requests.get(f"{PATIENT_API_URL}/{patient_id}")
         if patient_res.status_code != 200:
             return jsonify({"success": False, "message": "Patient not found"}), 404
@@ -94,29 +112,46 @@ def create_appointment():
         patient_email = patient_data.get("email")
 
         if not patient_phone or not patient_email:
-            return jsonify({"success": False, "message": "Patient phone or email is missing"}), 400
+            return jsonify({
+                "success": False,
+                "message": "Patient phone or email is missing"
+            }), 400
 
-        payload = request.get_json()
-        required_fields = ["doctor_id", "doctor_name", "appointment_date", "start_time", "end_time"]
-        if not all(field in payload for field in required_fields):
-            return jsonify({"success": False, "message": "Missing required fields"}), 400
+        # ❗DON'T include appointment_status in the payload — let the service default to "SCHEDULED"
+        send_payload = {
+            "doctor_id": doctor_id,
+            "patient_id": patient_id,
+            "appointment_date": appointment_date,
+            "start_time": start_time,
+            "end_time": end_time,
+            "notes": notes
+        }
 
-        doctor_id = payload["doctor_id"]
-        doctor_name = payload["doctor_name"]
-        appointment_date = payload["appointment_date"]
-        start_time = payload["start_time"]
-        payload["appointment_status"] = "Assigned"
-        end_time = payload["end_time"]
+        # ✅ Log what's being sent
+        print("📤 Sending to appointment microservice:", send_payload)
 
-        response = requests.post(APPOINTMENT_API_URL, json=payload)
-        appointment_result = response.json()
-
-        if response.status_code != 201:
-            return jsonify({"success": False, "message": "Failed to create appointment", "details": appointment_result}), response.status_code
+        response = requests.post(APPOINTMENT_API_URL, json=send_payload)
+        print("📥 Response status:", response.status_code)
+        print("📥 Response text:", response.text)
 
         try:
-            time_only = start_time.split("T")[1] if "T" in start_time else start_time
+            appointment_result = response.json()
+        except Exception as json_err:
+            return jsonify({
+                "success": False,
+                "message": f"Invalid JSON from appointment microservice: {response.text}"
+            }), 500
 
+        if response.status_code != 201:
+            return jsonify({
+                "success": False,
+                "message": "Failed to create appointment",
+                "details": appointment_result
+            }), response.status_code
+
+        # ✅ Update doctor availability
+        try:
+            time_only = start_time.split("T")[1]
             availability_payload = {
                 "DoctorID": doctor_id,
                 "Date": appointment_date,
@@ -137,10 +172,10 @@ def create_appointment():
                 "message": f"Appointment created but failed to update availability: {str(avail_error)}"
             }), 500
 
-        message = f"Your appointment with Dr. {doctor_name} is confirmed for {appointment_date} at {start_time}."
-        subject = "Appointment Confirmation"
-
+        # ✅ Send SMS & Email
         try:
+            message = f"Your appointment with Dr. {doctor_name} is confirmed for {appointment_date} at {start_time}."
+            subject = "Appointment Confirmation"
             sms_result = send_sms(patient_phone, message)
             email_result = send_email(patient_email, subject, message)
         except Exception as notify_error:
@@ -151,12 +186,18 @@ def create_appointment():
 
         return jsonify({
             "success": True,
+            "code": 201,
             "message": "Appointment successfully created",
             "appointment": appointment_result
         }), 201
 
     except Exception as e:
-        return jsonify({"success": False, "message": f"Server error: {str(e)}"}), 500
+        print("❌ Internal server error:", str(e))
+        return jsonify({
+            "success": False,
+            "message": f"Server error: {str(e)}"
+        }), 500
+
 
 
 if __name__ == "__main__":
