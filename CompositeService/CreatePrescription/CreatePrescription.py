@@ -199,6 +199,12 @@ def processCreatePrescription(prescription_data):
             "message": "Error creating prescription"
         }
     
+    # Update appointment status to completed
+    update_url = f"{appointment_URL}/{appointment_id}/status"
+    update_payload = {"status": "COMPLETED"}
+    update_result = invoke_http(update_url, method="PATCH", json=update_payload)
+    print("Appointment status update result:", update_result)
+        
     # 6. Extract and send prescription ID to AMQP broker
     print('\n-----Sending prescription ID to AMQP broker-----')
     exchangename = "dispenser_direct"  # exchange name
