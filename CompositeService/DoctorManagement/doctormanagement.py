@@ -12,152 +12,134 @@ CORS(app)
 patient_URL = os.environ.get('PATIENT_SERVICE_URL')
 appointment_URL = os.environ.get('APPOINTMENT_SERVICE_URL')
 
-
-# @app.route("/doctor_management/appointments/doctor/<int:doctor_id>", methods=["GET"])
-# def get_doctor_appointments(doctor_id):
-#     """
-#     Retrieve all upcoming appointments for a given doctor and enrich each appointment with patient details.
-
-#     Steps:
-#       1. UI sends GET request with doctor_id.
-#       2. Composite service calls Appointment Atomic Service at /appointment/doctor/<doctor_id>.
-#       3. Retrieves a list of appointments.
-#       4. For each appointment, extract the patient_id and retrieve basic patient details.
-#       5. Return aggregated appointment data (with patient details) to the UI.
-#     """
-#     try:
-#         # Step 2: Invoke the Appointment Service
-#         appointment_result = invoke_http(
-#             f"{appointment_URL}/{doctor_id}",
-#             method='GET'
-#         )
-#         print("[Doctor Management] Appointment service response:", appointment_result)
-        
-#         if appointment_result.get("code") not in range(200, 300):
-#             return jsonify({
-#                 "code": 500,
-#                 "message": "Failed to retrieve appointments for the doctor."
-#             }), 500
-        
-#         # Assume appointment_result returns:
-#         # { "code": 200, "data": { "appointments": [ { ... }, { ... } ] } }
-#         appointments = appointment_result.get("data", {}).get("appointments", [])
-        
-#         # Enrich each appointment with patient details
-#         for appointment in appointments:
-#             patient_id = appointment.get("patient_id")
-#             patient_result = invoke_http(
-#                 f"{patient_URL}/{patient_id}",
-#                 method='GET'
-#             )
-#             if patient_result.get("code") in range(200, 300):
-#                 # Attach basic patient info (could be extended as needed)
-#                 appointment["patient_details"] = patient_result.get("data")
-#             else:
-#                 appointment["patient_details"] = {"error": "Patient details not found"}
-        
-#         return jsonify({
-#             "code": 200,
-#             "data": {
-#                 "doctor_id": doctor_id,
-#                 "appointments": appointments
-#             }
-#         }), 200
-        
-#     except Exception as e:
-#         exc_type, exc_obj, exc_tb = sys.exc_info()
-#         fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-#         ex_str = f"{str(e)} at {exc_type}: {fname}: line {str(exc_tb.tb_lineno)}"
-#         return jsonify({
-#             "code": 500,
-#             "message": "Internal error retrieving doctor's appointments: " + ex_str
-#         }), 500
-
-
-@app.route("/doctor_management/patient_records/<int:patient_id>", methods=["GET"])
-def get_patient_records(patient_id):
+@app.route("/doctor_management", methods=["POST"])
+def doctormanagement():
     """
-    Retrieve a patient's full records (including medical history) based on patient id.
+    Composite endpoint that orchestrates a series of operations in sequence:
 
-    Steps:
-      5. UI: Doctor clicks on a patient from the upcoming list.
-      6. Composite service calls the Patient Atomic Service at /patient/<patient_id>.
-      7. Retrieve the patient's detailed records (e.g., medical history).
-      8. Return the patient's records to the UI for display.
+      1. Retrieve all appointments for a given doctor (key: "doctor_id") via
+         GET {appointment_URL}/appointments/doctor/<doctor_id>.
+         Enrich each appointment with patient details by calling the Patient service.
+      2. Optionally, retrieve detailed information for a specific appointment (key: "appointment_details_id")
+         via GET {appointment_URL}/appointments/<appointment_id>.
+      3. Optionally, retrieve full patient records (key: "patient_id")
+         via GET {patient_URL}/patient/<patient_id>.
+      4. Optionally, update the appointment notes (diagnosis) (key: "update_notes").
+         If provided, this key should be an object containing "appointment_id" (optional; if not provided, defaults to the first appointment) and "notes".
+         Calls PATCH {appointment_URL}/appointments/<appointment_id>/notes.
+      5. Optionally, update the appointment status (key: "update_status").
+         If provided, this key should be an object containing "appointment_id" (optional) and "status".
+         Calls PATCH {appointment_URL}/appointments/<appointment_id>/status.
+         
+    The endpoint aggregates and returns the results from each operation.
     """
     try:
-        # Step 6: Invoke the Patient Service to retrieve patient records
-        patient_result = invoke_http(
-            f"{patient_URL}/patient/{patient_id}",
-            method="GET"
-        )
-        print("[Doctor Management] Patient service response:", patient_result)
-        
-        if patient_result.get("code") not in range(200, 300):
-            return jsonify({
-                "code": 500,
-                "message": "Failed to retrieve patient records.",
-                "data": patient_result
-            }), 500
-        
-        # Step 8: Return the patient records to the UI
-        return jsonify({
-            "code": 200,
-            "data": patient_result.get("data")
-        }), 200
-        
-    except Exception as e:
-        exc_type, exc_obj, exc_tb = sys.exc_info()
-        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-        ex_str = f"{str(e)} at {str(exc_type)}: {fname}: line {str(exc_tb.tb_lineno)}"
-        return jsonify({
-            "code": 500,
-            "message": "Internal error retrieving patient records: " + ex_str
-        }), 500
-
-@app.route("/doctor_management/appointment/<int:appointment_id>/status", methods=["PATCH"])
-def update_appointment_status(appointment_id):
-    """
-    Update the status of an appointment.
-    """
-    try:
-        # Extract the new status from the request
         data = request.get_json()
-        new_status = data.get("status")
-        
-        if not new_status:
+        results = {}
+
+        # --- Operation 1: Get all appointments for the doctor ---
+        if "doctor_id" not in data:
             return jsonify({
                 "code": 400,
-                "message": "Missing 'status' in request body."
+                "message": "Missing required field: doctor_id"
             }), 400
-
-        # Invoke the Appointment Service to update the appointment status
-        appointment_result = invoke_http(
-            f"{appointment_URL}/appointment/{appointment_id}/status",
-            method='PATCH',
-            json={"status": new_status}  # Pass the new status in the request body
-        )
-        print("[Doctor Management] Appointment service response:", appointment_result)
-        
-        if appointment_result.get("code") not in range(200, 300):
+        doctor_id = data["doctor_id"]
+        url1 = f"{appointment_URL}/appointments/doctor/{doctor_id}"
+        res1 = invoke_http(url1, method="GET")
+        results["get_doctor_appointments"] = {
+            "return_code": res1.get("code"),
+            "response": res1
+        }
+        if res1.get("code") not in range(200, 300):
             return jsonify({
-                "code": 500,
-                "message": "Failed to update appointment status."
-            }), 500
-        
-        # Return success message
+                "code": res1.get("code", 500),
+                "message": f"Failed to retrieve appointments for doctor {doctor_id}.",
+                "data": results
+            }), res1.get("code", 500)
+        appointments = res1.get("data", {}).get("appointments", [])
+        if not appointments:
+            return jsonify({
+                "code": 404,
+                "message": f"No appointments found for doctor {doctor_id}.",
+                "data": results
+            }), 404
+        # Enrich each appointment with patient details.
+        for appointment in appointments:
+            pid = appointment.get("patient_id")
+            if pid:
+                patient_url = f"{patient_URL}/patient/{pid}"
+                pres = invoke_http(patient_url, method="GET")
+                if pres.get("code") in range(200, 300):
+                    appointment["patient_details"] = pres.get("data")
+                else:
+                    appointment["patient_details"] = {"error": "Patient details not found"}
+        results["get_doctor_appointments"]["enriched_appointments"] = appointments
+
+        # Set default values from the first appointment for use in subsequent operations.
+        default_app_id = appointments[0].get("appointment_id")
+        default_patient_id = appointments[0].get("patient_id")
+
+        # --- Operation 2: Get specific appointment details ---
+        if "appointment_details_id" in data:
+            app_id = data["appointment_details_id"]
+        else:
+            app_id = default_app_id  # use default if not provided
+        url2 = f"{appointment_URL}/appointments/{app_id}"
+        res2 = invoke_http(url2, method="GET")
+        results["get_appointment_details"] = {
+            "return_code": res2.get("code"),
+            "response": res2
+        }
+
+        # --- Operation 3: Get patient records ---
+        if "patient_id" in data:
+            patient_id = data["patient_id"]
+        else:
+            patient_id = default_patient_id
+        url3 = f"{patient_URL}/patient/{patient_id}"
+        res3 = invoke_http(url3, method="GET")
+        results["get_patient_records"] = {
+            "return_code": res3.get("code"),
+            "response": res3
+        }
+
+        # --- Operation 4: Update appointment notes (diagnosis) ---
+        if "update_notes" in data:
+            update_info = data["update_notes"]
+            # Use the provided appointment_id if available, otherwise default.
+            update_app_id = update_info.get("appointment_id", default_app_id)
+            if "notes" in update_info:
+                url4 = f"{appointment_URL}/appointments/{update_app_id}/notes"
+                payload = {"notes": update_info["notes"]}
+                res4 = invoke_http(url4, method="PATCH", json=payload)
+                results["update_appointment_notes"] = {
+                    "return_code": res4.get("code"),
+                    "response": res4
+                }
+            else:
+                results["update_appointment_notes"] = {
+                    "return_code": 400,
+                    "response": {"message": "Missing 'notes' in update_notes"}
+                }
+        else:
+            results["update_appointment_notes"] = {
+                "return_code": None,
+                "response": "Not requested"
+            }
+
         return jsonify({
             "code": 200,
-            "message": "Appointment status updated successfully."
+            "message": "Composite orchestration completed.",
+            "data": results
         }), 200
-        
+
     except Exception as e:
-        exc_type, exc_obj, exc_tb = sys.exc_info()
+        exc_type, _, exc_tb = sys.exc_info()
         fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-        ex_str = f"{str(e)} at {str(exc_type)}: {fname}: line {str(exc_tb.tb_lineno)}"
+        error_msg = f"{str(e)} at {str(exc_type)} in {fname} on line {exc_tb.tb_lineno}"
         return jsonify({
             "code": 500,
-            "message": "Internal error updating appointment status: " + ex_str
+            "message": "Internal error in composite orchestration: " + error_msg
         }), 500
 
 # Run the Flask app
