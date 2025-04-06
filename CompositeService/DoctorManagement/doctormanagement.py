@@ -18,18 +18,18 @@ def doctormanagement():
     Composite endpoint that orchestrates a series of operations in sequence:
 
       1. Retrieve all appointments for a given doctor (key: "doctor_id") via
-         GET {appointment_URL}/appointments/doctor/<doctor_id>.
+         GET {appointment_URL}/appointment/doctor/<doctor_id>.
          Enrich each appointment with patient details by calling the Patient service.
       2. Optionally, retrieve detailed information for a specific appointment (key: "appointment_details_id")
-         via GET {appointment_URL}/appointments/<appointment_id>.
+         via GET {appointment_URL}/appointment/<appointment_id>.
       3. Optionally, retrieve full patient records (key: "patient_id")
          via GET {patient_URL}/patient/<patient_id>.
       4. Optionally, update the appointment notes (diagnosis) (key: "update_notes").
          If provided, this key should be an object containing "appointment_id" (optional; if not provided, defaults to the first appointment) and "notes".
-         Calls PATCH {appointment_URL}/appointments/<appointment_id>/notes.
+         Calls PATCH {appointment_URL}/appointment/<appointment_id>/notes.
       5. Optionally, update the appointment status (key: "update_status").
          If provided, this key should be an object containing "appointment_id" (optional) and "status".
-         Calls PATCH {appointment_URL}/appointments/<appointment_id>/status.
+         Calls PATCH {appointment_URL}/appointment/<appointment_id>/status.
          
     The endpoint aggregates and returns the results from each operation.
     """
@@ -44,7 +44,7 @@ def doctormanagement():
                 "message": "Missing required field: doctor_id"
             }), 400
         doctor_id = data["doctor_id"]
-        url1 = f"{appointment_URL}/appointments/doctor/{doctor_id}"
+        url1 = f"{appointment_URL}/appointment/doctor/{doctor_id}"
         res1 = invoke_http(url1, method="GET")
         results["get_doctor_appointments"] = {
             "return_code": res1.get("code"),
@@ -84,7 +84,7 @@ def doctormanagement():
             app_id = data["appointment_details_id"]
         else:
             app_id = default_app_id  # use default if not provided
-        url2 = f"{appointment_URL}/appointments/{app_id}"
+        url2 = f"{appointment_URL}/appointment/{app_id}"
         res2 = invoke_http(url2, method="GET")
         results["get_appointment_details"] = {
             "return_code": res2.get("code"),
@@ -109,7 +109,7 @@ def doctormanagement():
             # Use the provided appointment_id if available, otherwise default.
             update_app_id = update_info.get("appointment_id", default_app_id)
             if "notes" in update_info:
-                url4 = f"{appointment_URL}/appointments/{update_app_id}/notes"
+                url4 = f"{appointment_URL}/appointment/{update_app_id}/notes"
                 payload = {"notes": update_info["notes"]}
                 res4 = invoke_http(url4, method="PATCH", json=payload)
                 results["update_appointment_notes"] = {

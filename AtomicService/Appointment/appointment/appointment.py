@@ -244,22 +244,22 @@ def update_appointment_status(appointment_id):
 
 # commenting this status is only updated after creating prescription
 # #appointment microservice returns ALL appointment details based on the patient id to the doctor management composite UI 
-@app.route("/appointment/patient/<int:patient_id>")
-def get_patient_appointments(patient_id):
-    """Get all appointments for a patient"""
-    appointments = db.session.scalars(db.select(Appointment).filter_by(patient_id=patient_id)).all()
+# @app.route("/appointment/patient/<int:patient_id>")
+# def get_patient_appointments(patient_id):
+#     """Get all appointments for a patient"""
+#     appointments = db.session.scalars(db.select(Appointment).filter_by(patient_id=patient_id)).all()
 
-    if appointments:
-        return jsonify({
-            "code": 200,
-            "data": {
-                "appointments": [appointment.json() for appointment in appointments]
-            }
-        })
-    return jsonify({
-        "code": 404,
-        "message": f"No appointments found for patient {patient_id}."
-    }), 404
+#     if appointments:
+#         return jsonify({
+#             "code": 200,
+#             "data": {
+#                 "appointments": [appointment.json() for appointment in appointments]
+#             }
+#         })
+#     return jsonify({
+#         "code": 404,
+#         "message": f"No appointments found for patient {patient_id}."
+#     }), 404
 
 
 # #updates the appointment status - scheduled / completed 
