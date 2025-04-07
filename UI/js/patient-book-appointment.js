@@ -107,7 +107,9 @@ const app = Vue.createApp({
                 appointment_date: dateStr,
                 start_time: `${dateStr}T${timeStr}`,
                 end_time: `${dateStr}T${this.addOneHour(timeStr)}`,
-                notes: this.reason
+                notes: this.reason,
+                patient_mobile: patientData?.mobile,
+                patient_email: patientDate?.email
             };
         
             console.log("📦 Payload:", payload); // Debug logging
