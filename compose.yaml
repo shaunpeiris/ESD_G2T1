@@ -22,7 +22,7 @@ services:
     depends_on:
       - patient_db
     environment:
-      dbURL: mysql+mysqlconnector://root@host.docker.internal:3306/patientdb
+      dbURL: mysql+mysqlconnector://root:root@host.docker.internal:3306/patientdb
       # dbURL: mysql+mysqlconnector://root:@patient_db:3306/patientdb
     networks:
       - atomic_network
@@ -51,7 +51,7 @@ services:
     depends_on:
       - appointment_db
     environment:
-      dbURL: mysql+mysqlconnector://root@host.docker.internal:3306/appointmentdb
+      dbURL: mysql+mysqlconnector://root:root@host.docker.internal:3306/appointmentdb
     networks:
       - atomic_network
 
@@ -79,7 +79,7 @@ services:
     depends_on:
       - prescription_db
     environment:
-      dbURL: mysql+mysqlconnector://root@host.docker.internal:3306/prescriptiondb
+      dbURL: mysql+mysqlconnector://root:root@host.docker.internal:3306/prescriptiondb
     networks:
       - atomic_network
 
@@ -103,7 +103,7 @@ services:
     image: ESDG2T1/billing:1.0
     restart: always
     ports:
-      - "5014:5004"
+      - "5014:5024"
     depends_on:
       - billing_db
     environment:
@@ -112,7 +112,7 @@ services:
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
       YOUR_DOMAIN: ${YOUR_DOMAIN}
       PATIENT_MICROSERVICE_URL: ${PATIENT_MICROSERVICE_URL}
-      dbURL: mysql+mysqlconnector://root@host.docker.internal:3306/billing
+      dbURL: mysql+mysqlconnector://root:root@host.docker.internal:3306/billing
     env_file:
       - .env
     networks:

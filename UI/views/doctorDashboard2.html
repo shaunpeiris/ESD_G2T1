@@ -114,11 +114,6 @@
             </li>
             <li class="nav-item">
               <a href="#" class="nav-link">
-                <i class="bi bi-file-earmark-text me-2"></i> Medical Certificates
-              </a>
-            </li>
-            <li class="nav-item">
-              <a href="#" class="nav-link">
                 <i class="bi bi-gear me-2"></i> Settings
               </a>
             </li>
@@ -142,9 +137,6 @@
               <button type="button" class="btn btn-sm btn-outline-secondary">
                 <i class="bi bi-calendar me-1"></i> Today
               </button>
-              <button type="button" class="btn btn-sm btn-outline-secondary">
-                <i class="bi bi-calendar-week me-1"></i> This Week
-              </button>
             </div>
           </div>
         </div>
@@ -154,35 +146,6 @@
           <h2 class="mb-4">Upcoming Appointments</h2>
           <div id="appointmentsContainer" class="row mb-4">
             <!-- Appointment cards will be dynamically injected here -->
-          </div>
-
-          <!-- Tomorrow's Schedule (static example) -->
-          <h3 class="h4 mb-3">Tomorrow's Schedule</h3>
-          <div class="table-responsive">
-            <table class="table table-hover">
-              <thead>
-                <tr>
-                  <th>Time</th>
-                  <th>Patient</th>
-                  <th>Type</th>
-                  <th>Reason</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>09:00 AM</td>
-                  <td>Robert Chen</td>
-                  <td><span class="badge bg-primary">Follow-up</span></td>
-                  <td>Post-surgery checkup</td>
-                  <td>
-                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"
-                      data-bs-target="#patientRecordModal">View Records</button>
-                  </td>
-                </tr>
-                <!-- Additional rows as needed -->
-              </tbody>
-            </table>
           </div>
         </section>
       </main>
@@ -204,14 +167,9 @@
             <div class="row">
               <div class="col-md-5">
                 <h4 id="modalPatientName">Patient Name</h4>
-                <p class="mb-1"><strong>DOB:</strong> <span id="modalDOB"></span></p>
-                <p class="mb-1"><strong>Gender:</strong> <span id="modalGender"></span></p>
-                <p class="mb-1"><strong>Blood Type:</strong> <span id="modalBloodType"></span></p>
-                <p class="mb-1"><strong>Patient ID:</strong> <span id="modalPatientID"></span></p>
-              </div>
-              <div class="col-md-5">
-                <p class="mb-1"><strong>Email:</strong> <span id="modalEmail"></span></p>
-                <!-- Other fields can be added if available -->
+                <p class="mb-1"><strong>id</strong> <span id="patientid"></span></p>
+                <p class="mb-1"><strong>Email</strong> <span id="email"></span></p>
+                <p class="mb-1"><strong>Phone No.</strong> <span id="mobile"></span></p>
               </div>
             </div>
           </div>
@@ -220,45 +178,30 @@
           <ul class="nav nav-tabs" id="myTab" role="tablist">
             <li class="nav-item" role="presentation">
               <button class="nav-link active" id="summary-tab" data-bs-toggle="tab" data-bs-target="#summary"
-                type="button" role="tab" aria-controls="summary" aria-selected="true">Summary</button>
-            </li>
-            <li class="nav-item" role="presentation">
-              <button class="nav-link" id="history-tab" data-bs-toggle="tab" data-bs-target="#history" type="button"
-                role="tab" aria-controls="history" aria-selected="false">Medical History</button>
-            </li>
-            <li class="nav-item" role="presentation">
-              <button class="nav-link" id="medications-tab" data-bs-toggle="tab" data-bs-target="#medications"
-                type="button" role="tab" aria-controls="medications" aria-selected="false">Medications</button>
-            </li>
-            <li class="nav-item" role="presentation">
-              <button class="nav-link" id="tests-tab" data-bs-toggle="tab" data-bs-target="#tests" type="button"
-                role="tab" aria-controls="tests" aria-selected="false">Test Results</button>
+                type="button" role="tab" aria-controls="medicalhistory" aria-selected="true">Medical History</button>
             </li>
             <li class="nav-item" role="presentation">
               <button class="nav-link" id="notes-tab" data-bs-toggle="tab" data-bs-target="#notes" type="button"
-                role="tab" aria-controls="notes" aria-selected="false">Clinical Notes</button>
+                role="tab" aria-controls="notes" aria-selected="false">Appointment Notes</button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="medications-tab" data-bs-toggle="tab" data-bs-target="#medications"
+                type="button" role="tab" aria-controls="medications" aria-selected="false">Prescriptions</button>
             </li>
           </ul>
+
           <div class="tab-content p-3 border border-top-0 rounded-bottom" id="myTabContent">
-            <!-- Summary Tab -->
+            <!-- Medical History Tab -->
             <div class="tab-pane fade show active" id="summary" role="tabpanel" aria-labelledby="summary-tab">
-              <!-- Summary content can be populated here -->
+              <!-- Medical History content can be populated here -->
             </div>
-            <!-- Medical History Tab: Will be dynamically populated -->
-            <div class="tab-pane fade" id="history" role="tabpanel" aria-labelledby="history-tab">
-              <!-- Medical history will be injected here -->
-            </div>
-            <!-- Medications Tab -->
-            <div class="tab-pane fade" id="medications" role="tabpanel" aria-labelledby="medications-tab">
-              <!-- Medications content -->
-            </div>
-            <!-- Test Results Tab -->
-            <div class="tab-pane fade" id="tests" role="tabpanel" aria-labelledby="tests-tab">
-              <!-- Test results content -->
-            </div>
-            <!-- Clinical Notes Tab -->
+            <!-- Appointment Notes Tab -->
             <div class="tab-pane fade" id="notes" role="tabpanel" aria-labelledby="notes-tab">
-              <!-- Clinical notes content -->
+              <!-- Appointment Notes content -->
+            </div>
+            <!-- Prescription Tab -->
+            <div class="tab-pane fade" id="medications" role="tabpanel" aria-labelledby="medications-tab">
+              <!-- Prescription content -->
             </div>
           </div>
         </div>
@@ -274,196 +217,174 @@
   <script src="../js/signout.js"></script>
 
   <script>
-    // Assuming the logged-in doctor's ID is known (e.g., 1)
-    const doctorId = 1;
-    const compositeBaseURL = "http://host.docker.internal:6002";
+    // Assuming the logged-in doctor's ID is known (e.g., D001)
+    const doctorId = "D001";
+    const compositeUrl = "http://localhost:6002/doctor_management";
 
-    // Fetch and display upcoming appointments for the doctor on page load
-    document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('doctor-name').textContent = JSON.parse(sessionStorage.doctor).Doctor_Name;
-      document.getElementById('doctor-specialization').textContent = JSON.parse(sessionStorage.doctor).Specialization;
+    // Create payload to request appointments (operation 1).
+    const payload = { "doctor_id": doctorId };
 
-
-      fetch(`${compositeBaseURL}/doctor_management/appointments/doctor/${doctorId}`)
-        .then(response => response.json())
-        .then(data => {
-          if (data.code === 200) {
-            populateAppointments(data.data.appointments);
-          } else {
-            console.error("Error loading appointments:", data.message);
-          }
-        })
-        .catch(error => console.error("Error fetching appointments:", error));
+    fetch(compositeUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    })
+    .then(response => response.json())
+    .then(data => {
+      console.log("Composite response:", data);
+      if (data.code === 200 && data.data && data.data.get_doctor_appointments) {
+        const opResult = data.data.get_doctor_appointments;
+        // Look specifically for enriched_appointments.
+        const appointments = opResult.enriched_appointments;
+        if (appointments && appointments.length > 0) {
+          populateAppointments(appointments);
+        } else {
+          document.getElementById("appointmentsContainer").innerHTML = `<p>No appointments found.</p>`;
+        }
+      } else {
+        document.getElementById("appointmentsContainer").innerHTML = `<p>Error: ${data.message}</p>`;
+      }
+    })
+    .catch(error => {
+      console.error("Fetch error:", error);
+      document.getElementById("appointmentsContainer").innerHTML = `<p>Error loading appointments.</p>`;
     });
 
     // Populate the appointments container with appointment cards
     function populateAppointments(appointments) {
       const container = document.getElementById("appointmentsContainer");
       container.innerHTML = "";
-      if (!appointments.length) {
-        container.innerHTML = "<p>No upcoming appointments.</p>";
-        return;
-      }
       appointments.forEach(appointment => {
-        const appointmentDate = new Date(appointment.appointment_date);
-        const startTime = new Date(appointment.start_time);
-        const formattedDate = appointmentDate.toLocaleDateString();
-        const formattedTime = startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        let badgeClass = "bg-primary";
-        if (appointment.appointment_status === "Urgent") badgeClass = "bg-danger";
-        if (appointment.appointment_status === "Completed") badgeClass = "bg-success";
-        const card = document.createElement("div");
-        card.className = "col-md-6 col-lg-4 mb-3";
-        card.innerHTML = `
-          <div class="card appointment-card" style="cursor: pointer;" onclick="viewPatientRecords(${appointment.patient_id})">
-            <div class="card-body">
-              <div class="d-flex justify-content-between align-items-center mb-2">
-                <h5 class="card-title mb-0">${appointment.patient_details ? appointment.patient_details.name : "Patient " + appointment.patient_id}</h5>
-                <span class="badge ${badgeClass}">${appointment.appointment_status}</span>
-              </div>
-              <h6 class="card-subtitle mb-2 text-muted">${formattedDate}, ${formattedTime}</h6>
-              <p class="card-text">${appointment.notes || ""}</p>
-              <div class="d-flex justify-content-between mt-3">
-                <button class="btn btn-outline-primary btn-sm" onclick="event.stopPropagation(); viewPatientRecords(${appointment.patient_id});">
-                  <i class="bi bi-file-medical me-1"></i> View Records
+        const appointmentId = appointment.appointment_id;
+        const patientId = appointment.patient_id;
+        const patientName = appointment.patient_details && appointment.patient_details.name 
+                              ? appointment.patient_details.name 
+                              : "Unknown Patient";
+        const apptDate = new Date(appointment.appointment_date).toLocaleDateString();
+        const startTime = new Date(appointment.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const endTime = new Date(appointment.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const status = appointment.appointment_status;
+        const notes = appointment.notes || "";
+        
+        let badgeClass = "bg-warning"; // default for Scheduled
+        if (status === "Completed") badgeClass = "bg-success";
+        else if (status === "Cancelled") badgeClass = "bg-danger";
+
+        const cardHtml = `
+          <div class="col-md-6 col-lg-4 mb-3">
+            <div class="card appointment-card" style="cursor: pointer;" onclick="viewAppointment(${appointmentId})">
+              <div class="card-body">
+                <h5 class="card-title d-inline-block mb-0 me-2">${patientName}</h5>
+                <span class="badge bg-danger d-inline-block">Upcoming</span>
+                <p class="card-text"><strong>Patient ID:</strong> ${patientId}</p>
+                <p class="card-text"><strong>Date:</strong> ${apptDate}</p>
+                <p class="card-text"><strong>Time:</strong> ${startTime} - ${endTime}</p>
+                <p class="card-text">${notes}</p>
+                <button class="btn btn-outline-primary btn-sm" onclick="event.stopPropagation(); viewPatientRecords(${patientId});">
+                  <i class="bi bi-file-medical me-1"></i> Check-in
                 </button>
-                <div>
-                  <button class="btn btn-success btn-sm me-1" onclick="event.stopPropagation(); checkInPatient(${appointment.patient_id});">
-                    <i class="bi bi-check-circle me-1"></i> Check In
-                  </button>
-                  <button class="btn btn-outline-secondary btn-sm" onclick="event.stopPropagation(); rescheduleAppointment(${appointment.patient_id});">
-                    <i class="bi bi-calendar-x me-1"></i> Reschedule
-                  </button>
-                </div>
               </div>
             </div>
           </div>
         `;
-        container.appendChild(card);
+        container.innerHTML += cardHtml;
       });
     }
 
-    // Fetch and display patient records in the modal
-    function viewPatientRecords(patientId) {
-      console.log("Fetching records for patient:", patientId);
-      fetch(`${compositeBaseURL}/doctor_management/patient_records/${patientId}`)
-        .then(response => response.json())
-        .then(data => {
-          if (data.code === 200) {
-            populatePatientModal(data.data);
-            const modal = new bootstrap.Modal(document.getElementById("patientRecordModal"));
-            modal.show();
-          } else {
-            console.error("Error loading patient records:", data.message);
-          }
-        })
-        .catch(error => console.error("Error fetching patient records:", error));
-    }
+    // // Populate the patient modal with basic details and medical history
+    // function populatePatientModal(patientData) {
+    //   document.getElementById("patientRecordModalLabel").innerText = "Patient Medical Record - " + (patientData.name || "Unknown");
+    //   document.getElementById("modalPatientName").innerText = patientData.name || "";
+    //   // Display fields that are available; use "N/A" if not provided.
+    //   document.getElementById("modalDOB").innerText = patientData.dob || "N/A";
+    //   document.getElementById("modalGender").innerText = patientData.gender || "N/A";
+    //   document.getElementById("modalBloodType").innerText = patientData.blood_type || "N/A";
+    //   document.getElementById("modalPatientID").innerText = patientData.id || "";
+    //   document.getElementById("modalEmail").innerText = patientData.email || "";
+    //   // Populate the Medical History tab using a helper function:
+    //   let medHistory = patientData.medicalHistory;
+    //   if (typeof medHistory === "string") {
+    //     try {
+    //       medHistory = JSON.parse(medHistory);
+    //     } catch (e) {
+    //       medHistory = null;
+    //     }
+    //   }
+    //   populateMedicalHistory(medHistory);
+    //   console.log("Patient data loaded into modal:", patientData);
+    // }
 
-    // Populate the patient modal with basic details and medical history
-    function populatePatientModal(patientData) {
-      document.getElementById("patientRecordModalLabel").innerText = "Patient Medical Record - " + (patientData.name || "Unknown");
-      document.getElementById("modalPatientName").innerText = patientData.name || "";
-      // Display fields that are available; use "N/A" if not provided.
-      document.getElementById("modalDOB").innerText = patientData.dob || "N/A";
-      document.getElementById("modalGender").innerText = patientData.gender || "N/A";
-      document.getElementById("modalBloodType").innerText = patientData.blood_type || "N/A";
-      document.getElementById("modalPatientID").innerText = patientData.id || "";
-      document.getElementById("modalEmail").innerText = patientData.email || "";
-      // Populate the Medical History tab using a helper function:
-      let medHistory = patientData.medicalHistory;
-      if (typeof medHistory === "string") {
-        try {
-          medHistory = JSON.parse(medHistory);
-        } catch (e) {
-          medHistory = null;
-        }
-      }
-      populateMedicalHistory(medHistory);
-      console.log("Patient data loaded into modal:", patientData);
-    }
+    // // Helper function to format and display medical history
+    // function populateMedicalHistory(medicalHistory) {
+    //   const historyTab = document.getElementById("history");
+    //   historyTab.innerHTML = "";
+    //   if (!medicalHistory) {
+    //     historyTab.innerHTML = "<p>No medical history available.</p>";
+    //     return;
+    //   }
+    //   let html = "";
+    //   html += "<div class='mb-3'><h5>Allergies</h5>";
+    //   if (medicalHistory.allergies && medicalHistory.allergies.length > 0) {
+    //     html += "<ul>";
+    //     medicalHistory.allergies.forEach(item => { html += `<li>${item}</li>`; });
+    //     html += "</ul>";
+    //   } else {
+    //     html += "<p>None</p>";
+    //   }
+    //   html += "</div>";
 
-    // Helper function to format and display medical history
-    function populateMedicalHistory(medicalHistory) {
-      const historyTab = document.getElementById("history");
-      historyTab.innerHTML = "";
-      if (!medicalHistory) {
-        historyTab.innerHTML = "<p>No medical history available.</p>";
-        return;
-      }
-      let html = "";
-      html += "<div class='mb-3'><h5>Allergies</h5>";
-      if (medicalHistory.allergies && medicalHistory.allergies.length > 0) {
-        html += "<ul>";
-        medicalHistory.allergies.forEach(item => { html += `<li>${item}</li>`; });
-        html += "</ul>";
-      } else {
-        html += "<p>None</p>";
-      }
-      html += "</div>";
+    //   html += "<div class='mb-3'><h5>Medical Conditions</h5>";
+    //   if (medicalHistory.medical_conditions && medicalHistory.medical_conditions.length > 0) {
+    //     html += "<ul>";
+    //     medicalHistory.medical_conditions.forEach(item => { html += `<li>${item}</li>`; });
+    //     html += "</ul>";
+    //   } else {
+    //     html += "<p>None</p>";
+    //   }
+    //   html += "</div>";
 
-      html += "<div class='mb-3'><h5>Medical Conditions</h5>";
-      if (medicalHistory.medical_conditions && medicalHistory.medical_conditions.length > 0) {
-        html += "<ul>";
-        medicalHistory.medical_conditions.forEach(item => { html += `<li>${item}</li>`; });
-        html += "</ul>";
-      } else {
-        html += "<p>None</p>";
-      }
-      html += "</div>";
+    //   html += "<div class='mb-3'><h5>Past Surgeries</h5>";
+    //   if (medicalHistory.past_surgeries && medicalHistory.past_surgeries.length > 0) {
+    //     html += "<ul>";
+    //     medicalHistory.past_surgeries.forEach(item => { html += `<li>${item}</li>`; });
+    //     html += "</ul>";
+    //   } else {
+    //     html += "<p>None</p>";
+    //   }
+    //   html += "</div>";
 
-      html += "<div class='mb-3'><h5>Past Surgeries</h5>";
-      if (medicalHistory.past_surgeries && medicalHistory.past_surgeries.length > 0) {
-        html += "<ul>";
-        medicalHistory.past_surgeries.forEach(item => { html += `<li>${item}</li>`; });
-        html += "</ul>";
-      } else {
-        html += "<p>None</p>";
-      }
-      html += "</div>";
+    //   html += "<div class='mb-3'><h5>Family Medical History</h5>";
+    //   if (medicalHistory.family_medical_history && medicalHistory.family_medical_history.length > 0) {
+    //     html += "<ul>";
+    //     medicalHistory.family_medical_history.forEach(item => { html += `<li>${item}</li>`; });
+    //     html += "</ul>";
+    //   } else {
+    //     html += "<p>None</p>";
+    //   }
+    //   html += "</div>";
 
-      html += "<div class='mb-3'><h5>Family Medical History</h5>";
-      if (medicalHistory.family_medical_history && medicalHistory.family_medical_history.length > 0) {
-        html += "<ul>";
-        medicalHistory.family_medical_history.forEach(item => { html += `<li>${item}</li>`; });
-        html += "</ul>";
-      } else {
-        html += "<p>None</p>";
-      }
-      html += "</div>";
+    //   html += "<div class='mb-3'><h5>Chronic Illnesses</h5>";
+    //   if (medicalHistory.chronic_illnesses && medicalHistory.chronic_illnesses.length > 0) {
+    //     html += "<ul>";
+    //     medicalHistory.chronic_illnesses.forEach(item => { html += `<li>${item}</li>`; });
+    //     html += "</ul>";
+    //   } else {
+    //     html += "<p>None</p>";
+    //   }
+    //   html += "</div>";
 
-      html += "<div class='mb-3'><h5>Chronic Illnesses</h5>";
-      if (medicalHistory.chronic_illnesses && medicalHistory.chronic_illnesses.length > 0) {
-        html += "<ul>";
-        medicalHistory.chronic_illnesses.forEach(item => { html += `<li>${item}</li>`; });
-        html += "</ul>";
-      } else {
-        html += "<p>None</p>";
-      }
-      html += "</div>";
+    //   html += "<div class='mb-3'><h5>Medications</h5>";
+    //   if (medicalHistory.medications && medicalHistory.medications.length > 0) {
+    //     html += "<ul>";
+    //     medicalHistory.medications.forEach(item => { html += `<li>${item}</li>`; });
+    //     html += "</ul>";
+    //   } else {
+    //     html += "<p>None</p>";
+    //   }
+    //   html += "</div>";
 
-      html += "<div class='mb-3'><h5>Medications</h5>";
-      if (medicalHistory.medications && medicalHistory.medications.length > 0) {
-        html += "<ul>";
-        medicalHistory.medications.forEach(item => { html += `<li>${item}</li>`; });
-        html += "</ul>";
-      } else {
-        html += "<p>None</p>";
-      }
-      html += "</div>";
-
-      historyTab.innerHTML = html;
-    }
-
-    function checkInPatient(patientId) {
-      console.log("Checking in patient:", patientId);
-      // Implement check-in functionality
-    }
-
-    function rescheduleAppointment(patientId) {
-      console.log("Rescheduling appointment for patient:", patientId);
-      // Implement rescheduling functionality
-    }
+    //   historyTab.innerHTML = html;
+    // }
   </script>
 </body>
 

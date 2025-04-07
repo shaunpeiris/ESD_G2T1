@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MediSync | Billing</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="../css/patient.css" />
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container">
+      <a class="navbar-brand" href="patientProfile.html">MediSync</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item"><a class="nav-link" href="patientBookAppointment.html">Book Appointment</a></li>
+          <li class="nav-item"><a class="nav-link" href="patientAppointment.html">My Appointments</a></li>
+          <li class="nav-item"><a class="nav-link" href="patientBilling.html">Billing</a></li>
+        </ul>
+        <div class="d-flex">
+          <a href="patientProfile.html" class="btn btn-outline-light me-2">My Profile</a>
+          <button class="btn btn-danger" onclick="logout()">Sign Out</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main App -->
+  <div id="app" class="container mt-5">
+    <h2 class="mb-4">My Pending Bills</h2>
+
+    <div v-if="loading" class="text-muted">Loading pending payments...</div>
+    <div v-else-if="error" class="alert alert-danger">{{ error }}</div>
+    <div v-else-if="payments.length === 0" class="text-muted">No pending payments found.</div>
+
+    <table v-else class="table table-bordered">
+      <thead class="table-light">
+        <tr>
+          <th>Prescription ID</th>
+          <th>Amount (SGD)</th>
+          <th>Status</th>
+          <th>Created At</th>
+          <th>Pay</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="payment in payments" :key="payment.paymentID">
+          <td>{{ payment.prescriptionID }}</td>
+          <td>{{ payment.amount.toFixed(2) }}</td>
+          <td>{{ payment.status }}</td>
+          <td>{{ formatDate(payment.createdAt) }}</td>
+          <td>
+            <button class="btn btn-sm btn-success" @click="regenerateSession(payment)" :disabled="payingId === payment.paymentID">
+              {{ payingId === payment.paymentID ? 'Redirecting...' : 'Pay Now' }}
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@3.2.31/dist/vue.global.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const { createApp, ref, onMounted } = Vue;
+  
+    createApp({
+      setup() {
+        const payments = ref([]);
+        const loading = ref(true);
+        const error = ref("");
+        const payingId = ref(null); // track which payment is loading
+
+        const formatDate = (dateStr) => {
+          const d = new Date(dateStr);
+          return d.toLocaleString("en-SG", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit"
+          });
+        };
+
+        const fetchPayments = () => {
+          const patient = JSON.parse(sessionStorage.getItem("patient"));
+          if (!patient?.id) {
+            error.value = "Patient not logged in.";
+            loading.value = false;
+            return;
+          }
+
+          const patientId = patient.id;
+
+          axios.get(`http://localhost:5014/patient/${patientId}/pending-payments`)
+            .then(res => {
+              payments.value = res.data.data || [];
+            })
+            .catch(err => {
+              console.error(err);
+              error.value = "Failed to load pending payments.";
+            })
+            .finally(() => {
+              loading.value = false;
+            });
+        };
+
+        const regenerateSession = async (payment) => {
+          try {
+            payingId.value = payment.paymentID;
+            const res = await axios.post(`http://localhost:5014/payment/${payment.paymentID}/recreate-session`);
+            const url = res.data.url;
+            if (url) {
+              window.open(url, "_blank");
+            } else {
+              alert("No URL returned from Stripe.");
+            }
+          } catch (err) {
+            console.error("❌ Failed to recreate session:", err);
+            alert("Failed to create checkout session.");
+          } finally {
+            payingId.value = null;
+          }
+        };
+
+        onMounted(fetchPayments);
+
+        return {
+          payments,
+          loading,
+          error,
+          formatDate,
+          regenerateSession,
+          payingId
+        };
+      }
+    }).mount("#app");
+
+    function logout() {
+      sessionStorage.clear();
+      window.location.href = "patientLogin.html";
+    }
+  </script>
+</body>
+</html>
+
