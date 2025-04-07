@@ -113,7 +113,7 @@
 
                 try {
                     // Fetch all doctors first
-                    const docRes = await fetch("http://104.214.186.4:5010/doctors");
+                    const docRes = await fetch("http://localhost:8000/doctors");
                     const docData = await docRes.json();
                     const doctors = docData.data || [];
 
@@ -123,7 +123,7 @@
                     });
 
                     // Fetch appointments
-                    const res = await fetch(`http://127.0.0.1:5002/appointment/patient/${patient.id}`);
+                    const res = await fetch(`http://localhost:8000/appointment/patient/${patient.id}`);
                     const data = await res.json();
                     const appointments = data.data.appointments || [];
 

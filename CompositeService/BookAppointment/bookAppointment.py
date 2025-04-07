@@ -100,10 +100,9 @@ def create_appointment():
         appointment_date = payload["appointment_date"]
         start_time = payload["start_time"]
         end_time = payload["end_time"]
-        notes = payload.get("notes", "")
         
-        patient_phone = payload["mobile"]
-        patient_email = payload["email"]
+        patient_phone = payload["patient_mobile"]
+        patient_email = payload["patient_email"]
 
         # ✅ Get patient details
         # patient_res = requests.get(f"{PATIENT_API_URL}/{patient_id}")
@@ -126,8 +125,7 @@ def create_appointment():
             "patient_id": patient_id,
             "appointment_date": appointment_date,
             "start_time": start_time,
-            "end_time": end_time,
-            "notes": notes
+            "end_time": end_time
         }
 
         # ✅ Log what's being sent

@@ -48,4 +48,18 @@ echo     ↳ Route added: /doctor_management/patient_records
 curl -s -X POST http://localhost:8001/services/doctormanagement-service/routes --data "paths[]=/doctor_management/appointment" --data strip_path=false >nul
 echo     ↳ Route added: /doctor_management/appointment
 
+REM Register appointment-service
+echo 🔗 Registering appointment-service...
+curl -s -X POST http://localhost:8001/services --data name=appointment-service --data url=http://appointment:5002 >nul
+curl -s -X POST http://localhost:8001/services/appointment-service/routes --data "paths[]=/appointment/patient" --data strip_path=false >nul
+echo     ↳ Route added: /appointment
+
+REM Register specializations service (external IP)
+echo 🔗 Registering specializations service...
+curl -s -X POST http://localhost:8001/services --data name=hospital-service --data url=http://104.214.186.4:5010 >nul
+curl -s -X POST http://localhost:8001/services/hospital-service/routes --data "paths[]=/specializations" --data strip_path=false >nul
+curl -s -X POST http://localhost:8001/services/hospital-service/routes --data "paths[]=/polyclinics" --data strip_path=false >nul
+curl -s -X POST http://localhost:8001/services/hospital-service/routes --data "paths[]=/doctors" --data strip_path=false >nul
+echo     ↳ Route added: /hospital
+
 echo ✅ All services and routes registered!
