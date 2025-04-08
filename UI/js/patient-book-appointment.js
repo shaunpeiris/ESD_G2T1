@@ -33,12 +33,12 @@ const app = Vue.createApp({
             }
         },
         async fetchSpecializations() {
-            const res = await fetch('http://104.214.186.4:5010/specializations');
+            const res = await fetch('http://localhost:8000/specializations');
             const data = await res.json();
             this.specialities = ['Any', ...data.data];
         },
         async fetchPolyclinics() {
-            const res = await fetch('http://104.214.186.4:5010/polyclinics');
+            const res = await fetch('http://localhost:8000/polyclinics');
             const data = await res.json();
             this.locations = ['Any', ...data.data];
         },
@@ -107,7 +107,9 @@ const app = Vue.createApp({
                 appointment_date: dateStr,
                 start_time: `${dateStr}T${timeStr}`,
                 end_time: `${dateStr}T${this.addOneHour(timeStr)}`,
-                notes: this.reason
+                notes: this.reason,
+                patient_mobile: patientData?.mobile,
+                patient_email: patientData?.email
             };
         
             console.log("📦 Payload:", payload); // Debug logging

@@ -100,16 +100,18 @@ def create_appointment():
         appointment_date = payload["appointment_date"]
         start_time = payload["start_time"]
         end_time = payload["end_time"]
-        notes = payload.get("notes", "")
+        
+        patient_phone = payload["patient_mobile"]
+        patient_email = payload["patient_email"]
 
         # ✅ Get patient details
-        patient_res = requests.get(f"{PATIENT_API_URL}/{patient_id}")
-        if patient_res.status_code != 200:
-            return jsonify({"success": False, "message": "Patient not found"}), 404
+        # patient_res = requests.get(f"{PATIENT_API_URL}/{patient_id}")
+        # if patient_res.status_code != 200:
+        #     return jsonify({"success": False, "message": "Patient not found"}), 404
 
-        patient_data = patient_res.json().get("data", {})
-        patient_phone = patient_data.get("mobile")
-        patient_email = patient_data.get("email")
+        # patient_data = patient_res.json().get("data", {})
+        # patient_phone = patient_data.get("mobile")
+        # patient_email = patient_data.get("email")
 
         if not patient_phone or not patient_email:
             return jsonify({
@@ -123,8 +125,7 @@ def create_appointment():
             "patient_id": patient_id,
             "appointment_date": appointment_date,
             "start_time": start_time,
-            "end_time": end_time,
-            "notes": notes
+            "end_time": end_time
         }
 
         # ✅ Log what's being sent
