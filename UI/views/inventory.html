@@ -120,7 +120,7 @@
 
         const fetchInventory = async () => {
           try {
-            const res = await axios.get("http://localhost:5004/pharmacy/inventory");
+            const res = await axios.get("http://localhost:8000/pharmacy/inventory");
             medications.value = res.data.Medications || [];
           } catch (err) {
             console.error(err);

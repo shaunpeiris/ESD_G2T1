@@ -277,7 +277,7 @@
     <script>
         // Assuming the logged-in doctor's ID is known (e.g., D001)
         const doctorId = "D001";
-        const compositeUrl = "http://localhost:6002/doctor_management";
+        const compositeUrl = "http://localhost:8000/doctor_management";
 
         // Function to fetch and display appointments
         function loadAppointments() {
@@ -384,7 +384,7 @@
         function viewPatientRecords(patientId, appointmentId) {
             currentAppointmentId = appointmentId;
             
-            const patientUrl = `http://localhost:6002/doctor_management`;
+            const patientUrl = `http://localhost:8000/doctor_management`;
             const payload = {
             "doctor_id": doctorId,
             "patient_id": patientId,
@@ -555,7 +555,7 @@
             }
 
             const notes = document.getElementById("appointmentNotes").value;
-            const url = `http://localhost:6002/doctor_management`;
+            const url = `http://localhost:8000/doctor_management`;
             const payload = {
                 "doctor_id": doctorId,
                 "update_notes": {
