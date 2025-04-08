@@ -139,9 +139,9 @@ def get_doctor_appointments(doctor_id):
             }
         })
     return jsonify({
-        "code": 404,
+        "code": 200,
         "message": f"No scheduled appointments found for doctor {doctor_id} on {current_date}."
-    }), 404
+    }), 200
 
 #to get patient appointment details via the appointment ID 
 @app.route("/appointment/<int:appointment_id>")
