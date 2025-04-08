@@ -77,6 +77,21 @@
         .tab-content {
             min-height: 400px;
         }
+
+        .nav-link.disabled {
+            color: #6c757d;
+            pointer-events: none;
+            opacity: 0.6;
+        }
+        
+        .medication-item {
+            background-color: #f9f9f9;
+            transition: all 0.2s ease;
+        }
+        
+        .medication-item:hover {
+            background-color: #f0f0f0;
+        }
     </style>
 </head>
 
@@ -200,12 +215,52 @@
                         </div>
                         <!-- Appointment Notes Tab -->
                         <div class="tab-pane fade" id="notes" role="tabpanel" aria-labelledby="notes-tab">
-                            <!-- Appointment Notes content -->
+                            <div class="mb-3">
+                              <label for="appointmentNotes" class="form-label"></label>
+                              <textarea class="form-control" id="appointmentNotes" rows="6" placeholder="Enter appointment notes here..."></textarea>
+                              <div class="mt-3">
+                                <button id="updateNotesBtn" class="btn btn-primary">Update Notes</button>
+                              </div>
+                            </div>
+                            <div id="notesUpdateStatus" class="alert alert-success mt-3" style="display: none;"></div>
                         </div>
                         <!-- Prescription Tab -->
                         <div class="tab-pane fade" id="medications" role="tabpanel" aria-labelledby="medications-tab">
-                            <!-- Prescription content -->
-                        </div>
+                            <div class="mb-3">
+                                <h5 class="mb-3">Prescription Details</h5>
+                                <div id="medicationsList">
+                                    <div class="medication-item mb-3 p-3 border rounded">
+                                        <div class="row mb-2">
+                                            <div class="col-md-6">
+                                                <label class="form-label">Medicine Name</label>
+                                                <input type="text" class="form-control medicine-name required-field">
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label">Dose</label>
+                                                <input type="text" class="form-control medicine-dose required-field">
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label">Quantity</label>
+                                                <input type="number" class="form-control medicine-quantity required-field" value="1" min="1">
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <label class="form-label">Frequency</label>
+                                                <input type="text" class="form-control medicine-frequency required-field">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-between mt-3">
+                                    <button id="addMedicineBtn" class="btn btn-outline-primary" disabled>
+                                        <i class="bi bi-plus-circle"></i> Add Another Medicine
+                                    </button>
+                                    <button id="createPrescriptionBtn" class="btn btn-success" disabled>Create Prescription</button>
+                                </div>
+                            </div>
+                            <div id="prescriptionStatus" class="alert mt-3" style="display: none;"></div>
+                        </div>                          
                     </div>
                 </div>
             </div>
@@ -292,8 +347,7 @@
                 <p class="card-text"><strong>Patient ID:</strong> ${patientId}</p>
                 <p class="card-text"><strong>Date:</strong> ${apptDate}</p>
                 <p class="card-text"><strong>Time:</strong> ${startTime} - ${endTime}</p>
-                <p class="card-text">${notes}</p>
-                <button class="btn btn-outline-primary btn-sm" onclick="event.stopPropagation(); viewPatientRecords(${patientId});">
+                <button class="btn btn-outline-primary btn-sm" onclick="event.stopPropagation(); viewPatientRecords(${patientId}, ${appointmentId});">
                   <i class="bi bi-file-medical me-1"></i> Check-in
                 </button>
               </div>
@@ -305,11 +359,36 @@
         }
 
         // Function to view patient records
-        function viewPatientRecords(patientId) {
-            const patientUrl = `http://localhost:6002/doctor_management`; // Using composite endpoint
+        let currentAppointmentId = null;
+        
+        // Helper functions for localStorage management
+        function getUpdatedAppointments() {
+            const storedData = localStorage.getItem('appointmentsWithNotesUpdated');
+            return storedData ? JSON.parse(storedData) : [];
+        }
+
+        function saveUpdatedAppointment(appointmentId) {
+            const updatedAppointments = getUpdatedAppointments();
+            if (!updatedAppointments.includes(appointmentId)) {
+                updatedAppointments.push(appointmentId);
+                localStorage.setItem('appointmentsWithNotesUpdated', JSON.stringify(updatedAppointments));
+            }
+        }
+
+        function hasUpdatedNotes(appointmentId) {
+            const updatedAppointments = getUpdatedAppointments();
+            return updatedAppointments.includes(appointmentId);
+        }
+
+        // Modify viewPatientRecords function 
+        function viewPatientRecords(patientId, appointmentId) {
+            currentAppointmentId = appointmentId;
+            
+            const patientUrl = `http://localhost:6002/doctor_management`;
             const payload = {
-              "doctor_id": doctorId,
-              "patient_id": patientId
+            "doctor_id": doctorId,
+            "patient_id": patientId,
+            "appointment_details_id": appointmentId
             };
 
             fetch(patientUrl, {
@@ -321,9 +400,26 @@
                 })
                 .then(response => response.json())
                 .then(data => {
-                    if (data.code === 200 && data.data && data.data.get_patient_records) {
+                    if (data.code === 200) {
                         const patientData = data.data.get_patient_records.response.data;
                         populatePatientModal(patientData);
+                        
+                        // Get appointment details and populate notes
+                        if (data.data.get_appointment_details && 
+                            data.data.get_appointment_details.response.code === 200) {
+                            const appointmentData = data.data.get_appointment_details.response.data;
+                            document.getElementById("appointmentNotes").value = appointmentData.notes || "";
+                        }
+                        
+                        // Check if this appointment has already had notes updated
+                        if (hasUpdatedNotes(appointmentId)) {
+                            // Enable the prescriptions tab if notes were previously updated
+                            document.getElementById("medications-tab").classList.remove("disabled");
+                        } else {
+                            // Disable prescriptions tab if notes aren't updated yet
+                            document.getElementById("medications-tab").classList.add("disabled");
+                        }
+                        
                         const patientRecordModal = new bootstrap.Modal(document.getElementById('patientRecordModal'));
                         patientRecordModal.show();
                     } else {
@@ -336,14 +432,11 @@
                     alert("Error loading patient information.");
                 });
         }
+        
         // Populate the patient modal with basic details and medical history
         function populatePatientModal(patientData) {
             document.getElementById("patientRecordModalLabel").innerText = "Patient Medical Record - " + (patientData.name || "Unknown");
             document.getElementById("modalPatientName").innerText = patientData.name || "";
-            // // Display fields that are available; use "N/A" if not provided.
-            // document.getElementById("modalDOB").innerText = patientData.dob || "N/A";
-            // document.getElementById("modalGender").innerText = patientData.gender || "N/A";
-            // document.getElementById("modalBloodType").innerText = patientData.blood_type || "N/A";
             document.getElementById("patientid").innerText = patientData.id || "";
             document.getElementById("email").innerText = patientData.email || "";
             document.getElementById("mobile").innerText = patientData.mobile || "";
@@ -448,6 +541,256 @@
             console.log("Viewing appointment:", appointmentId);
             // You can implement logic here to fetch appointment details if needed
         }
+
+        // Add event listener for update notes button
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById("updateNotesBtn").addEventListener("click", updateAppointmentNotes);
+        });
+
+        // Function to update appointment notes
+        function updateAppointmentNotes() {
+            if (!currentAppointmentId) {
+                alert("No appointment selected.");
+                return;
+            }
+
+            const notes = document.getElementById("appointmentNotes").value;
+            const url = `http://localhost:6002/doctor_management`;
+            const payload = {
+                "doctor_id": doctorId,
+                "update_notes": {
+                    "appointment_id": currentAppointmentId,
+                    "notes": notes
+                }
+            };
+
+            fetch(url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 200 && data.data.update_appointment_notes.return_code === 200) {
+                    // Show success message
+                    const statusDiv = document.getElementById("notesUpdateStatus");
+                    statusDiv.textContent = "Notes successfully updated!";
+                    statusDiv.style.display = "block";
+                    
+                    // Enable the prescriptions tab
+                    document.getElementById("medications-tab").classList.remove("disabled");
+
+                     // Store that this appointment has had notes updated in localStorage
+                    saveUpdatedAppointment(currentAppointmentId);
+                    
+                    // Auto-hide the message after 3 seconds
+                    setTimeout(() => {
+                        statusDiv.style.display = "none";
+                    }, 3000);
+                } else {
+                    alert("Failed to update notes: " + (data.message || "Unknown error"));
+                }
+            })
+            .catch(error => {
+                console.error("Error updating notes:", error);
+                alert("Error updating notes. Please try again.");
+            });
+        }
+
+        // Add event listeners for prescription functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById("addMedicineBtn").addEventListener("click", addMedicineField);
+            document.getElementById("createPrescriptionBtn").addEventListener("click", createPrescription);
+            setupValidationListeners();
+        });
+
+        // Function to set up validation listeners
+        function setupValidationListeners() {
+            // Add input event listeners to all required fields
+            document.querySelectorAll('.required-field').forEach(field => {
+                if (!field.hasAttribute('data-has-listener')) {
+                    field.setAttribute('data-has-listener', 'true');
+                    field.addEventListener('input', validateMedicationFields);
+                }
+            });
+            
+            // Initial validation
+            validateMedicationFields();
+        }
+
+
+        // Function to validate medication fields
+        function validateMedicationFields() {
+            const medicineItems = document.querySelectorAll('.medication-item');
+            let allFieldsValid = true;
+            let currentItemValid = true;
+            
+            medicineItems.forEach(item => {
+                const nameField = item.querySelector('.medicine-name');
+                const doseField = item.querySelector('.medicine-dose');
+                const quantityField = item.querySelector('.medicine-quantity');
+                const frequencyField = item.querySelector('.medicine-frequency');
+                
+                // Check if all required fields in this item are filled
+                const fieldsValid = 
+                    nameField.value.trim() !== '' && 
+                    doseField.value.trim() !== '' && 
+                    quantityField.value.trim() !== '' && 
+                    parseInt(quantityField.value) > 0 &&
+                    frequencyField.value.trim() !== '';
+                    
+                // For the last item (used to enable/disable Add Medicine button)
+                if (item === medicineItems[medicineItems.length - 1]) {
+                    currentItemValid = fieldsValid;
+                }
+                
+                // For all items (used to enable/disable Create Prescription button)
+                if (!fieldsValid) {
+                    allFieldsValid = false;
+                }
+            });
+            
+            // Update button states
+            document.getElementById('addMedicineBtn').disabled = !currentItemValid;
+            document.getElementById('createPrescriptionBtn').disabled = !allFieldsValid;
+        }
+
+        // Function to add another medicine field
+        function addMedicineField() {
+            const medicationItem = document.createElement('div');
+            medicationItem.className = 'medication-item mb-3 p-3 border rounded';
+            medicationItem.innerHTML = `
+                <div class="d-flex justify-content-end mb-2">
+                    <button class="btn btn-sm btn-outline-danger remove-medicine">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-md-6">
+                        <label class="form-label">Medicine Name</label>
+                        <input type="text" class="form-control medicine-name required-field">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Dose</label>
+                        <input type="text" class="form-control medicine-dose required-field">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Quantity</label>
+                        <input type="number" class="form-control medicine-quantity required-field" value="1" min="1">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <label class="form-label">Frequency</label>
+                        <input type="text" class="form-control medicine-frequency required-field">
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('medicationsList').appendChild(medicationItem);
+            
+            // Add event listener to the remove button
+            medicationItem.querySelector('.remove-medicine').addEventListener('click', function() {
+                medicationItem.remove();
+                // Revalidate after removing an item
+                validateMedicationFields();
+            });
+
+             // Setup validation for new fields
+            medicationItem.querySelectorAll('.required-field').forEach(field => {
+                field.addEventListener('input', validateMedicationFields);
+                field.setAttribute('data-has-listener', 'true');
+            });
+    
+            // Disable buttons until the new fields are filled
+            document.getElementById('addMedicineBtn').disabled = true;
+            validateMedicationFields();
+        }
+
+        // Function to create prescription
+        function createPrescription() {
+            if (!currentAppointmentId) {
+                alert("No appointment selected.");
+                return;
+            }
+            
+            const medicineItems = document.querySelectorAll('.medication-item');
+            const medicines = [];
+            
+            // Collect all medicine data
+            medicineItems.forEach(item => {
+                const medicine = {
+                    name: item.querySelector('.medicine-name').value,
+                    dose: item.querySelector('.medicine-dose').value,
+                    frequency: item.querySelector('.medicine-frequency').value,
+                    quantity: parseInt(item.querySelector('.medicine-quantity').value) || 1
+                };
+                
+                medicines.push(medicine);
+            });
+            
+            
+            // Create prescription data
+            const prescriptionData = {
+                appointment_id: currentAppointmentId,
+                medicine: medicines
+            };
+            
+            // Send to create_prescription endpoint
+            fetch('http://localhost:6003/create_prescription', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(prescriptionData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                const statusDiv = document.getElementById("prescriptionStatus");
+                
+                if (data.code === 201) {
+                    statusDiv.className = "alert alert-success mt-3";
+                    statusDiv.textContent = "Prescription created successfully!";
+                    statusDiv.style.display = "block";
+                    
+                    // Disable the create button to prevent duplicate submissions
+                    document.getElementById("createPrescriptionBtn").disabled = true;
+                    
+                    // Refresh appointments list after a short delay
+                    setTimeout(() => {
+                        loadAppointments();
+                    }, 2000);
+                } else if (data.code === 400 && data.data && data.data.allergic_medicine) {
+                    statusDiv.className = "alert alert-danger mt-3";
+                    statusDiv.textContent = `Warning: Patient is allergic to ${data.data.allergic_medicine.join(', ')}`;
+                    statusDiv.style.display = "block";
+                } else {
+                    statusDiv.className = "alert alert-danger mt-3";
+                    statusDiv.textContent = `Error: ${data.message || "Failed to create prescription"}`;
+                    statusDiv.style.display = "block";
+                }
+            })
+            .catch(error => {
+                console.error("Error creating prescription:", error);
+                const statusDiv = document.getElementById("prescriptionStatus");
+                statusDiv.className = "alert alert-danger mt-3";
+                statusDiv.textContent = "Error creating prescription. Please try again.";
+                statusDiv.style.display = "block";
+            });
+        }
+
+        // Add CSS for disabled tabs
+        document.head.insertAdjacentHTML('beforeend', `
+        <style>
+            .nav-link.disabled {
+                color: #6c757d;
+                pointer-events: none;
+                opacity: 0.6;
+            }
+        </style>
+        `);
 
         // Load appointments when the page loads
         window.onload = loadAppointments;
