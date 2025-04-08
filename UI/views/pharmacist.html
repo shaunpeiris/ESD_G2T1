@@ -79,13 +79,8 @@
                     </div>
                     <ul class="flex-column nav nav-pills mb-auto">
                         <li class="nav-item">
-                            <a href="dashboard.html" class="nav-link">
+                            <a href="dashboard.html" class="nav-link active">
                                 <i class="bi bi-speedometer2 me-2"></i> Dashboard
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="prescriptions.html" class="nav-link active">
-                                <i class="bi bi-prescription2 me-2"></i> Prescriptions
                             </a>
                         </li>
                         <li class="nav-item">
@@ -93,20 +88,10 @@
                                 <i class="bi bi-box-seam me-2"></i> Inventory
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a href="patients.html" class="nav-link">
-                                <i class="bi bi-people me-2"></i> Patients
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="reports.html" class="nav-link">
-                                <i class="bi bi-file-earmark-bar-graph me-2"></i> Reports
-                            </a>
-                        </li>
                     </ul>
                     <hr>
                     <div id="signout">
-                        <a href="javascript:void(0)" class="btn btn-outline-danger w-100" @click="logout">
+                        <a href="javascript:void(0)" class="btn btn-outline-danger w-100">
                             <i class="bi bi-box-arrow-right me-2"></i> Sign Out
                         </a>
                     </div>
@@ -132,27 +117,29 @@
 
                 <!-- Prescription Queue -->
                 <section id="prescription-queue" class="mb-4">
-                    <h3 class="h5 mb-3">Prescription Queue</h3>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h3 class="h5 mb-0">Prescription Queue</h3>
+                        <div class="input-group w-50">
+                            <input type="text" class="form-control" id="prescriptionSearch"
+                                placeholder="Search by patient name or prescription ID...">
+                            <button class="btn btn-outline-secondary" type="button" id="clearSearch">
+                                <i class="bi bi-x"></i>
+                            </button>
+                        </div>
+                    </div>
 
                     <ul class="nav nav-tabs" id="prescriptionTabs" role="tablist">
                         <li class="nav-item" role="presentation">
                             <button class="nav-link active" id="pending-tab" data-bs-toggle="tab"
                                 data-bs-target="#pending" type="button" role="tab" aria-controls="pending"
                                 aria-selected="true">
-                                Pending <span class="badge bg-primary">4</span>
-                            </button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="processing-tab" data-bs-toggle="tab"
-                                data-bs-target="#processing" type="button" role="tab" aria-controls="processing"
-                                aria-selected="false">
-                                Processing <span class="badge bg-warning">2</span>
+                                Pending <span class="badge bg-primary">0</span>
                             </button>
                         </li>
                         <li class="nav-item" role="presentation">
                             <button class="nav-link" id="completed-tab" data-bs-toggle="tab" data-bs-target="#completed"
                                 type="button" role="tab" aria-controls="completed" aria-selected="false">
-                                Completed <span class="badge bg-success">3</span>
+                                Completed <span class="badge bg-success">0</span>
                             </button>
                         </li>
                     </ul>
@@ -161,105 +148,15 @@
                         <!-- Pending Prescriptions Tab -->
                         <div class="active fade show tab-pane" id="pending" role="tabpanel"
                             aria-labelledby="pending-tab">
-                            <div class="g-3 row">
-                                <!-- Prescription Card 1 -->
-                                <div class="col-lg-4 col-md-6">
-                                    <div class="card prescription-card" id="prescription-1">
-                                        <div class="card-body">
-                                            <div class="d-flex align-items-center justify-content-between mb-2">
-                                                <h5 class="card-title mb-0">Emily Parker</h5>
-                                                <span class="badge bg-primary">New</span>
-                                            </div>
-                                            <h6 class="card-subtitle text-muted mb-2">Prescription #RX-78945</h6>
-                                            <p class="card-text mb-1"><strong>Doctor:</strong> Dr. James Wilson</p>
-                                            <p class="card-text mb-1"><strong>Date:</strong> March 15, 2025</p>
-                                            <p class="card-text mb-3"><strong>Items:</strong> 3 medications</p>
-                                            <div class="d-grid">
-                                                <button class="btn btn-primary process-prescription"
-                                                    data-prescription-id="prescription-1">
-                                                    <i class="bi bi-check2-circle me-2"></i>Process Prescription
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Prescription Card 2 -->
-                                <div class="col-lg-4 col-md-6">
-                                    <div class="card prescription-card urgent" id="prescription-2">
-                                        <div class="card-body">
-                                            <div class="d-flex align-items-center justify-content-between mb-2">
-                                                <h5 class="card-title mb-0">Michael Johnson</h5>
-                                                <span class="badge bg-danger">Urgent</span>
-                                            </div>
-                                            <h6 class="card-subtitle text-muted mb-2">Prescription #RX-78946</h6>
-                                            <p class="card-text mb-1"><strong>Doctor:</strong> Dr. Emily Rodriguez</p>
-                                            <p class="card-text mb-1"><strong>Date:</strong> March 15, 2025</p>
-                                            <p class="card-text mb-3"><strong>Items:</strong> 2 medications</p>
-                                            <div class="d-grid">
-                                                <button class="btn btn-primary process-prescription"
-                                                    data-prescription-id="prescription-2">
-                                                    <i class="bi bi-check2-circle me-2"></i>Process Prescription
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- More prescription cards would go here -->
-                            </div>
-                        </div>
-
-                        <!-- Processing Prescriptions Tab -->
-                        <div class="fade tab-pane" id="processing" role="tabpanel" aria-labelledby="processing-tab">
-                            <div class="g-3 row">
-                                <!-- Processing Prescription Card -->
-                                <div class="col-lg-4 col-md-6">
-                                    <div class="card prescription-card processing">
-                                        <div class="card-body">
-                                            <div class="d-flex align-items-center justify-content-between mb-2">
-                                                <h5 class="card-title mb-0">Sarah Williams</h5>
-                                                <span class="badge bg-warning">Processing</span>
-                                            </div>
-                                            <h6 class="card-subtitle text-muted mb-2">Prescription #RX-78943</h6>
-                                            <p class="card-text mb-1"><strong>Doctor:</strong> Dr. Robert Chen</p>
-                                            <p class="card-text mb-1"><strong>Date:</strong> March 15, 2025</p>
-                                            <p class="card-text mb-3"><strong>Status:</strong> Awaiting final check</p>
-                                            <div class="d-grid">
-                                                <button class="btn btn-success">
-                                                    <i class="bi bi-bag-check me-2"></i>Complete & Dispense
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                            <div class="g-3 row" id="pending-prescriptions">
+                                <!-- Prescription cards will be dynamically added here -->
                             </div>
                         </div>
 
                         <!-- Completed Prescriptions Tab -->
                         <div class="fade tab-pane" id="completed" role="tabpanel" aria-labelledby="completed-tab">
-                            <div class="g-3 row">
-                                <!-- Completed Prescription Card -->
-                                <div class="col-lg-4 col-md-6">
-                                    <div class="card completed prescription-card">
-                                        <div class="card-body">
-                                            <div class="d-flex align-items-center justify-content-between mb-2">
-                                                <h5 class="card-title mb-0">David Wilson</h5>
-                                                <span class="badge bg-success">Completed</span>
-                                            </div>
-                                            <h6 class="card-subtitle text-muted mb-2">Prescription #RX-78940</h6>
-                                            <p class="card-text mb-1"><strong>Doctor:</strong> Dr. James Wilson</p>
-                                            <p class="card-text mb-1"><strong>Date:</strong> March 14, 2025</p>
-                                            <p class="card-text mb-1"><strong>Dispensed:</strong> March 15, 2025</p>
-                                            <p class="card-text mb-3"><strong>By:</strong> Sarah Johnson</p>
-                                            <div class="d-grid">
-                                                <button class="btn btn-outline-secondary">
-                                                    <i class="bi bi-printer me-2"></i>Print Receipt
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                            <div class="g-3 row" id="completed-prescriptions">
+                                <!-- Completed prescription cards will be dynamically added here -->
                             </div>
                         </div>
                     </div>
@@ -274,59 +171,25 @@
         <div class="modal-dialog modal-dialog-scrollable modal-xl">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="prescriptionProcessingModalLabel">Process Prescription #RX-78945</h5>
+                    <h5 class="modal-title" id="prescriptionProcessingModalLabel">Process Prescription</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <!-- Patient & Prescription Info -->
+                    <!-- Prescription Info -->
                     <div class="row mb-4">
                         <div class="col-md-6">
-                            <h6>Patient Information</h6>
+                            <h6>Prescription Details</h6>
                             <div class="card">
-                                <div class="card-body">
-                                    <div class="d-flex align-items-center mb-3">
-                                        <img src="https://via.placeholder.com/50" class="rounded-circle me-3"
-                                            alt="Patient photo">
-                                        <div>
-                                            <h5 class="mb-0">Emily Parker</h5>
-                                            <p class="text-muted mb-0">DOB: 05/12/1978 (45 years)</p>
-                                        </div>
-                                    </div>
-                                    <p class="mb-1"><strong>Patient ID:</strong> PT-78945</p>
-                                    <p class="mb-1"><strong>Phone:</strong> (555) 123-4567</p>
-                                    <p class="mb-3"><strong>Address:</strong> 123 Main St, Anytown, USA</p>
-
-                                    <div class="alert alert-warning mb-0">
-                                        <h6 class="alert-heading"><i
-                                                class="bi bi-exclamation-triangle-fill me-2"></i>Allergies</h6>
-                                        <ul class="mb-0">
-                                            <li><strong>Penicillin</strong>: Rash, difficulty breathing</li>
-                                            <li><strong>Sulfa drugs</strong>: Hives</li>
-                                        </ul>
-                                    </div>
+                                <div class="card-body" id="prescription-details">
+                                    <!-- Prescription details will be dynamically added here -->
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <h6>Prescription Details</h6>
+                            <h6>Pharmacy Notes</h6>
                             <div class="card">
-                                <div class="card-body">
-                                    <p class="mb-1"><strong>Prescription ID:</strong> RX-78945</p>
-                                    <p class="mb-1"><strong>Prescribing Doctor:</strong> Dr. James Wilson (Cardiology)
-                                    </p>
-                                    <p class="mb-1"><strong>Date Prescribed:</strong> March 15, 2025</p>
-                                    <p class="mb-1"><strong>Prescription Notes:</strong></p>
-                                    <p class="fst-italic mb-3">Patient should monitor blood pressure daily and report
-                                        readings below 100/60 or above 140/90.</p>
-
-                                    <div class="alert alert-info mb-0">
-                                        <h6 class="alert-heading"><i class="bi bi-info-circle-fill me-2"></i>Current
-                                            Medications</h6>
-                                        <ul class="mb-0">
-                                            <li><strong>Atorvastatin 20mg</strong>: Once daily</li>
-                                            <li><strong>Metoprolol 50mg</strong>: Twice daily</li>
-                                        </ul>
-                                    </div>
+                                <div class="card-body" id="pharmacy-notes">
+                                    <!-- Pharmacy notes will be dynamically added here -->
                                 </div>
                             </div>
                         </div>
@@ -337,150 +200,25 @@
                     <div class="card mb-4">
                         <div class="card-body">
                             <div id="medicationList">
-                                <!-- Medication 1 -->
-                                <div class="rounded available mb-3 medication-item" id="med-item-1">
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <h5>Lisinopril 10mg</h5>
-                                            <p class="mb-1"><strong>Instructions:</strong> Take with food in the morning
-                                                and evening.</p>
-                                            <p class="mb-1"><strong>Frequency:</strong> Twice daily</p>
-                                            <p class="mb-1"><strong>Duration:</strong> 30 days</p>
-                                            <p class="mb-1"><strong>Quantity:</strong> 60 tablets</p>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <h6>Inventory Status</h6>
-                                            <span class="badge badge-stock bg-success mb-2">In Stock: 120 tablets</span>
-                                            <div class="form-check mb-2">
-                                                <input class="form-check-input" type="checkbox" id="verifyMed1" checked>
-                                                <label class="form-check-label" for="verifyMed1">
-                                                    Verified
-                                                </label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <h6>Dispensing</h6>
-                                            <div class="input-group mb-2">
-                                                <input type="number" class="form-control" id="dispenseQty1" value="60">
-                                                <span class="input-group-text">tablets</span>
-                                            </div>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" id="labelPrinted1">
-                                                <label class="form-check-label" for="labelPrinted1">
-                                                    Label Printed
-                                                </label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Medication 2 -->
-                                <div class="rounded low-stock mb-3 medication-item" id="med-item-2">
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <h5>Amlodipine 5mg</h5>
-                                            <p class="mb-1"><strong>Instructions:</strong> Take once daily in the
-                                                evening.</p>
-                                            <p class="mb-1"><strong>Frequency:</strong> Once daily</p>
-                                            <p class="mb-1"><strong>Duration:</strong> 30 days</p>
-                                            <p class="mb-1"><strong>Quantity:</strong> 30 tablets</p>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <h6>Inventory Status</h6>
-                                            <span class="badge badge-stock bg-warning mb-2">Low Stock: 35 tablets</span>
-                                            <div class="form-check mb-2">
-                                                <input class="form-check-input" type="checkbox" id="verifyMed2" checked>
-                                                <label class="form-check-label" for="verifyMed2">
-                                                    Verified
-                                                </label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <h6>Dispensing</h6>
-                                            <div class="input-group mb-2">
-                                                <input type="number" class="form-control" id="dispenseQty2" value="30">
-                                                <span class="input-group-text">tablets</span>
-                                            </div>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" id="labelPrinted2">
-                                                <label class="form-check-label" for="labelPrinted2">
-                                                    Label Printed
-                                                </label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Medication 3 -->
-                                <div class="rounded mb-3 medication-item out-of-stock" id="med-item-3">
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <h5>Hydrochlorothiazide 25mg</h5>
-                                            <p class="mb-1"><strong>Instructions:</strong> Take in the morning with
-                                                food.</p>
-                                            <p class="mb-1"><strong>Frequency:</strong> Once daily</p>
-                                            <p class="mb-1"><strong>Duration:</strong> 30 days</p>
-                                            <p class="mb-1"><strong>Quantity:</strong> 30 tablets</p>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <h6>Inventory Status</h6>
-                                            <span class="badge badge-stock bg-danger mb-2">Out of Stock: 0
-                                                tablets</span>
-                                            <div class="form-check mb-2">
-                                                <input class="form-check-input" type="checkbox" id="verifyMed3"
-                                                    disabled>
-                                                <label class="form-check-label" for="verifyMed3">
-                                                    Verified
-                                                </label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <h6>Dispensing</h6>
-                                            <div class="input-group mb-2">
-                                                <input type="number" class="form-control" id="dispenseQty3" value="0"
-                                                    disabled>
-                                                <span class="input-group-text">tablets</span>
-                                            </div>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" id="labelPrinted3"
-                                                    disabled>
-                                                <label class="form-check-label" for="labelPrinted3">
-                                                    Label Printed
-                                                </label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                <!-- Medication items will be dynamically added here -->
                             </div>
 
-                            <!-- Inventory Actions -->
-                            <div class="alert alert-danger mb-3" id="inventoryAlert">
+                            <!-- Inventory Alert -->
+                            <div class="alert alert-danger mb-3" id="inventoryAlert" style="display: none;">
                                 <h6 class="alert-heading"><i class="bi bi-exclamation-triangle-fill me-2"></i>Inventory
                                     Issues</h6>
-                                <p class="mb-0">Hydrochlorothiazide 25mg is out of stock. Please contact the patient to
-                                    discuss alternatives.</p>
+                                <p class="mb-0"></p>
                             </div>
 
-                            <!-- Substitution Options (shown when medication is out of stock) -->
-                            <div class="card mb-3" id="substitutionOptions">
+                            <!-- Substitution Options -->
+                            <div class="card mb-3" id="substitutionOptions" style="display: none;">
                                 <div class="card-header bg-info text-white">
                                     <h6 class="mb-0">Substitution Options</h6>
                                 </div>
                                 <div class="card-body">
-                                    <p>The following alternatives are available for Hydrochlorothiazide 25mg:</p>
-                                    <div class="form-check mb-2">
-                                        <input class="form-check-input" type="radio" name="substitution" id="sub1"
-                                            value="option1">
-                                        <label class="form-check-label" for="sub1">
-                                            Chlorthalidone 25mg (In stock: 45 tablets)
-                                        </label>
-                                    </div>
-                                    <div class="form-check mb-2">
-                                        <input class="form-check-input" type="radio" name="substitution" id="sub2"
-                                            value="option2">
-                                        <label class="form-check-label" for="sub2">
-                                            Indapamide 2.5mg (In stock: 60 tablets)
-                                        </label>
+                                    <p>The following alternatives are available:</p>
+                                    <div id="substitution-list">
+                                        <!-- Substitution options will be dynamically added here -->
                                     </div>
                                     <div class="mt-3">
                                         <button class="btn btn-primary btn-sm" id="contactDoctorBtn">
@@ -495,36 +233,6 @@
                         </div>
                     </div>
 
-                    <!-- Patient Instructions & Counseling -->
-                    <h6>Patient Instructions & Counseling</h6>
-                    <div class="card mb-4">
-                        <div class="card-body">
-                            <div class="form-check mb-3">
-                                <input class="form-check-input" type="checkbox" id="verifyAllergies">
-                                <label class="form-check-label" for="verifyAllergies">
-                                    <strong>Verified patient allergies and no contraindications</strong>
-                                </label>
-                            </div>
-                            <div class="form-check mb-3">
-                                <input class="form-check-input" type="checkbox" id="verifyInteractions">
-                                <label class="form-check-label" for="verifyInteractions">
-                                    <strong>Checked for drug interactions with current medications</strong>
-                                </label>
-                            </div>
-                            <div class="form-check mb-3">
-                                <input class="form-check-input" type="checkbox" id="counselingProvided">
-                                <label class="form-check-label" for="counselingProvided">
-                                    <strong>Medication counseling provided to patient</strong>
-                                </label>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="counselingNotes" class="form-label">Counseling Notes</label>
-                                <textarea class="form-control" id="counselingNotes" rows="3"
-                                    placeholder="Enter any specific instructions or notes provided to the patient"></textarea>
-                            </div>
-                        </div>
-                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -536,262 +244,8 @@
         </div>
     </div>
 
-    <!-- Patient History Modal (placeholder) -->
-    <div class="modal fade" id="patientHistoryModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Patient Medication History</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p>Patient medication history would be displayed here.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/vue@3.2.31/dist/vue.global.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-    <script src="../js/signout.js"></script>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // Sample inventory data (would come from database)
-            let inventory = {
-                "Lisinopril 10mg": 120,
-                "Atorvastatin 20mg": 80,
-                "Metoprolol 50mg": 50,
-                "Amlodipine 5mg": 65,
-                "Hydrochlorothiazide 25mg": 90
-            };
-
-            // Process prescription button handlers
-            const processButtons = document.querySelectorAll('.process-prescription');
-            processButtons.forEach(button => {
-                button.addEventListener('click', function () {
-                    const prescriptionId = this.getAttribute('data-prescription-id');
-                    openProcessingModal(prescriptionId);
-                });
-            });
-
-            // Function to open the processing modal and load prescription data
-            function openProcessingModal(prescriptionId) {
-                const modal = new bootstrap.Modal(document.getElementById('prescriptionProcessingModal'));
-
-                // In a real app, you would fetch prescription data from the server
-                // For demo, we'll use sample data
-                const prescription = {
-                    "Lisinopril 10mg": 60,
-                    "Atorvastatin 20mg": 30,
-                    "Metoprolol 50mg": 20
-                };
-
-                // Validate prescription against inventory
-                const validationResults = validatePrescription(prescription, inventory);
-
-                // Update the modal with validation results
-                updateMedicationList(prescription, validationResults);
-
-                modal.show();
-            }
-
-            // Function to validate prescription against inventory
-            function validatePrescription(prescription, inventory) {
-                const validationResults = {};
-
-                for (const [medication, quantity] of Object.entries(prescription)) {
-                    if (medication in inventory) {
-                        if (inventory[medication] >= quantity) {
-                            validationResults[medication] = "Available";
-                        } else if (inventory[medication] > 0) {
-                            validationResults[medication] = "Low Stock";
-                        } else {
-                            validationResults[medication] = "Out of Stock";
-                        }
-                    } else {
-                        validationResults[medication] = "Out of Stock";
-                    }
-                }
-
-                return validationResults;
-            }
-
-            // Function to update the medication list in the modal
-            function updateMedicationList(prescription, validationResults) {
-                const medicationList = document.getElementById('medicationList');
-                medicationList.innerHTML = ''; // Clear existing items
-
-                let index = 1;
-                for (const [medication, quantity] of Object.entries(prescription)) {
-                    const status = validationResults[medication];
-                    const stockClass = status === "Available" ? "available" :
-                        status === "Low Stock" ? "low-stock" : "out-of-stock";
-                    const stockBadgeClass = status === "Available" ? "bg-success" :
-                        status === "Low Stock" ? "bg-warning" : "bg-danger";
-
-                    const stockAmount = inventory[medication] || 0;
-                    const canDispense = stockAmount >= quantity;
-
-                    const medicationItem = document.createElement('div');
-                    medicationItem.className = `medication-item ${stockClass} mb-3 rounded`;
-                    medicationItem.id = `med-item-${index}`;
-
-                    medicationItem.innerHTML = `
-                <div class="row">
-                    <div class="col-md-6">
-                        <h5>${medication}</h5>
-                        <p class="mb-1"><strong>Instructions:</strong> Take as directed.</p>
-                        <p class="mb-1"><strong>Frequency:</strong> As prescribed</p>
-                        <p class="mb-1"><strong>Duration:</strong> 30 days</p>
-                        <p class="mb-1"><strong>Quantity:</strong> ${quantity} units</p>
-                    </div>
-                    <div class="col-md-3">
-                        <h6>Inventory Status</h6>
-                        <span class="badge badge-stock ${stockBadgeClass} mb-2">${status}: ${stockAmount} units</span>
-                        <div class="form-check mb-2">
-                            <input class="form-check-input" type="checkbox" id="verifyMed${index}" ${canDispense ? 'checked' : 'disabled'}>
-                            <label class="form-check-label" for="verifyMed${index}">
-                                Verified
-                            </label>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <h6>Dispensing</h6>
-                        <div class="input-group mb-2">
-                            <input type="number" class="form-control dispense-qty" id="dispenseQty${index}" 
-                                   value="${canDispense ? quantity : 0}" max="${stockAmount}" 
-                                   ${canDispense ? '' : 'disabled'} data-medication="${medication}">
-                            <span class="input-group-text">units</span>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="labelPrinted${index}" ${canDispense ? '' : 'disabled'}>
-                            <label class="form-check-label" for="labelPrinted${index}">
-                                Label Printed
-                            </label>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-                    medicationList.appendChild(medicationItem);
-                    index++;
-                }
-
-                // Add complete & dispense button to the modal footer
-                const modalFooter = document.querySelector('#prescriptionProcessingModal .modal-footer');
-                if (!modalFooter) {
-                    const footer = document.createElement('div');
-                    footer.className = 'modal-footer';
-                    footer.innerHTML = `
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-success" id="completeDispenseBtn">
-                    <i class="bi bi-bag-check me-2"></i>Complete & Dispense
-                </button>
-            `;
-                    document.querySelector('#prescriptionProcessingModal .modal-content').appendChild(footer);
-
-                    // Add event listener to the complete & dispense button
-                    document.getElementById('completeDispenseBtn').addEventListener('click', function () {
-                        dispenseMedications();
-                    });
-                }
-            }
-
-            // Function to dispense medications and update inventory
-            function dispenseMedications() {
-                const dispenseInputs = document.querySelectorAll('.dispense-qty');
-                const updatedInventory = { ...inventory }; // Create a copy of the inventory
-                const dispensed = {};
-
-                dispenseInputs.forEach(input => {
-                    const medication = input.getAttribute('data-medication');
-                    const quantity = parseInt(input.value);
-
-                    if (quantity > 0 && updatedInventory[medication] >= quantity) {
-                        updatedInventory[medication] -= quantity;
-                        dispensed[medication] = quantity;
-                    }
-                });
-
-                // Update the inventory
-                inventory = updatedInventory;
-
-                // Show success message
-                alert(`Prescription dispensed successfully! Updated inventory:\n${JSON.stringify(inventory, null, 2)}`);
-
-                // Close the modal
-                const modal = bootstrap.Modal.getInstance(document.getElementById('prescriptionProcessingModal'));
-                modal.hide();
-
-                // Move the prescription to completed tab
-                moveToCompleted();
-            }
-
-            // Function to move prescription to completed tab
-            function moveToCompleted() {
-                // In a real app, you would update the database
-                // For demo, we'll just show an alert
-                alert('Prescription moved to completed tab');
-
-                // Refresh the tabs (in a real app, this would update the UI)
-                document.getElementById('completed-tab').click();
-            }
-
-            // Medication search functionality
-            const medSearchInput = document.getElementById('medSearchInput');
-            if (medSearchInput) {
-                medSearchInput.addEventListener('keyup', function () {
-                    const query = this.value;
-                    const filteredMeds = filterMedications(query, Object.keys(inventory));
-                    updateMedicationSearchResults(filteredMeds);
-                });
-            }
-
-            // Function to filter medications based on search query
-            function filterMedications(query, medicationList) {
-                query = query.toLowerCase();
-                return medicationList.filter(med => med.toLowerCase().includes(query));
-            }
-
-            // Function to update medication search results
-            function updateMedicationSearchResults(filteredMeds) {
-                const resultsContainer = document.getElementById('medicationSearchResults');
-                if (!resultsContainer) return;
-
-                resultsContainer.innerHTML = '';
-
-                filteredMeds.forEach(med => {
-                    const resultItem = document.createElement('a');
-                    resultItem.href = '#';
-                    resultItem.className = 'list-group-item list-group-item-action med-search-result';
-                    resultItem.setAttribute('data-med-name', med);
-
-                    resultItem.innerHTML = `
-                <div class="d-flex justify-content-between w-100">
-                    <h6 class="mb-1">${med}</h6>
-                    <small>Stock: ${inventory[med] || 0}</small>
-                </div>
-                <p class="mb-1">Available for dispensing</p>
-            `;
-
-                    resultsContainer.appendChild(resultItem);
-                });
-            }
-
-            // Refresh prescriptions button
-            const refreshButton = document.getElementById('refreshPrescriptions');
-            if (refreshButton) {
-                refreshButton.addEventListener('click', function () {
-                    // In a real app, you would fetch updated prescription data
-                    alert('Refreshing prescription data...');
-                });
-            }
-        });
-
-    </script>
+    <script src="../js/pharmacy.js"></script>
 </body>
 
 </html>

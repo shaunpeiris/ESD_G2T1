@@ -228,6 +228,59 @@ def update_prescription_status(prescription_id):
             "code": 500,
             "message": "An error occurred: " + str(e)
         }), 500
+    
+@app.route("/prescription", methods=['GET'])
+def get_all_prescriptions():
+    """
+    Retrieves all prescriptions from the database.
+    Optional query parameter: status (True/False) to filter prescriptions by status.
+    Returns a list of prescriptions in JSON format.
+    """
+    try:
+        # Check if status filter is provided in query parameters
+        status_param = request.args.get('status')
+        
+        if status_param is not None:
+            # Convert string 'true'/'false' to boolean
+            if status_param.lower() == 'true':
+                status_filter = True
+            elif status_param.lower() == 'false':
+                status_filter = False
+            else:
+                return jsonify({
+                    "code": 400,
+                    "message": "Invalid status parameter. Use 'true' or 'false'."
+                }), 400
+                
+            prescriptions = Prescription.query.filter_by(status=status_filter).all()
+        else:
+            prescriptions = Prescription.query.all()
+        
+        # Convert prescriptions to JSON format
+        prescription_list = []
+        for prescription in prescriptions:
+            prescription_data = prescription.json()
+            
+            # Add additional status for frontend compatibility
+            if prescription.status:
+                prescription_data["status"] = "completed"
+            else:
+                prescription_data["status"] = "pending"
+                
+            prescription_list.append(prescription_data)
+        
+        # Wrap prescription list in a dictionary with a data field
+        return jsonify({
+            "code": 200,
+            "data": prescription_list
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            "code": 500,
+            "message": "An error occurred retrieving prescriptions: " + str(e)
+        }), 500
+
 
 if __name__ == '__main__':
     print("Prescription Microservice is running on " + os.path.basename(__file__))

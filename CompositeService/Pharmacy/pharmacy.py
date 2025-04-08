@@ -6,6 +6,7 @@ import logging
 from functools import lru_cache, wraps
 import amqp_connection
 import json
+from datetime import datetime
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -311,6 +312,116 @@ def send_email_notification(email, subject, message):
         return False
 
 # API Routes
+@app.route("/pharmacy/prescriptions", methods=['GET'])
+@handle_api_error
+def get_all_prescriptions():
+    try:
+        # Make request to the prescription service
+        response = make_api_request('GET', f"{PRESCRIPTION_SERVICE_URL}/prescription")
+        if response.status_code != 200:
+            logger.error(f"Failed to retrieve prescriptions: {response.text}")
+            return create_response(
+                response.status_code,
+                f"Error retrieving prescriptions: {response.text}"
+            )
+
+        # Extract prescription data from response
+        response_data = response.json()
+        if not isinstance(response_data, dict):
+            return create_response(500, "Invalid response format from prescription service")
+        
+        prescription_data = response_data.get('data', [])
+        if not isinstance(prescription_data, list):
+            if prescription_data:
+                prescription_data = [prescription_data]
+            else:
+                prescription_data = []
+
+        # Transform prescription data for frontend compatibility
+        transformed_prescriptions = []
+        patient_cache = {}  # Cache patient data to reduce API calls
+        
+        for prescription in prescription_data:
+            if not isinstance(prescription, dict):
+                continue
+                
+            appointment_id = prescription.get('appointment_id')
+            patient_name = "Unknown Patient"
+            
+            # Use cached patient data if available
+            if appointment_id and appointment_id in patient_cache:
+                patient_name = patient_cache[appointment_id]
+            elif appointment_id:
+                try:
+                    # Get appointment data with error handling
+                    appointment_data, status_code, message = get_appointment_data(appointment_id)
+                    
+                    if status_code == 200 and appointment_data and 'patient_id' in appointment_data:
+                        patient_id = appointment_data.get('patient_id')
+                        
+                        # Get patient data with error handling
+                        patient_data, patient_status, _ = get_patient_data(patient_id)
+                        
+                        if patient_status == 200 and patient_data:
+                            # Check various potential field names for first and last name
+                            first_name = patient_data.get('first_name', 
+                                        patient_data.get('firstName', 
+                                            patient_data.get('given_name', 
+                                            patient_data.get('givenName', ''))))
+                                            
+                            last_name = patient_data.get('last_name', 
+                                        patient_data.get('lastName', 
+                                            patient_data.get('family_name', 
+                                            patient_data.get('familyName', ''))))
+                            
+                            # If still no name found, try name or fullName fields
+                            if not first_name and not last_name:
+                                full_name = patient_data.get('name', patient_data.get('fullName', ''))
+                                if full_name:
+                                    name_parts = full_name.split()
+                                    if len(name_parts) > 1:
+                                        first_name = name_parts[0]
+                                        last_name = ' '.join(name_parts[1:])
+                                    else:
+                                        first_name = full_name
+                            
+                            patient_name = f"{first_name} {last_name}".strip()
+                            if not patient_name:
+                                patient_name = f"Patient #{patient_id}"
+                                
+                            # Cache this patient name for future prescriptions
+                            patient_cache[appointment_id] = patient_name
+                except Exception as e:
+                    logger.error(f"Error retrieving patient data for appointment {appointment_id}: {str(e)}")
+                    # Continue with Unknown Patient rather than fail the entire request
+            
+            # Determine status for UI (ensure correct status conversion)
+            status_value = prescription.get('status')
+            if status_value is True or (isinstance(status_value, str) and status_value.lower() == 'completed'):
+                prescription_status = "completed"
+            else:
+                prescription_status = "pending"
+            
+            # Build a UI-friendly prescription object
+            transformed_prescription = {
+                "id": prescription.get('prescription_id'),
+                "prescriptionNumber": prescription.get('prescription_id'),
+                "patientName": patient_name,
+                "date": prescription.get('date', datetime.now().strftime("%Y-%m-%d")),
+                "medicationCount": len(prescription.get('medicine', [])) if isinstance(prescription.get('medicine', []), list) else 0,
+                "status": prescription_status,
+                "isUrgent": False
+            }
+            
+            transformed_prescriptions.append(transformed_prescription)
+            
+        return jsonify(transformed_prescriptions), 200
+        
+    except Exception as e:
+        logger.error(f"Error in get_all_prescriptions: {str(e)}")
+        return create_response(500, f"An error occurred retrieving prescriptions: {str(e)}")
+
+
 @app.route("/pharmacy/inventory", methods=['GET'])
 @handle_api_error
 def list_all_medications():
