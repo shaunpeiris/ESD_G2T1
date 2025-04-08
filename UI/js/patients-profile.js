@@ -84,7 +84,8 @@ const app = Vue.createApp({
             const updateData = {
                 id: this.patient.id,
                 name: this.patient.name,
-                email: this.patient.email
+                email: this.patient.email,
+                mobile: this.patient.mobile
             };
             
             // Send the update to the server
