@@ -143,6 +143,33 @@ def get_doctor_appointments(doctor_id):
         "message": f"No scheduled appointments found for doctor {doctor_id} on {current_date}."
     }), 200
 
+
+#to get ALL completed appointments for a specific doctor on current date
+@app.route("/appointment/doctor/completed/<string:doctor_id>")
+def get_completed_appointments(doctor_id):
+    """Get all COMPLETED appointments for a doctor on current date"""
+    current_date = datetime.now().date()
+    appointments = db.session.scalars(
+        db.select(Appointment).filter(
+            Appointment.doctor_id == doctor_id,
+            Appointment.appointment_status == "COMPLETED",  # Match exact case
+            Appointment.appointment_date == current_date
+        )
+    ).all()
+
+    if appointments:
+        return jsonify({
+            "code": 200,
+            "data": {
+                "appointments": [appointment.json() for appointment in appointments]
+            }
+        })
+    return jsonify({
+        "code": 200,
+        "message": f"No completed appointments found for doctor {doctor_id} on {current_date}."
+    }), 200
+
+
 #to get patient appointment details via the appointment ID 
 @app.route("/appointment/<int:appointment_id>")
 def get_appointment(appointment_id):
@@ -206,7 +233,6 @@ def update_appointment_status(appointment_id):
         "data": appointment.json(),
         "message": "Appointment status updated to COMPLETED."
     }), 200
-    
 
 
 # commenting this because we dont need to find doctor by date
