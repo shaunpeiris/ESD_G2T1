@@ -175,7 +175,7 @@ def create_appointment():
 
         # ✅ Send SMS & Email
         try:
-            message = f"Your appointment with Dr. {doctor_name} is confirmed for {appointment_date} at {start_time}."
+            message = f"Your appointment with {doctor_name} is confirmed for {appointment_date} at {start_time}."
             subject = "Appointment Confirmation"
             sms_result = send_sms(patient_phone, message)
             email_result = send_email(patient_email, subject, message)

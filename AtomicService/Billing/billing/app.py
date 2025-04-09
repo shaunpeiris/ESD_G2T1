@@ -90,7 +90,7 @@ def create_checkout_session():
             prescriptionID=prescription_id,
             patientID=patient_id,
             patientEmail=patient_email,
-            amount=total_price * 100,
+            amount=total_price / 100,
             status="pending"
         )
         db.session.add(new_payment)
