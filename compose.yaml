@@ -22,8 +22,8 @@ services:
     depends_on:
       - patient_db
     environment:
-      dbURL: mysql+mysqlconnector://root@host.docker.internal:3306/patientdb
-      # dbURL: mysql+mysqlconnector://root:@patient_db:3306/patientdb
+      #dbURL: mysql+mysqlconnector://root@host.docker.internal:3306/patientdb
+      dbURL: mysql+mysqlconnector://root:@patient_db:3306/patientdb
     networks:
       - atomic_network
 
@@ -51,7 +51,8 @@ services:
     depends_on:
       - appointment_db
     environment:
-      dbURL: mysql+mysqlconnector://root@host.docker.internal:3306/appointmentdb
+      #dbURL: mysql+mysqlconnector://root@host.docker.internal:3306/appointmentdb
+      dbURL: mysql+mysqlconnector://root:@appointmentdb:3306/appointmentdb
     networks:
       - atomic_network
 
@@ -79,7 +80,8 @@ services:
     depends_on:
       - prescription_db
     environment:
-      dbURL: mysql+mysqlconnector://root@host.docker.internal:3306/prescriptiondb
+      #dbURL: mysql+mysqlconnector://root@host.docker.internal:3306/prescriptiondb
+      dbURL: mysql+mysqlconnector://root:@prescriptiondb:3306/prescriptiondb
     networks:
       - atomic_network
 
@@ -111,7 +113,8 @@ services:
       STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
       YOUR_DOMAIN: ${YOUR_DOMAIN}
-      dbURL: mysql+mysqlconnector://root@host.docker.internal:3306/billing
+      #dbURL: mysql+mysqlconnector://root@host.docker.internal:3306/billing
+      dbURL: mysql+mysqlconnector://root:@billing:3306/billing
     env_file:
       - .env
     networks:
