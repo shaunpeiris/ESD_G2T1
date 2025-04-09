@@ -30,3 +30,5 @@ VALUES
   ('Mason Wilson', 'mason@example.com', '5550123456', 'pass123', NULL),
   ('Charlotte Brown', 'charlotte@example.com', '5559876543', 'pass123', 
     '{"allergies": ["Wheat"], "medical_conditions": ["Celiac Disease"], "past_surgeries": [], "family_medical_history": ["Autoimmune disorders"], "chronic_illnesses": ["Celiac Disease"], "medications": ["Vitamin supplements"]}');
+  ('Alfred', 'alfredozm99@gmail.com', '+6583212680', 'pass123', 
+    '{"allergies": ["Candesartan"], "medical_conditions": ["Celiac Disease"], "past_surgeries": [], "family_medical_history": ["Autoimmune disorders"], "chronic_illnesses": ["Celiac Disease"], "medications": ["Vitamin supplements"]}');

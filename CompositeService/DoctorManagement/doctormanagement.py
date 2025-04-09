@@ -211,7 +211,7 @@ def get_completed_appointments():
 def get_prescription():
     try:
         appointment_id = request.args.get("appointment_id")
-        print(f"🧪 [DEBUG] appointment_id received: {appointment_id}")
+        print(f" [DEBUG] appointment_id received: {appointment_id}")
         
         if not appointment_id:
             return jsonify({
@@ -220,10 +220,10 @@ def get_prescription():
             }), 400
 
         url = f"{prescription_URL}/prescription/appointment/{appointment_id}"
-        print(f"🌐 [DEBUG] Calling prescription URL: {url}")
+        print(f" [DEBUG] Calling prescription URL: {url}")
 
         res = invoke_http(url, method="GET")
-        print(f"📦 [DEBUG] Response from prescription service: {res}")
+        print(f" [DEBUG] Response from prescription service: {res}")
 
         if res.get("code") == 404:
             return jsonify({
@@ -250,7 +250,7 @@ def get_prescription():
         exc_type, _, exc_tb = sys.exc_info()
         fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
         error_msg = f"{str(e)} at {str(exc_type)} in {fname} on line {exc_tb.tb_lineno}"
-        print(f"❌ [ERROR] {error_msg}")  # Add this line
+        print(f"[ERROR] {error_msg}")  # Add this line
         return jsonify({
             "code": 500,
             "message": "Internal error in prescription retrieval: " + error_msg
