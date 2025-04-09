@@ -97,7 +97,7 @@ def create_checkout_session():
         db.session.commit()
 
         session = stripe.checkout.Session.create(
-            payment_method_types=["card", "paynow"],
+            payment_method_types=["card"],
             line_items=[{
                 "price_data": {
                     "currency": "sgd",
@@ -202,7 +202,7 @@ def recreate_checkout_session(payment_id):
 
     try:
         session = stripe.checkout.Session.create(
-            payment_method_types=["card", "paynow"],
+            payment_method_types=["card"],
             line_items=[{
                 "price_data": {
                     "currency": "sgd",
