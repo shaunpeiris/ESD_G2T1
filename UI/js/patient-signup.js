@@ -69,12 +69,12 @@ const app = Vue.createApp({
                 isValid = false;
             }
             
-            // Validate mobile number
+            // Validate mobile number - updated to allow +65 prefix
             if (!this.mobile) {
                 this.formErrors.mobile = 'Mobile number is required';
                 isValid = false;
             } else if (!this.validateMobile(this.mobile)) {
-                this.formErrors.mobile = 'Please enter a valid mobile number (digits only)';
+                this.formErrors.mobile = 'Please enter a valid mobile number (optional +65 prefix followed by digits)';
                 isValid = false;
             }
             
@@ -108,8 +108,8 @@ const app = Vue.createApp({
         },
         
         validateMobile(mobile) {
-            // Validate that mobile contains only digits
-            const re = /^\d+$/;
+            // +65XXXXXXXX or just XXXXXXXX (digits only)
+            const re = /^(\+65)?\d+$/;
             return re.test(mobile);
         },
         
