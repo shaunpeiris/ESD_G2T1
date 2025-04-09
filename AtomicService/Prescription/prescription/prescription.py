@@ -281,6 +281,32 @@ def get_all_prescriptions():
             "message": "An error occurred retrieving prescriptions: " + str(e)
         }), 500
 
+@app.route("/prescription/appointment/<int:appointment_id>", methods=['GET'])
+def get_prescription_by_appointment(appointment_id):
+    """
+    Retrieves prescription details for a specific appointment ID.
+    Used by the Doctor Composite Service (/get_prescription).
+    """
+    try:
+        prescription = Prescription.query.filter_by(appointment_id=appointment_id).first()
+
+        if not prescription:
+            return jsonify({
+                "code": 404,
+                "message": f"No prescription found for appointment_id {appointment_id}"
+            }), 404
+
+        return jsonify({
+            "code": 200,
+            "data": prescription.json()
+        }), 200
+
+    except Exception as e:
+        return jsonify({
+            "code": 500,
+            "message": "An error occurred retrieving the prescription: " + str(e)
+        }), 500
+
 
 if __name__ == '__main__':
     print("Prescription Microservice is running on " + os.path.basename(__file__))

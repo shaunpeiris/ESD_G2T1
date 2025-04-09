@@ -223,6 +223,7 @@ services:
       PYTHONUNBUFFERED: 1
       APPOINTMENT_SERVICE_URL: "http://appointment:5002"
       PATIENT_SERVICE_URL: "http://patient:5001"
+      PRESCRIPTION_SERVICE_URL: "http://prescription:5003"
     networks:
       - atomic_network
 

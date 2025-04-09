@@ -35,6 +35,7 @@ curl -s -X POST http://localhost:8001/services --data name=doctormanagement-serv
 curl -s -X POST http://localhost:8001/services/doctormanagement-service/routes --data "paths[]=/doctor" --data strip_path=false > /dev/null && echo "    ↳ Route added: /doctor"
 curl -s -X POST http://localhost:8001/services/doctormanagement-service/routes --data "paths[]=/doctor_management/patient_records" --data strip_path=false > /dev/null && echo "    ↳ Route added: /doctor_management/patient_records"
 curl -s -X POST http://localhost:8001/services/doctormanagement-service/routes --data "paths[]=/doctor_management/appointment" --data strip_path=false > /dev/null && echo "    ↳ Route added: /doctor_management/appointment"
+curl -s -X POST http://localhost:8001/services/doctormanagement-service/routes --data "paths[]=/get_prescription" --data strip_path=false > /dev/null && echo "    ↳ Route added: /get_prescription"
 
 # Register appointment-service
 echo "🔗 Registering appointment-service..."
