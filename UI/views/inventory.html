@@ -32,9 +32,7 @@
       <!-- Sidebar -->
       <div class="col-md-2 sidebar p-3">
         <div class="text-center mb-4">
-          <!-- <img src="https://via.placeholder.com/80" class="rounded-circle mb-2" alt="Pharmacist profile"> -->
           <h5 class="mb-0">Pharmacy</h5>
-          <!-- <p class="text-muted small">Lead Pharmacist</p> -->
         </div>
         <ul class="nav nav-pills flex-column">
           <li class="nav-item"><a class="nav-link" href="pharmacist.html"><i class="bi bi-speedometer2 me-2"></i> Dashboard</a></li>
@@ -50,6 +48,17 @@
       <main class="col-md-10 py-4 px-4" id="app">
         <h2 class="mb-4">Pharmacy Inventory</h2>
         <div v-if="error" class="alert alert-danger">{{ error }}</div>
+
+        <!-- Search Bar -->
+        <div class="input-group mb-3">
+          <span class="input-group-text"><i class="bi bi-search"></i></span>
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Search medication name..."
+            v-model="searchQuery"
+          />
+        </div>
 
         <!-- Inventory Table -->
         <div class="table-responsive">
@@ -104,6 +113,7 @@
       setup() {
         const medications = ref([]);
         const error = ref("");
+        const searchQuery = ref("");
         const currentPage = ref(1);
         const pageSize = 10;
 
@@ -142,21 +152,20 @@
           });
         };
 
-        const restock = (med) => {
-          alert(`Restock clicked for ${med.medicationName}`);
-        };
-
-        const edit = (med) => {
-          alert(`Edit clicked for ${med.medicationName}`);
-        };
+        const filteredMedications = computed(() => {
+          if (!searchQuery.value.trim()) return medications.value;
+          return medications.value.filter(med =>
+            med.medicationName.toLowerCase().includes(searchQuery.value.toLowerCase())
+          );
+        });
 
         const paginatedMedications = computed(() => {
           const start = (currentPage.value - 1) * pageSize;
-          return medications.value.slice(start, start + pageSize);
+          return filteredMedications.value.slice(start, start + pageSize);
         });
 
         const totalPages = computed(() =>
-          Math.ceil(medications.value.length / pageSize)
+          Math.ceil(filteredMedications.value.length / pageSize)
         );
 
         const nextPage = () => {
@@ -172,6 +181,7 @@
         return {
           medications,
           error,
+          searchQuery,
           currentPage,
           totalPages,
           paginatedMedications,
@@ -179,8 +189,6 @@
           getRowClass,
           getProgressBarClass,
           getStockWidth,
-          restock,
-          edit,
           nextPage,
           prevPage
         };
@@ -194,6 +202,7 @@
   </script>
 </body>
 </html>
+
 
 
 
