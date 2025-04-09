@@ -104,9 +104,9 @@ const showBillingError = (message, prescriptionId) => {
         specificIssue = 'contact';
     }
 
-    const actionButton = `<a href="edit-patient.html?prescription=${prescriptionId}&issue=${specificIssue}" class="btn btn-sm btn-primary">
-        <i class="bi bi-pencil me-1"></i>${actionText}
-    </a>`;
+    const actionButton = `<a href="/views/editPatient.html?prescription=${prescriptionId}&issue=${specificIssue}" class="btn btn-sm btn-primary">
+    <i class="bi bi-pencil me-1"></i>${actionText} </a>`;
+
 
     return showNotification(message, errorTitle, 0, actionButton);
 };

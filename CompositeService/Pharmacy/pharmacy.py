@@ -311,7 +311,96 @@ def send_email_notification(email, subject, message):
         logger.error(f"Unexpected error sending email notification to {email}: {str(e)}")
         return False
 
+def update_patient_data(patient_id, update_data):
+    """
+    Update patient data via the patient service
+    """
+    try:
+        # Forward the update request to the patient service
+        response = make_api_request(
+            'PUT', 
+            f"{PATIENT_SERVICE_URL}/patient/update/personal", 
+            json={"id": patient_id, **update_data}
+        )
+        
+        if response.status_code != 200:
+            error_msg = f"Patient service error: {response.status_code} - {response.text}"
+            logger.error(error_msg)
+            return None, response.status_code, error_msg
+        
+        result = response.json()
+        if result.get('code') != 200:
+            error_msg = f"Patient data update failed: {result.get('message', 'Unknown error')}"
+            logger.error(error_msg)
+            return None, result.get('code', 500), error_msg
+        
+        updated_patient_data = result.get('data', {})
+        return updated_patient_data, 200, "Patient data updated successfully"
+    except requests.exceptions.RequestException as e:
+        error_msg = f"Error connecting to patient service: {str(e)}"
+        logger.error(error_msg)
+        return None, 503, error_msg
+
 # API Routes
+@app.route("/pharmacy/patient/<patient_id>", methods=['GET'])
+@handle_api_error
+def get_patient_details(patient_id):
+    """
+    Get detailed patient information including contact details.
+    """
+    patient_data, status_code, message = get_patient_data(patient_id)
+    
+    if status_code != 200:
+        return create_response(status_code, message)
+    
+    # Add contact information explicitly to ensure it's included
+    enhanced_data = {
+        "id": patient_data.get("id"),
+        "name": patient_data.get("name"),
+        "email": patient_data.get("email"),
+        "mobile": patient_data.get("phone_number") or patient_data.get("mobile")
+    }
+    
+    return create_response(200, "Patient data retrieved successfully", enhanced_data)
+
+
+@app.route("/pharmacy/appointment/<appointment_id>", methods=['GET'])
+@handle_api_error
+def get_appointment_by_id(appointment_id):
+    """
+    Get appointment data by ID and return in a format compatible with the frontend.
+    """
+    appointment_data, status_code, message = get_appointment_data(appointment_id)
+    
+    if status_code != 200:
+        return create_response(status_code, message)
+        
+    return create_response(200, "Appointment data retrieved successfully", appointment_data)
+
+@app.route("/pharmacy/update-patient", methods=['PUT'])
+@handle_api_error
+def update_patient():
+    data = request.json
+    patient_id = data.get('id')
+    
+    if not patient_id:
+        return create_response(400, "Patient ID is required")
+    
+    # Create update data with only the fields we want to update
+    update_data = {
+        "name": data.get('name'),
+        "email": data.get('email'),
+        "mobile": data.get('mobile')
+    }
+    
+    updated_patient, status_code, message = update_patient_data(patient_id, update_data)
+    
+    if status_code != 200:
+        return create_response(status_code, message)
+    
+    return create_response(200, "Patient information updated successfully", updated_patient)
+
+
 @app.route("/pharmacy/prescriptions", methods=['GET'])
 @handle_api_error
 def get_all_prescriptions():

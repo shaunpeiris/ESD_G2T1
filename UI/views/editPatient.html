@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Patient Contact Details | MediSync</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        .profile-container {
+            padding: 40px 0;
+            min-height: calc(100vh - 140px);
+        }
+
+        .profile-card {
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            border-radius: 0.5rem;
+            border: none;
+        }
+
+        .profile-header {
+            background-color: #f8f9fa;
+            padding: 1.5rem;
+            border-top-left-radius: 0.5rem;
+            border-top-right-radius: 0.5rem;
+        }
+
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            background-color: #e9ecef;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .profile-avatar i {
+            font-size: 40px;
+            color: #6c757d;
+        }
+
+        .alert-saved {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1050;
+            min-width: 300px;
+            box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.15);
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1060;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-dark navbar-expand-lg bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="pharmacy.html">MediSync Pharmacy</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link" href="pharmacy.html">Prescription Queue</a></li>
+                    <li class="nav-item"><a class="nav-link" href="inventory.html">Inventory</a></li>
+                </ul>
+                <div class="d-flex">
+                    <a href="pharmacy.html" class="btn btn-outline-light me-2">
+                        <i class="bi bi-arrow-left me-1"></i> Back to Pharmacy
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="profile-container" id="edit-patient-app">
+        <div class="container">
+            <!-- Success Alert -->
+            <div class="alert alert-saved alert-success shadow-sm" v-if="saveMessage" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i> {{ saveMessage }}
+            </div>
+
+            <!-- Error Alert -->
+            <div class="alert alert-saved alert-danger shadow-sm" v-if="errorMessage" role="alert">
+                <i class="bi bi-exclamation-circle-fill me-2"></i> {{ errorMessage }}
+            </div>
+
+            <!-- Loading Overlay -->
+            <div class="loading-overlay" v-if="loading">
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="mt-2">Loading patient information...</p>
+                </div>
+            </div>
+
+            <div class="row justify-content-center" v-if="patient">
+                <div class="col-md-8">
+                    <div class="card profile-card">
+                        <div class="profile-header text-center">
+                            <h4 class="mb-0">Edit Patient Contact Details</h4>
+                            <p class="text-muted mt-2">
+                                Please update the patient's contact information to enable prescription processing
+                            </p>
+                        </div>
+                        <div class="card-body p-4">
+                            <!-- Patient Info -->
+                            <div class="d-flex align-items-center mb-4">
+                                <div class="profile-avatar me-3">
+                                    <i class="bi bi-person"></i>
+                                </div>
+                                <div>
+                                    <h5 class="mb-1">{{ patient.name }}</h5>
+                                    <p class="text-muted mb-0">Patient ID: {{ patient.id }}</p>
+                                </div>
+                            </div>
+
+                            <!-- Edit Form -->
+                            <form @submit.prevent="savePatientInfo">
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Email Address <span class="text-danger">*</span></label>
+                                    <input type="email" class="form-control" id="email" v-model="patient.email"
+                                        :class="{'is-invalid': emailError}">
+                                    <div class="invalid-feedback" v-if="emailError">{{ emailError }}</div>
+                                    <div class="form-text">The payment link will be sent to this email address.</div>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label for="mobile" class="form-label">Mobile Phone <span class="text-danger">*</span></label>
+                                    <input type="tel" class="form-control" id="mobile" v-model="patient.mobile"
+                                        :class="{'is-invalid': mobileError}">
+                                    <div class="invalid-feedback" v-if="mobileError">{{ mobileError }}</div>
+                                    <div class="form-text">SMS notifications will be sent to this number.</div>
+                                </div>
+
+                                <!-- Prescription Info -->
+                                <div class="alert alert-info" v-if="prescriptionInfo">
+                                    <h6 class="alert-heading">
+                                        <i class="bi bi-info-circle-fill me-2"></i>Prescription Information
+                                    </h6>
+                                    <p class="mb-0">{{ prescriptionInfo }}</p>
+                                </div>
+
+                                <div class="d-flex justify-content-end mt-4">
+                                    <a href="pharmacy.html" class="btn btn-outline-secondary me-2">Cancel</a>
+                                    <button type="submit" class="btn btn-primary px-4" :disabled="saving">
+                                        <i class="bi" :class="saving ? 'bi-hourglass-split' : 'bi-save'"></i>
+                                        {{ saving ? 'Saving...' : 'Save Changes' }}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error State -->
+            <div class="row justify-content-center" v-if="!patient && !loading">
+                <div class="col-md-8">
+                    <div class="card profile-card">
+                        <div class="card-body p-4 text-center">
+                            <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 3rem;"></i>
+                            <h4 class="mt-3">Failed to Load Patient Information</h4>
+                            <p class="text-muted mb-4">{{ loadError || "Unable to retrieve patient details." }}</p>
+                            <a href="http://localhost:8080/views/pharmacist.html" class="btn btn-primary">
+                                <i class="bi bi-arrow-left me-2"></i>Return to Pharmacy
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white border-top py-3">
+        <div class="container">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="text-muted small">
+                    &copy; 2025 MediSync. All rights reserved.
+                </div>
+                <div class="text-muted small">
+                    <a href="#" class="text-decoration-none text-muted me-3">Privacy Policy</a>
+                    <a href="#" class="text-decoration-none text-muted me-3">Terms of Service</a>
+                    <a href="#" class="text-decoration-none text-muted">Contact</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.2.31/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Vue App Script -->
+    <script>
+        const pharmacyURL = 'http://localhost:8000/pharmacy';
+
+        const app = Vue.createApp({
+            data() {
+                return {
+                    prescriptionId: null,
+                    issueType: null,
+                    patient: null,
+                    loading: true,
+                    saving: false,
+                    saveMessage: '',
+                    errorMessage: '',
+                    loadError: '',
+                    emailError: '',
+                    mobileError: '',
+                    prescriptionInfo: ''
+                };
+            },
+
+            methods: {
+                loadPatientData() {
+                    // Parse URL parameters
+                    const urlParams = new URLSearchParams(window.location.search);
+                    this.prescriptionId = urlParams.get('prescription');
+                    this.issueType = urlParams.get('issue') || 'billing';
+                    
+                    if (!this.prescriptionId) {
+                        this.loadError = 'No prescription ID provided. Cannot load patient data.';
+                        this.loading = false;
+                        return;
+                    }
+                    
+                    console.log(`Loading patient data for prescription: ${this.prescriptionId}`);
+                    console.log(`Issue type: ${this.issueType}`);
+                    
+                    // Set prescription info message based on issue type
+                    if (this.issueType === 'email') {
+                        this.prescriptionInfo = "This prescription requires a valid email address to send payment information.";
+                    } else if (this.issueType === 'phone') {
+                        this.prescriptionInfo = "This prescription requires a valid phone number to send SMS notifications.";
+                    } else {
+                        this.prescriptionInfo = "Contact information is required to process this prescription.";
+                    }
+                    
+                    // Step 1: Get prescription data
+                    fetch(`${pharmacyURL}/prescription/${this.prescriptionId}`)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`Prescription API Error (${response.status}): ${response.statusText}`);
+                            }
+                            return response.json();
+                        })
+                        .then(response => {
+                            // Get appointment ID from prescription
+                            const prescriptionData = response.data;
+                            if (!prescriptionData) {
+                                throw new Error('API returned empty prescription data');
+                            }
+                            
+                            if (!prescriptionData.appointment_id) {
+                                throw new Error(`Prescription ${this.prescriptionId} has no associated appointment_id`);
+                            }
+                            
+                            console.log(`Found appointment ID: ${prescriptionData.appointment_id}`);
+                            
+                            // Step 2: Get appointment data which contains patient ID
+                            return fetch(`${pharmacyURL}/appointment/${prescriptionData.appointment_id}`)
+                                .then(appResponse => {
+                                    if (!appResponse.ok) {
+                                        throw new Error(`Appointment API Error (${appResponse.status}): ${appResponse.statusText}`);
+                                    }
+                                    return appResponse.json();
+                                })
+                                .then(appointmentResponse => {
+                                    // Extract patient ID from appointment
+                                    if (!appointmentResponse.data) {
+                                        throw new Error('API returned empty appointment data');
+                                    }
+                                    
+                                    const appointmentData = appointmentResponse.data;
+                                    
+                                    if (!appointmentData.patient_id) {
+                                        throw new Error('Appointment has no associated patient_id');
+                                    }
+                                    
+                                    const patientId = appointmentData.patient_id;
+                                    console.log(`Found patient ID: ${patientId}`);
+                                    
+                                    // Step 3: Get patient details from patient endpoint
+                                    return fetch(`${pharmacyURL}/patient/${patientId}`)
+                                        .then(patientResponse => {
+                                            if (!patientResponse.ok) {
+                                                throw new Error(`Patient API Error (${patientResponse.status}): ${patientResponse.statusText}`);
+                                            }
+                                            return patientResponse.json();
+                                        })
+                                        .then(patientResult => {
+                                            if (!patientResult.data) {
+                                                throw new Error('API returned empty patient data');
+                                            }
+                                            
+                                            // Set patient data
+                                            this.patient = {
+                                                id: patientResult.data.id,
+                                                name: patientResult.data.name || 'Unknown Patient',
+                                                email: patientResult.data.email || '',
+                                                mobile: patientResult.data.mobile || ''
+                                            };
+                                            
+                                            console.log('Successfully loaded patient data:', this.patient);
+                                            
+                                            // Auto-focus on problematic field
+                                            this.$nextTick(() => {
+                                                if (this.issueType === 'email') {
+                                                    document.getElementById('email').focus();
+                                                } else if (this.issueType === 'phone') {
+                                                    document.getElementById('mobile').focus();
+                                                }
+                                            });
+                                        });
+                                });
+                        })
+                        .catch(error => {
+                            console.error('Error loading patient data:', error);
+                            this.loadError = error.message || 'Failed to load patient information';
+                        })
+                        .finally(() => {
+                            this.loading = false;
+                        });
+                },
+                
+                validateEmail(email) {
+                    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    return re.test(email);
+                },
+                
+                validatePhone(phone) {
+                    // Basic validation - phone should be at least 8 digits
+                    return phone && phone.length >= 8;
+                },
+                
+                savePatientInfo() {
+                    // Reset validation errors
+                    this.emailError = '';
+                    this.mobileError = '';
+                    this.errorMessage = '';
+                    
+                    // Validate email
+                    if (!this.patient.email) {
+                        this.emailError = 'Email address is required';
+                        document.getElementById('email').focus();
+                        return;
+                    } else if (!this.validateEmail(this.patient.email)) {
+                        this.emailError = 'Please enter a valid email address';
+                        document.getElementById('email').focus();
+                        return;
+                    }
+                    
+                    // Validate phone
+                    if (!this.patient.mobile) {
+                        this.mobileError = 'Phone number is required';
+                        document.getElementById('mobile').focus();
+                        return;
+                    } else if (!this.validatePhone(this.patient.mobile)) {
+                        this.mobileError = 'Please enter a valid phone number (minimum 8 digits)';
+                        document.getElementById('mobile').focus();
+                        return;
+                    }
+                    
+                    // Set saving state
+                    this.saving = true;
+                    
+                    // Prepare update data
+                    const updateData = {
+                        id: this.patient.id,
+                        name: this.patient.name,
+                        email: this.patient.email,
+                        mobile: this.patient.mobile
+                    };
+                    
+                    // Send update request
+                    fetch(`${pharmacyURL}/update-patient`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(updateData)
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! Status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(response => {
+                        if (response.code !== 200) {
+                            throw new Error(response.message || 'Failed to update patient information');
+                        }
+                        
+                        // Show success message
+                        this.saveMessage = 'Patient information updated successfully!';
+                        
+                        // Redirect back to pharmacy page after delay
+                        setTimeout(() => {
+                            window.location.href = 'pharmacist.html';
+                        }, 1000);
+                    })
+                    .catch(error => {
+                        console.error('Error updating patient:', error);
+                        this.errorMessage = `Failed to update patient information: ${error.message}`;
+                    })
+                    .finally(() => {
+                        this.saving = false;
+                    });
+                }
+            },
+            
+            mounted() {
+                this.loadPatientData();
+            }
+        });
+
+        app.mount('#edit-patient-app');
+    </script>
+</body>
+
+</html>
