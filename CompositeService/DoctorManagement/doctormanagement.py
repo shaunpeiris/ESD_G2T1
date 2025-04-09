@@ -59,10 +59,10 @@ def doctormanagement():
         appointments = res1.get("data", {}).get("appointments", [])
         if not appointments:
             return jsonify({
-                "code": 404,
+                "code": 200,
                 "message": f"No appointments found for doctor {doctor_id}.",
                 "data": results
-            }), 404
+            }), 200
         # Enrich each appointment with patient details.
         for appointment in appointments:
             pid = appointment.get("patient_id")

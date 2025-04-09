@@ -22,8 +22,13 @@ services:
     depends_on:
       - patient_db
     environment:
+<<<<<<< HEAD
       #dbURL: mysql+mysqlconnector://root:root@host.docker.internal:3306/patientdb
       dbURL: mysql+mysqlconnector://root:@patient_db:3306/patientdb
+=======
+      dbURL: mysql+mysqlconnector://root:@host.docker.internal:3306/patientdb
+      # dbURL: mysql+mysqlconnector://root:@patient_db:3306/patientdb
+>>>>>>> 0f07653a646145eb8a83a68d3666bda5d077c705
     networks:
       - atomic_network
 
@@ -51,8 +56,12 @@ services:
     depends_on:
       - appointment_db
     environment:
+<<<<<<< HEAD
       #dbURL: mysql+mysqlconnector://root:root@host.docker.internal:3306/appointmentdb
       dbURL: mysql+mysqlconnector://root:@appointment_db:3306/appointmentdb
+=======
+      dbURL: mysql+mysqlconnector://root:@host.docker.internal:3306/appointmentdb
+>>>>>>> 0f07653a646145eb8a83a68d3666bda5d077c705
     networks:
       - atomic_network
 
@@ -80,8 +89,12 @@ services:
     depends_on:
       - prescription_db
     environment:
+<<<<<<< HEAD
       #dbURL: mysql+mysqlconnector://root:root@host.docker.internal:3306/prescriptiondb
       dbURL: mysql+mysqlconnector://root:@prescriptiondb:3306/prescriptiondb
+=======
+      dbURL: mysql+mysqlconnector://root:@host.docker.internal:3306/prescriptiondb
+>>>>>>> 0f07653a646145eb8a83a68d3666bda5d077c705
     networks:
       - atomic_network
 
@@ -114,8 +127,12 @@ services:
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
       YOUR_DOMAIN: ${YOUR_DOMAIN}
       PATIENT_MICROSERVICE_URL: ${PATIENT_MICROSERVICE_URL}
+<<<<<<< HEAD
       #dbURL: mysql+mysqlconnector://root:root@host.docker.internal:3306/billing
       dbURL: mysql+mysqlconnector://root:@billing:3306/billing
+=======
+      dbURL: mysql+mysqlconnector://root:@host.docker.internal:3306/billing
+>>>>>>> 0f07653a646145eb8a83a68d3666bda5d077c705
     env_file:
       - .env
     networks:
