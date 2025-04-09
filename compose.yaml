@@ -103,7 +103,7 @@ services:
     image: ESDG2T1/billing:1.0
     restart: always
     ports:
-      - "5014:5004"
+      - "5014:5024"
     depends_on:
       - billing_db
     environment:
@@ -111,7 +111,6 @@ services:
       STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
       YOUR_DOMAIN: ${YOUR_DOMAIN}
-      PATIENT_MICROSERVICE_URL: ${PATIENT_MICROSERVICE_URL}
       dbURL: mysql+mysqlconnector://root@host.docker.internal:3306/billing
     env_file:
       - .env

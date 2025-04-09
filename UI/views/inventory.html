@@ -57,16 +57,13 @@
             <thead class="table-light">
               <tr>
                 <th>Name</th>
-                <th>Category</th>
                 <th>Stock</th>
                 <th>Updated</th>
-                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="med in paginatedMedications" :key="med.medicationID" :class="getRowClass(med)">
                 <td>{{ med.medicationName }}</td>
-                <td>{{ med.category || 'N/A' }}</td>
                 <td>
                   <div class="progress" style="height: 20px;">
                     <div class="progress-bar" :class="getProgressBarClass(med.quantity)" :style="{ width: getStockWidth(med.quantity) + '%' }">
@@ -75,14 +72,6 @@
                   </div>
                 </td>
                 <td>{{ formatDate(med.updatedAt) }}</td>
-                <td>
-                  <button class="btn btn-sm btn-outline-primary" @click="edit(med)">
-                    <i class="bi bi-pencil"></i>
-                  </button>
-                  <button class="btn btn-sm btn-outline-success" @click="restock(med)">
-                    <i class="bi bi-plus-circle"></i>
-                  </button>
-                </td>
               </tr>
             </tbody>
           </table>
