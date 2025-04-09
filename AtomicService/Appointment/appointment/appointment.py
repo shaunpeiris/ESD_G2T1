@@ -93,8 +93,7 @@ def create_appointment():
             appointment_date=appointment_date,
             start_time=start_time,
             end_time=end_time,
-            appointment_status="SCHEDULED",
-            notes="New patient consultation"
+            appointment_status="SCHEDULED"
         )
         
         db.session.add(appointment)
