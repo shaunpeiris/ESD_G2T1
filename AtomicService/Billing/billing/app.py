@@ -52,9 +52,13 @@ class Payment(db.Model):
 def home():
     return render_template("index.html", stripe_publishable_key=STRIPE_PUBLISHABLE_KEY)
 
-@app.route("/success")
-def success():
-    return render_template("success.html")
+@app.route("/successrecreatedsession")
+def successrecreatedsession():
+    return render_template("successrecreatedsession.html")
+
+@app.route("/successfirstsession")
+def successfirstsession():
+    return render_template("successfirstsession.html")
 
 @app.route("/cancel")
 def cancel():
@@ -86,7 +90,7 @@ def create_checkout_session():
             prescriptionID=prescription_id,
             patientID=patient_id,
             patientEmail=patient_email,
-            amount=total_price / 100,
+            amount=total_price * 100,
             status="pending"
         )
         db.session.add(new_payment)
@@ -104,7 +108,7 @@ def create_checkout_session():
             }],
             mode="payment",
             customer_email=patient_email,
-            success_url=f"{YOUR_DOMAIN}/success",
+            success_url=f"{YOUR_DOMAIN}/successfirstsession",
             cancel_url=f"{YOUR_DOMAIN}/cancel",
             metadata={"payment_id": str(new_payment.paymentID)}
         )
@@ -202,14 +206,14 @@ def recreate_checkout_session(payment_id):
             line_items=[{
                 "price_data": {
                     "currency": "sgd",
-                    "product_data": {"name": f"Prescription #{payment.prescriptionID}"},
+                    "product_data": {"name": "Doctor Consultation & Medicines"},
                     "unit_amount": int(payment.amount * 100),
                 },
                 "quantity": 1,
             }],
             mode="payment",
             customer_email=payment.patientEmail,
-            success_url=f"{YOUR_DOMAIN}/success",
+            success_url=f"{YOUR_DOMAIN}/successrecreatedsession",
             cancel_url=f"{YOUR_DOMAIN}/cancel",
             metadata={"payment_id": str(payment.paymentID)}
         )

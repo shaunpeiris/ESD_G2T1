@@ -748,55 +748,60 @@
 
     // Function to add another medicine field
     function addMedicineField() {
-      const medicationItem = document.createElement('div');
-      medicationItem.className = 'medication-item mb-3 p-3 border rounded';
-      medicationItem.innerHTML = `
-                <div class="d-flex justify-content-end mb-2">
-                    <button class="btn btn-sm btn-outline-danger remove-medicine">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                </div>
-                <div class="row mb-2">
-                    <div class="col-md-6">
-                        <label class="form-label">Medicine Name</label>
-                        <input type="text" class="form-control medicine-name required-field">
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Dose</label>
-                        <input type="text" class="form-control medicine-dose required-field">
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Quantity</label>
-                        <input type="number" class="form-control medicine-quantity required-field" value="1" min="1">
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-12">
-                        <label class="form-label">Frequency</label>
-                        <input type="text" class="form-control medicine-frequency required-field">
-                    </div>
-                </div>
-            `;
+  const medicationItem = document.createElement('div');
+  medicationItem.className = 'medication-item mb-3 p-3 border rounded';
+  medicationItem.innerHTML = `
+    <div class="d-flex justify-content-end mb-2">
+      <button class="btn btn-sm btn-outline-danger remove-medicine">
+        <i class="bi bi-trash"></i>
+      </button>
+    </div>
+    <div class="row mb-2">
+      <div class="col-md-6">
+        <label class="form-label">Medicine Name</label>
+        <select class="form-select medicine-name required-field">
+          <option value="">Select medicine</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Dose</label>
+        <input type="text" class="form-control medicine-dose required-field">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Quantity</label>
+        <input type="number" class="form-control medicine-quantity required-field" value="1" min="1">
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12">
+        <label class="form-label">Frequency</label>
+        <input type="text" class="form-control medicine-frequency required-field">
+      </div>
+    </div>
+  `;
 
-      document.getElementById('medicationsList').appendChild(medicationItem);
+  document.getElementById('medicationsList').appendChild(medicationItem);
 
-      // Add event listener to the remove button
-      medicationItem.querySelector('.remove-medicine').addEventListener('click', function () {
-        medicationItem.remove();
-        // Revalidate after removing an item
-        validateMedicationFields();
-      });
+  // Fill the new select with options
+  updateAllMedicineDropdowns();
 
-      // Setup validation for new fields
-      medicationItem.querySelectorAll('.required-field').forEach(field => {
-        field.addEventListener('input', validateMedicationFields);
-        field.setAttribute('data-has-listener', 'true');
-      });
+  // Add event listener to remove button
+  medicationItem.querySelector('.remove-medicine').addEventListener('click', function () {
+    medicationItem.remove();
+    validateMedicationFields();
+  });
 
-      // Disable buttons until the new fields are filled
-      document.getElementById('addMedicineBtn').disabled = true;
-      validateMedicationFields();
-    }
+  // Setup validation
+  medicationItem.querySelectorAll('.required-field').forEach(field => {
+    field.addEventListener('input', validateMedicationFields);
+    field.setAttribute('data-has-listener', 'true');
+  });
+
+  // Disable add button until new fields are filled
+  document.getElementById('addMedicineBtn').disabled = true;
+  validateMedicationFields();
+}
+
 
     // Function to create prescription
     function createPrescription() {
@@ -905,19 +910,28 @@
         medDropdownOptions = [];
       });
 
-    function updateAllMedicineDropdowns() {
-      const selects = document.querySelectorAll(".medicine-name");
-      selects.forEach(select => {
-        if (select.tagName !== "SELECT") return;
-        select.innerHTML = '<option value="">Select medicine</option>';
-        medDropdownOptions.forEach(med => {
-          const option = document.createElement("option");
-          option.value = med.medicationName; // send med ID in payload if needed
-          option.textContent = med.medicationName;
-          select.appendChild(option);
-        });
-      });
-    }
+      function updateAllMedicineDropdowns() {
+  const selects = document.querySelectorAll(".medicine-name");
+
+  selects.forEach(select => {
+    if (select.tagName !== "SELECT") return;
+
+    const currentValue = select.value; // Save current selection
+
+    // Clear and repopulate
+    select.innerHTML = '<option value="">Select medicine</option>';
+    medDropdownOptions.forEach(med => {
+      const option = document.createElement("option");
+      option.value = med.medicationName;
+      option.textContent = med.medicationName;
+      select.appendChild(option);
+    });
+
+    // Restore previous selection
+    select.value = currentValue;
+  });
+}
+
 
     const originalAddMedicineField = window.addMedicineField;
     window.addMedicineField = function () {
