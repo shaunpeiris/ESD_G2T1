@@ -611,11 +611,11 @@ def dispense_prescription(prescription_id):
         return create_response(400, f"Failed to get patient data: {message}")
 
     # Send SMS notification - UPDATED ERROR MESSAGE
-    phone_number = patient_data.get('phone_number')
-    
+    phone_number = patient_data.get('mobile') or patient_data.get('phone_number')
+        
     if not phone_number:
         logger.error(f"Patient (ID: {patient_id}) has no phone number")
-        return create_response(400, "Billing failed: Patient has no valid phone number")
+        return create_response(400, f"Billing failed: Patient has no valid phone number. {phone_number}")
 
     sms_message = f"Your prescription has been collected. Please check your email for the payment link."
     sms_sent = send_sms_notification(phone_number, sms_message)
@@ -815,7 +815,7 @@ def process_prescription_from_queue(ch, method, properties, body):
             return
 
         # Send SMS notification
-        phone_number = patient_data.get('mobile')  # Assuming field name from error message
+        phone_number = patient_data.get('phone_number')  # Assuming field name from error message
         if not phone_number:
             logger.warning("Patient phone number not found, skipping SMS notification")
             sms_sent = {"error": "Patient phone number not available", "status": "skipped"}
