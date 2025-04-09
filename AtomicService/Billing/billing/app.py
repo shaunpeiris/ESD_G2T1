@@ -23,7 +23,7 @@ stripe.api_key = STRIPE_SECRET_KEY
 
 # Microservice & domain config
 YOUR_DOMAIN = environ.get("YOUR_DOMAIN")
-PATIENT_MICROSERVICE_URL = environ.get("PATIENT_MICROSERVICE_URL")
+# PATIENT_MICROSERVICE_URL = environ.get("PATIENT_MICROSERVICE_URL")
 
 # Define Payment Model
 class Payment(db.Model):

@@ -521,30 +521,35 @@ def dispense_prescription(prescription_id):
     if status_code != 200:
         return create_response(400, f"Failed to get patient data: {message}")
 
-    # Send SMS notification
-    test_phone_number = "+6598345858"  # For testing purposes
-    phone_number = test_phone_number if test_phone_number else patient_data.get('phone_number')
+    # Send SMS notification - UPDATED ERROR MESSAGE
+    phone_number = patient_data.get('phone_number')
     
     if not phone_number:
-        return create_response(400, "Patient phone number not found")
+        logger.error(f"Patient (ID: {patient_id}) has no phone number")
+        return create_response(400, "Billing failed: Patient has no valid phone number")
 
-    sms_message = f"Your prescription has been collected. Please check your email for the payment link. Thanks for coming la see u again have a nice day :)"
+    sms_message = f"Your prescription has been collected. Please check your email for the payment link."
     sms_sent = send_sms_notification(phone_number, sms_message)
     
-    # Send email notification
-    test_email = "kesterfun@live.com"  # For testing purposes
-    email = test_email if test_email else patient_data.get('email')
+    # Send email notification - UPDATED ERROR MESSAGE
+    email = patient_data.get('email')
     
     if not email:
-        return create_response(400, "Patient email not found")
+        logger.error(f"Patient (ID: {patient_id}) has no email address")
+        return create_response(400, "Billing failed: Patient has no valid email address")
 
-    email_subject = f"Pay up"
+    email_subject = f"Prescription Payment"
     email_message = f"Your prescription has been completed. Please complete the payment at: {checkout_url}"
     email_sent = send_email_notification(email, email_subject, email_message)
     
     if not sms_sent or not email_sent:
-        logger.error("Failed to send notifications")
-        return create_response(500, "Failed to send notifications. Prescription not dispensed.")
+        error_msg = "Failed to send notifications. "
+        if not sms_sent:
+            error_msg += "SMS notification failed. "
+        if not email_sent:
+            error_msg += "Email notification failed. "
+        logger.error(error_msg)
+        return create_response(500, f"Billing failed: {error_msg.strip()}")
     
     # Only update inventory AFTER successful billing URL generation and notifications
     inventory_updates = []
