@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS patient (
 INSERT INTO patient (name, email, mobile, password, medicalHistory)
 VALUES 
   ('Emma Taylor', 'emma@example.com', '5551234567', 'pass123', 
-    '{"allergies": ["Penicillin"], "medical_conditions": [], "past_surgeries": [], "family_medical_history": [], "chronic_illnesses": [], "medications": []}'),
+    '{"allergies": ["Candesartan"], "medical_conditions": [], "past_surgeries": [], "family_medical_history": [], "chronic_illnesses": [], "medications": []}'),
   ('Noah Parker', 'noah@example.com', '5552345678', 'pass123', 
     '{"allergies": ["Peanuts", "Shellfish"], "medical_conditions": ["Asthma"], "past_surgeries": [], "family_medical_history": ["Diabetes"], "chronic_illnesses": [], "medications": ["Ventolin"]}'),
   ('Sophia Martinez','sophia@example.com', '5553456789', 'pass123', 
