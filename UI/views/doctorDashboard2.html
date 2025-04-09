@@ -163,6 +163,14 @@
                         <!-- Appointment cards will be dynamically injected here -->
                     </div>
                 </section>
+
+                <!-- Completed appointments section -->
+                <section id="completedAppointments" class="mt-5">
+                    <h2 class="mb-4">Completed Appointments</h2>
+                    <div id="completedAppointmentsContainer" class="row mb-4">
+                        <!-- Completed appointment cards will be dynamically injected here -->
+                    </div>
+                </section>
             </main>
         </div>
     </div>
@@ -312,6 +320,40 @@
                 });
         }
 
+
+        // Function to fetch and display completed appointments
+        function loadCompletedAppointments() {
+            const payload = {
+                "doctor_id": doctorId
+            };
+            fetch(`${compositeUrl}/completed`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(payload)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log("Completed appointments response:", data);
+                    if (data.code === 200 && data.data && data.data.get_completed_appointments) {
+                        const opResult = data.data.get_completed_appointments;
+                        const appointments = opResult.enriched_appointments;
+                        if (appointments && appointments.length > 0) {
+                            populateCompletedAppointments(appointments);
+                        } else {
+                            document.getElementById("completedAppointmentsContainer").innerHTML = `<p>No completed appointments found for today.</p>`;
+                        }
+                    } else {
+                        document.getElementById("completedAppointmentsContainer").innerHTML = `<p>Error: ${data.message}</p>`;
+                    }
+                })
+                .catch(error => {
+                    console.error("Fetch error:", error);
+                    document.getElementById("completedAppointmentsContainer").innerHTML = `<p>Error loading completed appointments.</p>`;
+                });
+        }
+
         // Populate the appointments container with appointment cards
         function populateAppointments(appointments) {
             const container = document.getElementById("appointmentsContainer");
@@ -354,6 +396,46 @@
             </div>
           </div>
         `;
+                container.innerHTML += cardHtml;
+            });
+        }
+
+        // Populate the completed appointments container with appointment cards
+        function populateCompletedAppointments(appointments) {
+            const container = document.getElementById("completedAppointmentsContainer");
+            container.innerHTML = "";
+            appointments.forEach(appointment => {
+                const appointmentId = appointment.appointment_id;
+                const patientId = appointment.patient_id;
+                const patientName = appointment.patient_details && appointment.patient_details.name ?
+                    appointment.patient_details.name :
+                    "Unknown Patient";
+                const apptDate = new Date(appointment.appointment_date).toLocaleDateString();
+                const startTime = new Date(appointment.start_time).toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                const endTime = new Date(appointment.end_time).toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
+                const cardHtml = `
+                    <div class="col-md-6 col-lg-4 mb-3">
+                        <div class="card appointment-card completed" style="cursor: pointer;" onclick="viewAppointment(${appointmentId})">
+                            <div class="card-body">
+                                <h5 class="card-title d-inline-block mb-0 me-2">${patientName}</h5>
+                                <span class="badge bg-success d-inline-block">Completed</span>
+                                <p class="card-text"><strong>Patient ID:</strong> ${patientId}</p>
+                                <p class="card-text"><strong>Date:</strong> ${apptDate}</p>
+                                <p class="card-text"><strong>Time:</strong> ${startTime} - ${endTime}</p>
+                                <button class="btn btn-outline-secondary btn-sm" onclick="event.stopPropagation(); viewPatientRecords(${patientId}, ${appointmentId});">
+                                    <i class="bi bi-file-earmark-text me-1"></i> View Records
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
                 container.innerHTML += cardHtml;
             });
         }
@@ -793,7 +875,10 @@
         `);
 
         // Load appointments when the page loads
-        window.onload = loadAppointments;
+        window.onload = function() {
+            loadAppointments();
+            loadCompletedAppointments();
+        };
     </script>
 </body>
 
