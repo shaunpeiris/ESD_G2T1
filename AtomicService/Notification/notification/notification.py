@@ -3,6 +3,7 @@ from twilio.rest import Client
 from dotenv import load_dotenv
 import os
 from mailersend import emails
+import traceback
 
 app = Flask(__name__)
 
@@ -61,6 +62,7 @@ def send_notification():
         return jsonify({'notification_id': notif_id, 'status': 'sent'}), 201
 
     except Exception as e:
+        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
 @app.route('/notify/resend/<notif_id>', methods=['POST'])

@@ -55,7 +55,7 @@ curl -s -X POST http://localhost:8001/services/appointment-service/routes --data
 echo     ↳ Route added: /appointment
 
 REM Register specializations service (external IP)
-echo 🔗 Registering specializations service...
+echo 🔗 Registering hospital service...
 curl -s -X POST http://localhost:8001/services --data name=hospital-service --data url=http://104.214.186.4:5010 >nul
 curl -s -X POST http://localhost:8001/services/hospital-service/routes --data "paths[]=/specializations" --data strip_path=false >nul
 curl -s -X POST http://localhost:8001/services/hospital-service/routes --data "paths[]=/polyclinics" --data strip_path=false >nul
