@@ -52,7 +52,7 @@ services:
       - appointment_db
     environment:
       #dbURL: mysql+mysqlconnector://root@host.docker.internal:3306/appointmentdb
-      dbURL: mysql+mysqlconnector://root:@appointmentdb:3306/appointmentdb
+      dbURL: mysql+mysqlconnector://root:@appointment_db:3306/appointmentdb
     networks:
       - atomic_network
 
@@ -81,7 +81,7 @@ services:
       - prescription_db
     environment:
       #dbURL: mysql+mysqlconnector://root@host.docker.internal:3306/prescriptiondb
-      dbURL: mysql+mysqlconnector://root:@prescriptiondb:3306/prescriptiondb
+      dbURL: mysql+mysqlconnector://root:@prescription_db:3306/prescriptiondb
     networks:
       - atomic_network
 
@@ -114,7 +114,7 @@ services:
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
       YOUR_DOMAIN: ${YOUR_DOMAIN}
       #dbURL: mysql+mysqlconnector://root@host.docker.internal:3306/billing
-      dbURL: mysql+mysqlconnector://root:@billing:3306/billing
+      dbURL: mysql+mysqlconnector://root:@billing_db:3306/billing
     env_file:
       - .env
     networks:
