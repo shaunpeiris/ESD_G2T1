@@ -134,7 +134,7 @@ services:
   # Notification Microservice
   #################################
   notification:
-    build: ./AtomicService/Notification/notification
+    build: ./ExternalService/Notification/notification
     image: ESDG2T1/notification:1.0
     restart: always
     ports:
