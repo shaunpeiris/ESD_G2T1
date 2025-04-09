@@ -11,6 +11,7 @@ CORS(app)
 # appointment_URL = "http://host.docker.internal:5002/appointment"
 patient_URL = os.environ.get('PATIENT_SERVICE_URL')
 appointment_URL = os.environ.get('APPOINTMENT_SERVICE_URL')
+prescription_URL=os.environ.get('PRESCRIPTION_SERVICE_URL')
 
 @app.route("/doctor_management", methods=["POST"])
 def doctormanagement():
@@ -141,6 +142,71 @@ def doctormanagement():
             "code": 500,
             "message": "Internal error in composite orchestration: " + error_msg
         }), 500
+    
+
+@app.route("/doctor_management/completed", methods=["POST"])
+def get_completed_appointments():
+    try:
+        data = request.get_json()
+        results = {}
+        
+        if "doctor_id" not in data:
+            return jsonify({
+                "code": 400, 
+                "message": "Missing required field: doctor_id"
+            }), 400
+
+        doctor_id = data["doctor_id"]
+        url = f"{appointment_URL}/appointment/doctor/completed/{doctor_id}"
+        res = invoke_http(url, method="GET")
+        results["get_completed_appointments"] = {  # Key for completed appointments
+            "return_code": res.get("code"),
+            "response": res
+        }
+        
+        if res["code"] not in range(200, 300):
+            return jsonify({
+                "code": res.get("code", 500),
+                "message": f"Failed to retrieve completed appointments for doctor {doctor_id}.",
+                "data": res.get("data")  # Include any data returned by the appointment service
+            }), res.get("code", 500)
+        
+        completed_appointments = res.get("data", {}).get("appointments", [])
+        if not completed_appointments:
+            return jsonify({
+                "code": 200, 
+                "message": f"No completed appointments found for doctor {doctor_id}.",
+                "data": []  
+            }), 200
+        
+        # Enrich with patient details
+        for appointment in completed_appointments:
+            pid = appointment.get("patient_id")
+            if pid:
+                patient_url = f"{patient_URL}/patient/{pid}"
+                pres = invoke_http(patient_url, method="GET")
+                if pres.get("code") in range(200, 300):
+                    appointment["patient_details"] = pres.get("data")
+                else:
+                    appointment["patient_details"] = {"error": "Patient details not found"}
+
+        results["get_completed_appointments"]["enriched_appointments"] = completed_appointments  # Store enriched appointments
+
+        return jsonify({
+            "code": 200,
+            "message": "Completed appointments retrieved successfully.",
+            "data": results
+        }), 200
+
+    except Exception as e:
+        exc_type, _, exc_tb = sys.exc_info()
+        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+        error_msg = f"{str(e)} at {str(exc_type)} in {fname} on line {exc_tb.tb_lineno}"
+        return jsonify({
+            "code": 500,
+            "message": "Internal error in composite orchestration: " + error_msg
+        }), 500
+
 
 # Run the Flask app
 if __name__ == "__main__":
