@@ -1,3 +1,5 @@
+CREATE DATABASE IF NOT EXISTS billing;
+
 USE billing;
 
 -- Drop and recreate the table if you're resetting

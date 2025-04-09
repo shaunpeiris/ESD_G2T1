@@ -462,56 +462,129 @@
 
     // Modify viewPatientRecords function 
     function viewPatientRecords(patientId, appointmentId) {
-      currentAppointmentId = appointmentId;
+  currentAppointmentId = appointmentId;
 
-      const patientUrl = `http://localhost:8000/doctor_management`;
-      const payload = {
-        "doctor_id": doctorId,
-        "patient_id": patientId,
-        "appointment_details_id": appointmentId
-      };
+  const patientUrl = `http://localhost:8000/doctor_management`;
+  const payload = {
+    "doctor_id": doctorId,
+    "patient_id": patientId,
+    "appointment_details_id": appointmentId
+  };
 
-      fetch(patientUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload)
-      })
-        .then(response => response.json())
-        .then(data => {
-          if (data.code === 200) {
-            const patientData = data.data.get_patient_records.response.data;
-            populatePatientModal(patientData);
+  fetch(patientUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(payload)
+  })
+    .then(response => response.json())
+    .then(data => {
+      if (data.code === 200) {
+        const patientData = data.data.get_patient_records.response.data;
+        populatePatientModal(patientData);
 
-            // Get appointment details and populate notes
-            if (data.data.get_appointment_details &&
-              data.data.get_appointment_details.response.code === 200) {
-              const appointmentData = data.data.get_appointment_details.response.data;
-              document.getElementById("appointmentNotes").value = appointmentData.notes || "";
-            }
+        // Appointment Notes
+        if (
+          data.data.get_appointment_details &&
+          data.data.get_appointment_details.response.code === 200
+        ) {
+          const appointmentData = data.data.get_appointment_details.response.data;
+          document.getElementById("appointmentNotes").value = appointmentData.notes || "";
+        }
 
-            // Check if this appointment has already had notes updated
-            if (hasUpdatedNotes(appointmentId)) {
-              // Enable the prescriptions tab if notes were previously updated
-              document.getElementById("medications-tab").classList.remove("disabled");
+        // Notes tab handling
+        const medsTab = document.getElementById("medications-tab");
+        if (hasUpdatedNotes(appointmentId)) {
+          medsTab.classList.remove("disabled");
+        } else {
+          medsTab.classList.add("disabled");
+        }
+
+        // Show modal
+        const patientRecordModal = new bootstrap.Modal(document.getElementById('patientRecordModal'));
+        patientRecordModal.show();
+
+        // === FETCH PRESCRIPTION IF EXISTS ===
+        fetch(`http://localhost:8000/get_prescription?appointment_id=${appointmentId}`)
+          .then(res => res.json())
+          .then(prescriptionData => {
+            const listContainer = document.getElementById("medicationsList");
+            listContainer.innerHTML = ""; // Always clear first
+
+            const addBtn = document.getElementById("addMedicineBtn");
+            const createBtn = document.getElementById("createPrescriptionBtn");
+
+            if (
+              prescriptionData.code === 200 &&
+              prescriptionData.data &&
+              Array.isArray(prescriptionData.data.medicine) &&
+              prescriptionData.data.medicine.length > 0
+            ) {
+              // Existing prescription
+              const meds = prescriptionData.data.medicine;
+
+              meds.forEach(med => {
+                const medItem = document.createElement("div");
+                medItem.className = "medication-item mb-3 p-3 border rounded";
+
+                medItem.innerHTML = `
+                  <div class="row mb-2">
+                    <div class="col-md-6">
+                      <label class="form-label">Medicine Name</label>
+                      <input type="text" class="form-control" value="${med.name}" readonly>
+                    </div>
+                    <div class="col-md-3">
+                      <label class="form-label">Dose</label>
+                      <input type="text" class="form-control" value="${med.dose}" readonly>
+                    </div>
+                    <div class="col-md-3">
+                      <label class="form-label">Quantity</label>
+                      <input type="number" class="form-control" value="${med.quantity}" readonly>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-12">
+                      <label class="form-label">Frequency</label>
+                      <input type="text" class="form-control" value="${med.frequency}" readonly>
+                    </div>
+                  </div>
+                `;
+
+                listContainer.appendChild(medItem);
+              });
+
+              // Hide prescription creation UI
+              addBtn.style.display = "none";
+              createBtn.style.display = "none";
             } else {
-              // Disable prescriptions tab if notes aren't updated yet
-              document.getElementById("medications-tab").classList.add("disabled");
+              // No prescription yet - enable creation UI
+              addBtn.style.display = "inline-block";
+              createBtn.style.display = "inline-block";
+              addMedicineField();
             }
+          })
+          .catch(err => {
+            console.error("Error loading prescription:", err);
+            // Fallback: assume no prescription and enable UI
+            document.getElementById("medicationsList").innerHTML = "";
+            document.getElementById("addMedicineBtn").style.display = "inline-block";
+            document.getElementById("createPrescriptionBtn").style.display = "inline-block";
+            addMedicineField();
+          });
 
-            const patientRecordModal = new bootstrap.Modal(document.getElementById('patientRecordModal'));
-            patientRecordModal.show();
-          } else {
-            console.error("Error fetching patient data:", data.message);
-            alert("Failed to retrieve patient data.");
-          }
-        })
-        .catch(error => {
-          console.error("Fetch error:", error);
-          alert("Error loading patient information.");
-        });
-    }
+      } else {
+        console.error("Error fetching patient data:", data.message);
+        alert("Failed to retrieve patient data.");
+      }
+    })
+    .catch(error => {
+      console.error("Fetch error:", error);
+      alert("Error loading patient information.");
+    });
+}
+
+
 
     // Populate the patient modal with basic details and medical history
     function populatePatientModal(patientData) {

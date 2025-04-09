@@ -207,6 +207,56 @@ def get_completed_appointments():
             "message": "Internal error in composite orchestration: " + error_msg
         }), 500
 
+@app.route("/get_prescription", methods=["GET"])
+def get_prescription():
+    try:
+        appointment_id = request.args.get("appointment_id")
+        print(f"🧪 [DEBUG] appointment_id received: {appointment_id}")
+        
+        if not appointment_id:
+            return jsonify({
+                "code": 400,
+                "message": "Missing required query parameter: appointment_id"
+            }), 400
+
+        url = f"{prescription_URL}/prescription/appointment/{appointment_id}"
+        print(f"🌐 [DEBUG] Calling prescription URL: {url}")
+
+        res = invoke_http(url, method="GET")
+        print(f"📦 [DEBUG] Response from prescription service: {res}")
+
+        if res.get("code") == 404:
+            return jsonify({
+                "code": 200,
+                "message": f"No prescription found for appointment {appointment_id}",
+                "data": {}
+            }), 200
+
+        elif res.get("code") not in range(200, 300):
+            return jsonify({
+                "code": res.get("code", 500),
+                "message": f"Failed to retrieve prescription for appointment {appointment_id}",
+                "data": res.get("data")
+            }), res.get("code", 500)
+
+        return jsonify({
+            "code": 200,
+            "message": f"Prescription retrieved successfully for appointment {appointment_id}",
+            "data": res.get("data")
+        }), 200
+
+    except Exception as e:
+        import sys, os
+        exc_type, _, exc_tb = sys.exc_info()
+        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+        error_msg = f"{str(e)} at {str(exc_type)} in {fname} on line {exc_tb.tb_lineno}"
+        print(f"❌ [ERROR] {error_msg}")  # Add this line
+        return jsonify({
+            "code": 500,
+            "message": "Internal error in prescription retrieval: " + error_msg
+        }), 500
+
+
 
 # Run the Flask app
 if __name__ == "__main__":
