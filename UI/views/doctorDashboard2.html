@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html lang="en">
 
+<html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Doctor Dashboard | HealthConnect</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" />
-    <style>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Doctor Dashboard | HealthConnect</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet"/>
+<style>
         .sidebar {
             height: 100vh;
             position: sticky;
@@ -94,187 +94,170 @@
         }
     </style>
 </head>
-
 <body>
-    <div class="container-fluid">
-        <div class="row">
-            <!-- Sidebar -->
-            <div class="col-md-3 col-lg-2 d-md-block sidebar collapse">
-                <div class="d-flex flex-column p-3">
-                    <div class="text-center mb-4">
-                        <!-- Profile image removed -->
-                        <h5 id="doctor-name" class="mb-0 mt-4">Dr. James Wilson</h5>
-                        <p id="doctor-specilization" class="text-muted small">Cardiology</p>
-                    </div>
-                    <ul class="nav nav-pills flex-column mb-auto">
-                        <li class="nav-item">
-                            <a href="#" class="nav-link active">
-                                <i class="bi bi-calendar-check me-2"></i> Appointments
+<div class="container-fluid">
+<div class="row">
+<!-- Sidebar -->
+<div class="col-md-3 col-lg-2 d-md-block sidebar collapse">
+<div class="d-flex flex-column p-3">
+<div class="text-center mb-4">
+<!-- Profile image removed -->
+<h5 class="mb-0 mt-4" id="doctor-name">Dr. James Wilson</h5>
+<p class="text-muted small" id="doctor-specilization">Cardiology</p>
+</div>
+<ul class="nav nav-pills flex-column mb-auto">
+<li class="nav-item">
+<a class="nav-link active" href="#">
+<i class="bi bi-calendar-check me-2"></i> Appointments
                             </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="#" class="nav-link">
-                                <i class="bi bi-people me-2"></i> Patients
+</li>
+<li class="nav-item">
+<a class="nav-link" href="#">
+<i class="bi bi-people me-2"></i> Patients
                             </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="#" class="nav-link">
-                                <i class="bi bi-journal-medical me-2"></i> Medical Records
+</li>
+<li class="nav-item">
+<a class="nav-link" href="#">
+<i class="bi bi-journal-medical me-2"></i> Medical Records
                             </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="#" class="nav-link">
-                                <i class="bi bi-prescription2 me-2"></i> Prescriptions
+</li>
+<li class="nav-item">
+<a class="nav-link" href="#">
+<i class="bi bi-prescription2 me-2"></i> Prescriptions
                             </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="#" class="nav-link">
-                                <i class="bi bi-gear me-2"></i> Settings
+</li>
+<li class="nav-item">
+<a class="nav-link" href="#">
+<i class="bi bi-gear me-2"></i> Settings
                             </a>
-                        </li>
-                    </ul>
-                    <hr />
-                    <div id="signout">
-                        <a href="javascript:void(0)" class="btn btn-outline-danger w-100" @click="logout">
-                            <i class="bi bi-box-arrow-right me-2"></i> Sign Out
+</li>
+</ul>
+<hr/>
+<div id="signout">
+<a @click="logout" class="btn btn-outline-danger w-100" href="javascript:void(0)">
+<i class="bi bi-box-arrow-right me-2"></i> Sign Out
                         </a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Main Content -->
-            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
-                <div
-                    class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                    <h1 class="h2">Doctor Dashboard</h1>
-                    <div class="btn-toolbar mb-2 mb-md-0">
-                        <div class="btn-group me-2">
-                            <button type="button" class="btn btn-sm btn-outline-secondary">
-                                <i class="bi bi-calendar me-1"></i> Today
+</div>
+</div>
+</div>
+<!-- Main Content -->
+<main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+<h1 class="h2">Doctor Dashboard</h1>
+<div class="btn-toolbar mb-2 mb-md-0">
+<div class="btn-group me-2">
+<button class="btn btn-sm btn-outline-secondary" type="button">
+<i class="bi bi-calendar me-1"></i> Today
                             </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Appointments Section -->
-                <section id="appointments">
-                    <h2 class="mb-4">Upcoming Appointments</h2>
-                    <div id="appointmentsContainer" class="row mb-4">
-                        <!-- Appointment cards will be dynamically injected here -->
-                    </div>
-                </section>
-            </main>
-        </div>
-    </div>
-
-    <!-- Patient Record Modal -->
-    <div class="modal fade" id="patientRecordModal" tabindex="-1" aria-labelledby="patientRecordModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog modal-xl modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="patientRecordModalLabel">Patient Medical Record</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <!-- Patient Info Header (no image) -->
-                    <div class="patient-info-header mb-4">
-                        <div class="row">
-                            <div class="col-md-5">
-                                <h4 id="modalPatientName">Patient Name</h4>
-                                <p class="mb-1"><strong>Patient ID:</strong> <span id="patientid"></span></p>
-                                <p class="mb-1"><strong>Email:</strong> <span id="email"></span></p>
-                                <p class="mb-1"><strong>Phone Number:</strong> <span id="mobile"></span></p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Medical Records Tabs -->
-                    <ul class="nav nav-tabs" id="myTab" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link active" id="summary-tab" data-bs-toggle="tab"
-                                data-bs-target="#summary" type="button" role="tab" aria-controls="medicalhistory"
-                                aria-selected="true">Medical History</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="notes-tab" data-bs-toggle="tab" data-bs-target="#notes"
-                                type="button" role="tab" aria-controls="notes" aria-selected="false">Appointment Notes</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="medications-tab" data-bs-toggle="tab"
-                                data-bs-target="#medications" type="button" role="tab" aria-controls="medications"
-                                aria-selected="false">Prescriptions</button>
-                        </li>
-                    </ul>
-
-                    <div class="tab-content p-3 border border-top-0 rounded-bottom" id="myTabContent">
-                        <!-- Medical History Tab -->
-                        <div class="tab-pane fade show active" id="summary" role="tabpanel"
-                            aria-labelledby="summary-tab">
-                            <!-- Medical History content can be populated here -->
-                        </div>
-                        <!-- Appointment Notes Tab -->
-                        <div class="tab-pane fade" id="notes" role="tabpanel" aria-labelledby="notes-tab">
-                            <div class="mb-3">
-                              <label for="appointmentNotes" class="form-label"></label>
-                              <textarea class="form-control" id="appointmentNotes" rows="6" placeholder="Enter appointment notes here..."></textarea>
-                              <div class="mt-3">
-                                <button id="updateNotesBtn" class="btn btn-primary">Update Notes</button>
-                              </div>
-                            </div>
-                            <div id="notesUpdateStatus" class="alert alert-success mt-3" style="display: none;"></div>
-                        </div>
-                        <!-- Prescription Tab -->
-                        <div class="tab-pane fade" id="medications" role="tabpanel" aria-labelledby="medications-tab">
-                            <div class="mb-3">
-                                <h5 class="mb-3">Prescription Details</h5>
-                                <div id="medicationsList">
-                                    <div class="medication-item mb-3 p-3 border rounded">
-                                        <div class="row mb-2">
-                                            <div class="col-md-6">
-                                                <label class="form-label">Medicine Name</label>
-                                                <input type="text" class="form-control medicine-name required-field">
-                                            </div>
-                                            <div class="col-md-3">
-                                                <label class="form-label">Dose</label>
-                                                <input type="text" class="form-control medicine-dose required-field">
-                                            </div>
-                                            <div class="col-md-3">
-                                                <label class="form-label">Quantity</label>
-                                                <input type="number" class="form-control medicine-quantity required-field" value="1" min="1">
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-md-12">
-                                                <label class="form-label">Frequency</label>
-                                                <input type="text" class="form-control medicine-frequency required-field">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="d-flex justify-content-between mt-3">
-                                    <button id="addMedicineBtn" class="btn btn-outline-primary" disabled>
-                                        <i class="bi bi-plus-circle"></i> Add Another Medicine
+</div>
+</div>
+</div>
+<!-- Appointments Section -->
+<section id="appointments">
+<h2 class="mb-4">Upcoming Appointments</h2>
+<div class="row mb-4" id="appointmentsContainer">
+<!-- Appointment cards will be dynamically injected here -->
+</div>
+</section>
+</main>
+</div>
+</div>
+<!-- Patient Record Modal -->
+<div aria-hidden="true" aria-labelledby="patientRecordModalLabel" class="modal fade" id="patientRecordModal" tabindex="-1">
+<div class="modal-dialog modal-xl modal-dialog-scrollable">
+<div class="modal-content">
+<div class="modal-header">
+<h5 class="modal-title" id="patientRecordModalLabel">Patient Medical Record</h5>
+<button aria-label="Close" class="btn-close" data-bs-dismiss="modal" type="button"></button>
+</div>
+<div class="modal-body">
+<!-- Patient Info Header (no image) -->
+<div class="patient-info-header mb-4">
+<div class="row">
+<div class="col-md-5">
+<h4 id="modalPatientName">Patient Name</h4>
+<p class="mb-1"><strong>Patient ID:</strong> <span id="patientid"></span></p>
+<p class="mb-1"><strong>Email:</strong> <span id="email"></span></p>
+<p class="mb-1"><strong>Phone Number:</strong> <span id="mobile"></span></p>
+</div>
+</div>
+</div>
+<!-- Medical Records Tabs -->
+<ul class="nav nav-tabs" id="myTab" role="tablist">
+<li class="nav-item" role="presentation">
+<button aria-controls="medicalhistory" aria-selected="true" class="nav-link active" data-bs-target="#summary" data-bs-toggle="tab" id="summary-tab" role="tab" type="button">Medical History</button>
+</li>
+<li class="nav-item" role="presentation">
+<button aria-controls="notes" aria-selected="false" class="nav-link" data-bs-target="#notes" data-bs-toggle="tab" id="notes-tab" role="tab" type="button">Appointment Notes</button>
+</li>
+<li class="nav-item" role="presentation">
+<button aria-controls="medications" aria-selected="false" class="nav-link" data-bs-target="#medications" data-bs-toggle="tab" id="medications-tab" role="tab" type="button">Prescriptions</button>
+</li>
+</ul>
+<div class="tab-content p-3 border border-top-0 rounded-bottom" id="myTabContent">
+<!-- Medical History Tab -->
+<div aria-labelledby="summary-tab" class="tab-pane fade show active" id="summary" role="tabpanel">
+<!-- Medical History content can be populated here -->
+</div>
+<!-- Appointment Notes Tab -->
+<div aria-labelledby="notes-tab" class="tab-pane fade" id="notes" role="tabpanel">
+<div class="mb-3">
+<label class="form-label" for="appointmentNotes"></label>
+<textarea class="form-control" id="appointmentNotes" placeholder="Enter appointment notes here..." rows="6"></textarea>
+<div class="mt-3">
+<button class="btn btn-primary" id="updateNotesBtn">Update Notes</button>
+</div>
+</div>
+<div class="alert alert-success mt-3" id="notesUpdateStatus" style="display: none;"></div>
+</div>
+<!-- Prescription Tab -->
+<div aria-labelledby="medications-tab" class="tab-pane fade" id="medications" role="tabpanel">
+<div class="mb-3">
+<h5 class="mb-3">Prescription Details</h5>
+<div id="medicationsList">
+<div class="medication-item mb-3 p-3 border rounded">
+<div class="row mb-2">
+<div class="col-md-6">
+<label class="form-label">Medicine Name</label>
+<select class="form-select medicine-name required-field"><option value="">Loading medicines...</option></select>
+</div>
+<div class="col-md-3">
+<label class="form-label">Dose</label>
+<input class="form-control medicine-dose required-field" type="text"/>
+</div>
+<div class="col-md-3">
+<label class="form-label">Quantity</label>
+<input class="form-control medicine-quantity required-field" min="1" type="number" value="1"/>
+</div>
+</div>
+<div class="row">
+<div class="col-md-12">
+<label class="form-label">Frequency</label>
+<input class="form-control medicine-frequency required-field" type="text"/>
+</div>
+</div>
+</div>
+</div>
+<div class="d-flex justify-content-between mt-3">
+<button class="btn btn-outline-primary" disabled="" id="addMedicineBtn">
+<i class="bi bi-plus-circle"></i> Add Another Medicine
                                     </button>
-                                    <button id="createPrescriptionBtn" class="btn btn-success" disabled>Create Prescription</button>
-                                </div>
-                            </div>
-                            <div id="prescriptionStatus" class="alert mt-3" style="display: none;"></div>
-                        </div>                          
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/vue@3.2.31/dist/vue.global.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-    <script src="../js/signout.js"></script>
-
-    <script>
+<button class="btn btn-success" disabled="" id="createPrescriptionBtn">Create Prescription</button>
+</div>
+</div>
+<div class="alert mt-3" id="prescriptionStatus" style="display: none;"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/vue@3.2.31/dist/vue.global.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../js/signout.js"></script>
+<script>
         // Assuming the logged-in doctor's ID is known (e.g., D001)
         const doctorId = "D001";
         const compositeUrl = "http://localhost:8000/doctor_management";
@@ -795,6 +778,42 @@
         // Load appointments when the page loads
         window.onload = loadAppointments;
     </script>
-</body>
+<script>
+let medDropdownOptions = [];
 
+fetch("https://personal-dxi3ngjv.outsystemscloud.com/Inventory/rest/v1/inventory")
+  .then(res => res.json())
+  .then(data => {
+    if (data && data.Medications) {
+      medDropdownOptions = data.Medications;
+      updateAllMedicineDropdowns();
+    } else {
+      console.error("No Medications found in response");
+    }
+  })
+  .catch(err => {
+    console.error("Failed to load meds", err);
+    medDropdownOptions = [];
+  });
+
+function updateAllMedicineDropdowns() {
+  const selects = document.querySelectorAll(".medicine-name");
+  selects.forEach(select => {
+    if (select.tagName !== "SELECT") return;
+    select.innerHTML = '<option value="">Select medicine</option>';
+    medDropdownOptions.forEach(med => {
+      const option = document.createElement("option");
+      option.value = med.medicationName; // send med ID in payload if needed
+      option.textContent = med.medicationName;
+      select.appendChild(option);
+    });
+  });
+}
+
+const originalAddMedicineField = window.addMedicineField;
+window.addMedicineField = function () {
+  if (originalAddMedicineField) originalAddMedicineField();
+  setTimeout(updateAllMedicineDropdowns, 100);
+};
+</script></body>
 </html>
